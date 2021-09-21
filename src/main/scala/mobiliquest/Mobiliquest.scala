@@ -2,8 +2,9 @@ package mobiliquest
 
 object Mobiliquest extends App {
 
-  val dummy = CSV.read(io.Source.fromResource("dummy.csv").getLines())
-  val third = dummy.column("third")
+  val toulouse = CSV.read(io.Source.fromResource("BD_presence_Toulouse.csv").getLines())
+  println("HEADERS " + toulouse.header.mkString(" | "))
 
-  println("THIRD COLUMN " + third)
+  val h12 = toulouse.column("h12")
+  println("H12 " + h12)
 }
