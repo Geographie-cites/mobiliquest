@@ -1,28 +1,39 @@
 package mobiliquest
 
+import mobiliquest.CSV.Header
+import scala.annotation.targetName
+
 object Quest {
 
   sealed trait Rule
-  case class SuchAs(operator: String=> Boolean) extends Rule
+  case class SuchAsInt(operator: Int=> Boolean) extends Rule
+  case class SuchAsDouble(operator: Double=> Boolean) extends Rule
   case class IsIn(values: Seq[String]) extends Rule
   case object NoRule extends Rule
 
+  case class Where(header: CSV.Header, request: Request)
   case class RuleOnColumn(header: CSV.Header, rule: Rule)
   case class Request(content: CSV.Content, selected: Seq[CSV.Header], rulesOnColumns: Seq[RuleOnColumn])
 
+  implicit class WhereDecorator(w: Where) {
+    def suchAs(x: Int=> Boolean): Request =  w.request.copy(rulesOnColumns = w.request.rulesOnColumns :+ RuleOnColumn(w.header, SuchAsInt(i => x(i))))
+    @targetName("suchAsDouble")
+    def suchAs(x: Double=> Boolean):Request = w.request.copy(rulesOnColumns = w.request.rulesOnColumns :+ RuleOnColumn(w.header, SuchAsDouble(i => x(i))))
+
+    def isIn(values: String*) =
+      w.request.copy(rulesOnColumns = w.request.rulesOnColumns :+ RuleOnColumn(w.header, IsIn(values)))
+  }
+
   implicit class RuleOnColumnDecorator(ruleOnColumn: RuleOnColumn) {
-    def compute(content: CSV.Content) = {
-      val headerIndex = CSV.columnIndex(ruleOnColumn.header, content)
-      content.copy(fields =
-        content.fields.filter {line=>
-          val valueToBeTested = line(headerIndex)
+    def compute(column: CSV.Column): Seq[Int] = {
+        column.zipWithIndex.filter {case (el,ind)=>
           ruleOnColumn.rule match {
-            case sa: SuchAs=>  sa.operator(valueToBeTested)
-            case iin: IsIn=> iin.values.contains(valueToBeTested)
+            case sa: SuchAsInt=> sa.operator(el.toString.toInt)
+            case sa: SuchAsDouble=> sa.operator(el.toString.toDouble)
+            case iin: IsIn=> iin.values.contains(el)
             case _=> true
           }
-        }
-      )
+        }.map{_._2}
     }
   }
 
@@ -33,14 +44,25 @@ object Quest {
 
   implicit class RequestDecorator(request: Request) {
 
-    def where(header: CSV.Header, rule: Rule) = request.copy(rulesOnColumns = request.rulesOnColumns :+ RuleOnColumn(header, rule))
+    def where(header: CSV.Header) = Where(header, request)
+
     def quest = {
-      def quest0(content: CSV.Content, rulesToBeApplied: Seq[RuleOnColumn]): CSV.Content = {
-        if (rulesToBeApplied.isEmpty) content
-        else quest0(rulesToBeApplied.head.compute(content), rulesToBeApplied.tail)
+      def quest0(selectedLineIndexes: Seq[Int], rulesToBeApplied: Seq[RuleOnColumn]): Seq[Int] = {
+        if (rulesToBeApplied.isEmpty) selectedLineIndexes
+        else {
+          val ruleOnColumn = rulesToBeApplied.head
+
+          val newRuleResult =  ruleOnColumn.compute(CSV.column(ruleOnColumn.header, request.content))
+          val newLineSelection = {
+            if (selectedLineIndexes.isEmpty) newRuleResult
+            else selectedLineIndexes intersect newRuleResult
+          }
+          quest0( newLineSelection, rulesToBeApplied.tail)
+        }
       }
 
-      CSV.linesWhere(request.selected, quest0(request.content, request.rulesOnColumns))
+      val quested = quest0( 0 to request.content.columns.headOption.map{_.length}.getOrElse(0), request.rulesOnColumns)
+      CSV.linesWhere(request.selected, quested, request.content)
     }
   }
 
