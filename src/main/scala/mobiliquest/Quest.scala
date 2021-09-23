@@ -40,6 +40,7 @@ object Quest {
   implicit class ContentDecorator(content: CSV.Content) {
     def column(columnName: String) = CSV.column(columnName, content)
     def select(headers: CSV.Header*) = Request(content, headers, Seq())
+    def where(header: Header) = Request(content, content.headers, Seq()).where(header)
   }
 
   implicit class RequestDecorator(request: Request) {

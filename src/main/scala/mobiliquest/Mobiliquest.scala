@@ -21,5 +21,6 @@ object Mobiliquest extends App {
 //    .where("AGE").suchAs((i: Int)=> i > 6)
 //    .where("BB").suchAs((d: Double)=> d < 12.0)
 //    .quest
-  println(request.size)
+  println("LINES " + request.size)
+  println("COLUMNS " + request.headOption.map {_.length}.getOrElse(0))
 }
