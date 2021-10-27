@@ -20,7 +20,9 @@ object CSV {
         .toIndexedSeq
     }.toSeq
 
-    val headers: IndexedSeq[Header] = lines.headOption.map{_.toIndexedSeq}.getOrElse(IndexedSeq[Header]())
+    val headers: IndexedSeq[Header] = lines.headOption.map {
+      _.toIndexedSeq
+    }.getOrElse(IndexedSeq[Header]())
 
     val rawColumns = lines.size match {
       case 0 => IndexedSeq()
@@ -59,17 +61,19 @@ object CSV {
     columnIndex(cn, content)
   }
 
-  def columns(columnNames: Seq[String], content: Content): Seq[Column] = {
-    content.headers.zip(content.columns).filter { case (head, col) =>
-      columnNames.contains(head)
-    }.map {
-      _._2
+    def columns(columnNames: Seq[String], content: Content): Seq[Column] = {
+  //    content.headers.zip(content.columns).filter { case (head, col) =>
+  //      columnNames.contains(head)
+  //    }.map {
+  //      _._2
+  //    }
+      columnNames.map { cn =>
+        CSV.column(cn, content)
+      }
     }
-  }
 
-  def linesWhere(columnNames: Seq[String], selectedLineIndexes: Seq[Int], content: Content): Seq[Seq[String | Int | Double]] = {
-    val requestedColumns = columns(columnNames, content)
-
+  def linesWhere(columnNames: Seq[String], selectedLineIndexes: Seq[Int], selectedContent: Content): Seq[Seq[String | Int | Double]] = {
+    val requestedColumns = columns(columnNames, selectedContent)
     // Filter selected indexed lines on requested columns
     selectedLineIndexes.flatMap(requestedColumns.transpose.lift)
 

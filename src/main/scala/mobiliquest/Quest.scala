@@ -48,23 +48,31 @@ object Quest {
     def where(header: CSV.Header) = Where(header, request)
 
     def quest = {
-      def quest0(selectedLineIndexes: Seq[Int], rulesToBeApplied: Seq[RuleOnColumn]): Seq[Int] = {
+      def quest0(selectedContent: CSV.Content, selectedLineIndexes: Seq[Int], rulesToBeApplied: Seq[RuleOnColumn]): Seq[Int] = {
+        println("content size " + selectedContent.columns.head.size)
         if (rulesToBeApplied.isEmpty) selectedLineIndexes
         else {
           val ruleOnColumn = rulesToBeApplied.head
 
-          val newRuleResult =  ruleOnColumn.compute(CSV.column(ruleOnColumn.header, request.content))
+          val newRuleResult =  ruleOnColumn.compute(CSV.column(ruleOnColumn.header, selectedContent))
           val newLineSelection = {
             if (selectedLineIndexes.isEmpty) newRuleResult
             else selectedLineIndexes intersect newRuleResult
           }
-          quest0( newLineSelection, rulesToBeApplied.tail)
+          quest0(selectedContent, newLineSelection, rulesToBeApplied.tail)
         }
       }
 
-      val quested = quest0( 0 to request.content.columns.headOption.map{_.length}.getOrElse(0), request.rulesOnColumns)
-      CSV.linesWhere(request.selected, quested, request.content)
+      val selection = doSelect((request.selected ++ request.rulesOnColumns.map{_.header}).distinct, request.content)
+
+      val quested = quest0(selection, 0 to selection.columns.headOption.map{_.length}.getOrElse(0), request.rulesOnColumns)
+
+      CSV.linesWhere(request.selected, quested, selection)
     }
+  }
+
+  def doSelect(headers: Seq[CSV.Header], content: CSV.Content) = {
+    CSV.Content(headers.toIndexedSeq, CSV.columns(headers, content))
   }
 
 }
