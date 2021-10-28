@@ -5,9 +5,13 @@ import mobiliquest.CSV._
 
 object Mobiliquest extends App {
 
+
+  println("READING ....")
   val toulouse = CSV.read(io.Source.fromResource("BD_presence_Toulouse.csv").getLines())
 //  val toulouse = CSV.read(io.Source.fromResource("test.csv").getLines())
 
+
+  println("REQUESTING ...")
   //toulouse.columns
   val request = toulouse
     .select("ID_IND", "h11", "CODE_SEC", "KAGE")
@@ -30,5 +34,5 @@ object Mobiliquest extends App {
   //  request.foreach {println}
 
 
-  println("REQUEST — LINES: " + request.size + " | COLS: " + request.headOption.map{_.size}.getOrElse(0))
+  println("REQUEST — COLS: " + request.columns.size + " | LINES: " + request.columns.headOption.map{_.size}.getOrElse(0))
 }

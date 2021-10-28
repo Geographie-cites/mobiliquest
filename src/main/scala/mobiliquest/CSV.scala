@@ -61,22 +61,15 @@ object CSV {
     columnIndex(cn, content)
   }
 
-    def columns(columnNames: Seq[String], content: Content): Seq[Column] = {
-  //    content.headers.zip(content.columns).filter { case (head, col) =>
-  //      columnNames.contains(head)
-  //    }.map {
-  //      _._2
-  //    }
-      columnNames.map { cn =>
-        CSV.column(cn, content)
-      }
+  def columns(columnNames: Seq[String], content: Content): Seq[Column] = {
+    columnNames.map { cn =>
+      CSV.column(cn, content)
     }
-
-  def linesWhere(columnNames: Seq[String], selectedLineIndexes: Seq[Int], selectedContent: Content): Seq[Seq[String | Int | Double]] = {
-    val requestedColumns = columns(columnNames, selectedContent)
-    // Filter selected indexed lines on requested columns
-    selectedLineIndexes.flatMap(requestedColumns.transpose.lift)
-
   }
+
+  def linesWhere(selectedLineIndexes: Seq[Int], selectedContent: Content): Content = {
+    selectedContent.copy(columns = selectedLineIndexes.flatMap(selectedContent.columns.transpose.lift).transpose)
+  }
+  
 
 }
