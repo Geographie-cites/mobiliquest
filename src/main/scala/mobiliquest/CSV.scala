@@ -13,11 +13,9 @@ object CSV {
   def read(path: File): Content = read(io.Source.fromFile(path).getLines())
 
   def read(rawLines: Iterator[String]) = {
-    val lines = rawLines.map {
-      _.split(";").map {
-        _.replaceAll("\"", "").trim
-      }
-        .toIndexedSeq
+    // Required format: no "" and ";" as separator
+    val lines = rawLines.map { l =>
+      l.split(";").toIndexedSeq
     }.toSeq
 
     val headers: IndexedSeq[Header] = lines.headOption.map {
@@ -44,7 +42,6 @@ object CSV {
       }
     }
     else Seq()
-
     Content(lines.head, columns)
   }
 

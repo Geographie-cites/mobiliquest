@@ -58,7 +58,6 @@ object Quest {
 
     def quest = {
       def quest0(selectedContent: CSV.Content, rulesToBeApplied: Seq[RuleOnColumn]): CSV.Content = {
-        println("content size " + selectedContent.columns.head.size)
         if (rulesToBeApplied.isEmpty) selectedContent
         else {
           val ruleOnColumn = rulesToBeApplied.head
@@ -72,7 +71,7 @@ object Quest {
         }
       }
 
-      // Gest only columns of interest (selected in 'select' instruction or used in request filters
+      // Get only columns of interest (selected in 'select' instruction or used in request filters
       val selection = doSelect((request.selected ++ request.rulesOnColumns.map {
         _.header
       }).distinct, request.content)
