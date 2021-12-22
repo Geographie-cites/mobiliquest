@@ -1,7 +1,7 @@
 package mobiliquest
 
 import mobiliquest.CSV.Header
-import scala.annotation.targetName
+//import scala.annotation.targetName
 
 object Quest {
 
@@ -24,8 +24,8 @@ object Quest {
   implicit class WhereDecorator(w: Where) {
     def suchAs(x: Int => Boolean): Request = w.request.copy(rulesOnColumns = w.request.rulesOnColumns :+ RuleOnColumn(w.header, SuchAsInt(i => x(i))))
 
-    @targetName("suchAsDouble")
-    def suchAs(x: Double => Boolean): Request = w.request.copy(rulesOnColumns = w.request.rulesOnColumns :+ RuleOnColumn(w.header, SuchAsDouble(i => x(i))))
+//    @targetName("suchAsDouble")
+//    def suchAs(x: Double => Boolean): Request = w.request.copy(rulesOnColumns = w.request.rulesOnColumns :+ RuleOnColumn(w.header, SuchAsDouble(i => x(i))))
 
     def isIn(values: String*) =
       w.request.copy(rulesOnColumns = w.request.rulesOnColumns :+ RuleOnColumn(w.header, IsIn(values)))

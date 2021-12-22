@@ -5,7 +5,8 @@ import java.io.File
 object CSV {
 
   type Header = String
-  type Column = Seq[String | Int | Double]
+  //type Column = Seq[String | Int | Double]
+  type Column = Seq[String]
   type Line = Seq[Column]
 
   case class Content(headers: IndexedSeq[String], columns: Seq[Column])
@@ -29,20 +30,20 @@ object CSV {
       }
     }
 
-    val columns: Seq[Column] = if (rawColumns.headOption.map {
-      _.size
-    }.getOrElse(0) > 0) {
-      rawColumns.map { rc =>
-        rc.head match {
-          case v if Seq("AGE").contains(v) => rc.map {
-            _.toInt
-          }
-          case _ => rc
-        }
-      }
-    }
-    else Seq()
-    Content(lines.head, columns)
+//    val columns: Seq[Column] = if (rawColumns.headOption.map {
+//      _.size
+//    }.getOrElse(0) > 0) {
+//      rawColumns.map { rc =>
+//        rc.head match {
+//          case v if Seq("AGE").contains(v) => rc.map {
+//            _.toInt
+//          }
+//          case _ => rc
+//        }
+//      }
+//    }
+//    else Seq()
+    Content(lines.head, rawColumns)
   }
 
   def columnIndex(columnName: String, content: Content) = content.headers.indexOf(columnName)

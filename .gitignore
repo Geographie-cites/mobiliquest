@@ -21,5 +21,3 @@ release/*
 .settings
 *.bak
 *.bsp
-resources/
-resources/*
