@@ -8,10 +8,11 @@ import java.io.{BufferedWriter, FileWriter}
 
 object Mobiliquest extends App {
 
-  implicit val inputDirectory: Directory = args(0)
-  implicit val outputDirectory: Directory = new java.io.File(new java.io.File(inputDirectory).getParent, "output").getAbsolutePath
+  val study = args(0)
+  implicit val inputDirectory: Directory = args(1)
+  implicit val outputDirectory: Directory = new java.io.File(new java.io.File(inputDirectory).getParentFile.getParent, "output").getAbsolutePath
 
-  R.computeAll("TOULOUSE")(inputDirectory, outputDirectory)
+  R.computeAll(study)(inputDirectory, outputDirectory)
 
 
   def request = {
