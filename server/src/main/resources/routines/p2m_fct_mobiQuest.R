@@ -4,20 +4,27 @@
 #                                      fonctions 
 # ================================================================================#
 
-
-
+# library
+library(tidylog)
+library(tidyverse)
+library(sf)
+library(geojsonio)
+library(geojsonsf)
+library(OasisR) # Duncan
+library(spdep) # Moran
+#library(plyr)
 
 #==== GLOBAL FUNCTIONS ====
 
 # 1. Indicateur POPULATION GLOBALE ----
-createPopFiles <- function(nomEnq, prez_long, sfSec, seuil){
+createPopFiles <- function(nomEnq, prez_long, sfSec, seuil, cheminOut){
 
   # 1a. CONSTRUCTION DES DONNEES POUR la carte en cercle proportionnelle - pop0_prop : 
   # nombre estimé de personnes présentes par secteur et par heure
   
-  dir.create(paste0(chemin, nomEnq,"/pop0_prop"))
-  dir.create(paste0(chemin, nomEnq,"/pop0_prop/data"))
-  dir.create(paste0(chemin, nomEnq,"/pop0_prop/geo"))
+  dir.create(paste0(cheminOut, nomEnq,"/pop0_prop"))
+  dir.create(paste0(cheminOut, nomEnq,"/pop0_prop/data"))
+  dir.create(paste0(cheminOut, nomEnq,"/pop0_prop/geo"))
   
   ## Comptage des présences par secteur et par heure : 
   ## POPULATION PRESENTE (STOCK PONDERE)
@@ -49,7 +56,7 @@ createPopFiles <- function(nomEnq, prez_long, sfSec, seuil){
   ### Export
   shpProp <- sf_geojson(shpProp)
   geojson_write(shpProp,
-                file = paste0(chemin, nomEnq,"/pop0_prop/geo/secteursData.geojson"),
+                file = paste0(cheminOut, nomEnq,"/pop0_prop/geo/secteursData.geojson"),
                 layer_options = "ENCODING=UTF-8")
   
   
@@ -74,7 +81,7 @@ createPopFiles <- function(nomEnq, prez_long, sfSec, seuil){
   
   ### Export
   write.csv(dfProp, 
-             paste0(chemin, nomEnq,"/pop0_prop/data/dataSect.csv"), 
+             paste0(cheminOut, nomEnq,"/pop0_prop/data/dataSect.csv"), 
              row.names = FALSE)   
   
   
@@ -82,9 +89,9 @@ createPopFiles <- function(nomEnq, prez_long, sfSec, seuil){
   # 1b. CONSTRUCTION DES DONNEES POUR la carte de densité - pop0_choro : 
   # Densité de personnes (km2) présentes par secteur et par heure
   
-  dir.create(paste0(chemin, nomEnq,"/pop0_choro"))
-  dir.create(paste0(chemin, nomEnq,"/pop0_choro/data"))
-  dir.create(paste0(chemin, nomEnq,"/pop0_choro/geo"))
+  dir.create(paste0(cheminOut, nomEnq,"/pop0_choro"))
+  dir.create(paste0(cheminOut, nomEnq,"/pop0_choro/data"))
+  dir.create(paste0(cheminOut, nomEnq,"/pop0_choro/geo"))
   
   ### joindre la variable 'AREA' de la couche des secteurs à la table de présence et calcul
   options(scipen = 999)
@@ -108,7 +115,7 @@ createPopFiles <- function(nomEnq, prez_long, sfSec, seuil){
   ### Export
   shpChoro <- sf_geojson(shpChoro)
   geojson_write(shpChoro,
-                file = paste0(chemin, nomEnq,"/pop0_choro/geo/secteursData.geojson"),
+                file = paste0(cheminOut, nomEnq,"/pop0_choro/geo/secteursData.geojson"),
                 layer_options = "ENCODING=UTF-8")
 
   ## mise en forme csv DENS
@@ -122,7 +129,7 @@ createPopFiles <- function(nomEnq, prez_long, sfSec, seuil){
   
   ### Export
   write.csv(dfChoro, 
-             paste0(chemin, nomEnq,"/pop0_choro/data/dataSect.csv"), 
+             paste0(cheminOut, nomEnq,"/pop0_choro/data/dataSect.csv"), 
              row.names = FALSE) 
   
   
@@ -132,9 +139,9 @@ createPopFiles <- function(nomEnq, prez_long, sfSec, seuil){
   # nombre estimé de personnes non résidentes par secteur et par heure + flux OD
   
   # Création des dossiers   
-  dir.create(paste0(chemin, nomEnq,"/pop0_flow"))
-  dir.create(paste0(chemin, nomEnq,"/pop0_flow/data"))
-  dir.create(paste0(chemin, nomEnq,"/pop0_flow/geo"))
+  dir.create(paste0(cheminOut, nomEnq,"/pop0_flow"))
+  dir.create(paste0(cheminOut, nomEnq,"/pop0_flow/data"))
+  dir.create(paste0(cheminOut, nomEnq,"/pop0_flow/geo"))
   
 
   ## Calcul des flux OD (origine = secteur de résidence - RES_SEC, destination = secteur de présence - CODE_SEC)
@@ -151,7 +158,7 @@ createPopFiles <- function(nomEnq, prez_long, sfSec, seuil){
   
   ## Export de flowdata
   write.csv2(flowdata, 
-             paste0(chemin,nomEnq,"/pop0_flow/geo/flowData.csv"), 
+             paste0(cheminOut,nomEnq,"/pop0_flow/geo/flowData.csv"), 
              row.names = FALSE)  
   
   
@@ -189,7 +196,7 @@ createPopFiles <- function(nomEnq, prez_long, sfSec, seuil){
   ## Export
   shpChoroNR <- sf_geojson(shpChoroNR)
   geojson_write(shpChoroNR,
-                file = paste0(chemin, nomEnq, "/pop0_flow/geo/secteursData.geojson"),
+                file = paste0(cheminOut, nomEnq, "/pop0_flow/geo/secteursData.geojson"),
                 layer_options = "ENCODING=UTF-8")
   
   ## mise en forme csv STOCK NR
@@ -204,7 +211,7 @@ createPopFiles <- function(nomEnq, prez_long, sfSec, seuil){
   
   ## Export des tables
   write.csv(dfChoroNR, 
-             paste0(chemin, nomEnq,"/pop0_flow/data/dataSect.csv"), 
+             paste0(cheminOut, nomEnq,"/pop0_flow/data/dataSect.csv"), 
              row.names = FALSE) 
 }
 
@@ -348,7 +355,7 @@ prepPVS <- function(nomEnq, prez_long, nomIndic, nomVar, seuil){
 }
 
 #~ création des geojson et des csv pour le graphique "simple" ----
-createFiles <- function(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil){
+createFiles <- function(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil, cheminOut){
 
   # calcul des mini tables de présences de l'indicateur
   data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
@@ -365,15 +372,15 @@ createFiles <- function(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil
     
     # Création des répertoires
     ## Répertoires parents (2 par indicateur)
-    dir.create(paste0(chemin, nomEnq, "/", nomIndic, i ,"_prop"))
-    dir.create(paste0(chemin, nomEnq, "/", nomIndic, i ,"_choro"))
+    dir.create(paste0(cheminOut, nomEnq, "/", nomIndic, i ,"_prop"))
+    dir.create(paste0(cheminOut, nomEnq, "/", nomIndic, i ,"_choro"))
     
     ## Répertoires enfants (2 par répertoire parent)
-    dir.create(paste0(chemin, nomEnq, "/", nomIndic, i ,"_prop/geo"))
-    dir.create(paste0(chemin, nomEnq, "/", nomIndic, i ,"_choro/geo"))
+    dir.create(paste0(cheminOut, nomEnq, "/", nomIndic, i ,"_prop/geo"))
+    dir.create(paste0(cheminOut, nomEnq, "/", nomIndic, i ,"_choro/geo"))
     
-    dir.create(paste0(chemin, nomEnq, "/", nomIndic, i ,"_prop/data"))
-    dir.create(paste0(chemin, nomEnq, "/", nomIndic, i ,"_choro/data"))
+    dir.create(paste0(cheminOut, nomEnq, "/", nomIndic, i ,"_prop/data"))
+    dir.create(paste0(cheminOut, nomEnq, "/", nomIndic, i ,"_choro/data"))
     
     indic <- colnames(pvs)[3 + i]
 
@@ -393,7 +400,7 @@ createFiles <- function(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil
     ### Export des données spatiales
     shpProp <- sf_geojson(shpProp)
     geojson_write(shpProp,
-                  file = paste0(chemin, nomEnq, "/", nomIndic, i ,"_prop/geo/secteursData.geojson"),
+                  file = paste0(cheminOut, nomEnq, "/", nomIndic, i ,"_prop/geo/secteursData.geojson"),
                   layer_options = "ENCODING=UTF-8")
     
     
@@ -412,7 +419,7 @@ createFiles <- function(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil
     ### Export des données spatiales
     shpChoro <- sf_geojson(shpChoro)
     geojson_write(shpChoro,
-                  file = paste0(chemin, nomEnq, "/", nomIndic, i ,"_choro/geo/secteursData.geojson"),
+                  file = paste0(cheminOut, nomEnq, "/", nomIndic, i ,"_choro/geo/secteursData.geojson"),
                   layer_options = "ENCODING=UTF-8")
     
     
@@ -420,11 +427,11 @@ createFiles <- function(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil
     if(!nomIndic %in% c("res")){
       
       ## Répertoires parents (2 par indicateur)
-      dir.create(paste0(chemin, nomEnq, "/", nomIndic, i ,"_flow"))
+      dir.create(paste0(cheminOut, nomEnq, "/", nomIndic, i ,"_flow"))
       
       ## Répertoires enfants (2 par répertoire parent)
-      dir.create(paste0(chemin, nomEnq, "/", nomIndic, i ,"_flow/geo"))
-      dir.create(paste0(chemin, nomEnq, "/", nomIndic, i ,"_flow/data"))
+      dir.create(paste0(cheminOut, nomEnq, "/", nomIndic, i ,"_flow/geo"))
+      dir.create(paste0(cheminOut, nomEnq, "/", nomIndic, i ,"_flow/data"))
       
       ### Flowdata : csv des flux OD avec seuil à 6
       flowdata <- prez_long %>% 
@@ -454,10 +461,10 @@ createFiles <- function(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil
       ### Export des données spatiales
       shpChoroNR <- sf_geojson(shpChoroNR)
       geojson_write(shpChoroNR,
-                    file = paste0(chemin, nomEnq, "/", nomIndic, i ,"_flow/geo/secteursData.geojson"),
+                    file = paste0(cheminOut, nomEnq, "/", nomIndic, i ,"_flow/geo/secteursData.geojson"),
                     layer_options = "ENCODING=UTF-8")
       write.csv2(flowdata, 
-                 paste0(chemin, nomEnq, "/", nomIndic, i ,"_flow/geo/flowData.csv"), 
+                 paste0(cheminOut, nomEnq, "/", nomIndic, i ,"_flow/geo/flowData.csv"), 
                  row.names = FALSE)
     }
     
@@ -483,7 +490,7 @@ createFiles <- function(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil
     
     ### Export des données
     write.csv(dfProp, 
-               paste0(chemin, nomEnq, "/", nomIndic, i ,"_prop/data/dataSect.csv"), 
+               paste0(cheminOut, nomEnq, "/", nomIndic, i ,"_prop/data/dataSect.csv"), 
                row.names = FALSE)
 
     
@@ -498,7 +505,7 @@ createFiles <- function(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil
     
     ### Export des données
     write.csv(dfChoro, 
-               paste0(chemin, nomEnq, "/", nomIndic, i ,"_choro/data/dataSect.csv"), 
+               paste0(cheminOut, nomEnq, "/", nomIndic, i ,"_choro/data/dataSect.csv"), 
                row.names = FALSE)
     
     ## Oursins
@@ -515,7 +522,7 @@ createFiles <- function(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil
       
       ## Export des données
       write.csv(dfChoroNR, 
-                 paste0(chemin, nomEnq, "/", nomIndic, i ,"_flow/data/dataSect.csv"), 
+                 paste0(cheminOut, nomEnq, "/", nomIndic, i ,"_flow/data/dataSect.csv"), 
                  row.names = FALSE)
     }
     
@@ -524,7 +531,7 @@ createFiles <- function(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil
 }  
 
 #~ création des indices de ségrégation et csv ----
-createISeg <- function(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, seuil){
+createISeg <- function(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, seuil, cheminOut){
   
   # sortie des mini tables de présences de l'indicateur
   data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
@@ -671,15 +678,15 @@ createISeg <- function(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, 
   
   ## EXPORT 
   write.csv(duncan, 
-              paste0(chemin, nomEnq, "/indice_segreg/", nomIndic,"_Duncan.csv"), 
+              paste0(cheminOut, nomEnq, "/indice_segreg/", nomIndic,"_Duncan.csv"), 
               row.names = FALSE)
   write.csv(moran, 
-              paste0(chemin, nomEnq, "/indice_segreg/", nomIndic,"_Moran.csv"), 
+              paste0(cheminOut, nomEnq, "/indice_segreg/", nomIndic,"_Moran.csv"), 
               row.names = FALSE)
 }  
 
 #~ création des csv pour graphique en aires empilées (stacked) ----
-createStacked <- function(nbMod, nomIndic, nomEnq, ctry){
+createStacked <- function(nbMod, nomIndic, nomEnq, ctry, cheminOut){
   
   # 1. Cartes choro
   
@@ -688,7 +695,7 @@ createStacked <- function(nbMod, nomIndic, nomEnq, ctry){
   
   for (i in 1:nbMod){
     assign(paste0("dataSect", i, "_choro"),
-           read.csv(paste0(chemin, nomEnq, "/", nomIndic, i, "_choro/data/dataSect.csv"), 
+           read.csv(paste0(cheminOut, nomEnq, "/", nomIndic, i, "_choro/data/dataSect.csv"), 
                      check.names = FALSE))
     listData[[as.character(i)]] <- eval(parse(text = paste0("dataSect", i, "_choro")))
   }
@@ -728,7 +735,7 @@ createStacked <- function(nbMod, nomIndic, nomEnq, ctry){
   }
   
   ## Export
-  write.csv(tabFin, paste0(chemin, nomEnq, "/stacked/", nomIndic, "_choro_stacked.csv"), 
+  write.csv(tabFin, paste0(cheminOut, nomEnq, "/stacked/", nomIndic, "_choro_stacked.csv"), 
               row.names = FALSE)
   
   
@@ -739,7 +746,7 @@ createStacked <- function(nbMod, nomIndic, nomEnq, ctry){
   
   for (i in 1:nbMod){
     assign(paste0("dataSect", i, "_prop"),
-           read.csv(paste0(chemin, nomEnq, "/", nomIndic, i, "_prop/data/dataSect.csv"),
+           read.csv(paste0(cheminOut, nomEnq, "/", nomIndic, i, "_prop/data/dataSect.csv"),
                      check.names = FALSE))
     listData[[as.character(i)]] <- eval(parse(text = paste0("dataSect", i, "_prop")))
   }
@@ -780,7 +787,7 @@ createStacked <- function(nbMod, nomIndic, nomEnq, ctry){
   
   ## Export
   write.csv(tabFin, 
-             paste0(chemin, nomEnq, "/stacked/", nomIndic, "_prop_stacked.csv"), 
+             paste0(cheminOut, nomEnq, "/stacked/", nomIndic, "_prop_stacked.csv"), 
              row.names = FALSE)
   
   
@@ -792,7 +799,7 @@ createStacked <- function(nbMod, nomIndic, nomEnq, ctry){
 
     for (i in 1:nbMod){
       assign(paste0("dataSect", i, "_flow"),
-             read.csv(paste0(chemin, nomEnq, "/", nomIndic, i, "_flow/data/dataSect.csv"),
+             read.csv(paste0(cheminOut, nomEnq, "/", nomIndic, i, "_flow/data/dataSect.csv"),
                        check.names = FALSE))
       listData[[as.character(i)]] <- eval(parse(text = paste0("dataSect", i, "_flow")))
     }
@@ -835,7 +842,7 @@ createStacked <- function(nbMod, nomIndic, nomEnq, ctry){
     
     ## Export
     write.csv(tabFin, 
-               paste0(chemin, nomEnq, "/stacked/", nomIndic, "_flow_stacked.csv"), 
+               paste0(cheminOut, nomEnq, "/stacked/", nomIndic, "_flow_stacked.csv"), 
                 row.names = FALSE)
   }
   
@@ -846,18 +853,22 @@ createStacked <- function(nbMod, nomIndic, nomEnq, ctry){
 #==== ALGO FUNCTION ====
 
 ##---- Fonction p2m : de la table de présence aux indicateurs du Mobiliscope ----
-p2m <- function(nomEnq, perim, subpop, chemin){
-  
+p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
+
+  print ("XXX")
+  print(nomEnq)
+  print(cheminIn)
+  print(cheminOut)
   # Création des répertoires de sortie 
-  dir.create(paste0(chemin, nomEnq))
-  dir.create(paste0(chemin, nomEnq, "/stacked"))
-  dir.create(paste0(chemin, nomEnq, "/indice_segreg"))
-  
+  dir.create(paste0(cheminOut, nomEnq))
+  dir.create(paste0(cheminOut, nomEnq, "/stacked"))
+  dir.create(paste0(cheminOut, nomEnq, "/indice_segreg"))
+
   
   #~ 0. FILTRES : Enquête, périmètre et sous-population ----
   
   ## couche secteur
-  sfSec <- st_read("prepa_data/data/BDgeo/SEC_59ED_W84.shp")
+  sfSec <- st_read(paste0(cheminIn, "/BDgeo/SEC_59ED_W84.shp"))
   sfSec <- sfSec %>% 
     mutate(ENQUETE = case_when(LIB_ED=="Valenciennes, 2011" ~ "VALENCIENNES2011",
                                TRUE ~ ENQUETE)) %>% 
@@ -871,7 +882,7 @@ p2m <- function(nomEnq, perim, subpop, chemin){
   }
   
   ## données de présence
-  prez_long <- readRDS(paste0("prepa_data/data/out_presence/BD_presence_utile/presence_utile_", nomEnq, ".RDS"))
+  prez_long <- readRDS(paste0(cheminIn, "/presence_utile_", nomEnq, ".RDS"))
   
   ### périmètre
   if(!is.na(perim)){
@@ -899,7 +910,7 @@ p2m <- function(nomEnq, perim, subpop, chemin){
   
   
   #~ 1. INDICATEUR "WHOLE POPULATION" ----
-  createPopFiles(nomEnq, prez_long, sfSec, seuil)
+  createPopFiles(nomEnq, prez_long, sfSec, seuil, cheminOut)
   
   
   #~ 2. TOUS LES AUTRES INDICATEURS ----
@@ -910,9 +921,8 @@ p2m <- function(nomEnq, perim, subpop, chemin){
   nomVar <- "RES"
   
   if(nomVar!=indicateur){
-    createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil)
-    createStacked(nbMod, nomIndic, nomEnq, ctry)
-  }
+    createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil, cheminOut)
+    createStacked(nbMod, nomIndic, nomEnq, ctry, cheminOut)  }
   
   ## SEX 
   nbMod <- 2
@@ -920,10 +930,9 @@ p2m <- function(nomEnq, perim, subpop, chemin){
   nomVar <- "SEX"
 
   if(nomVar!=indicateur){
-    createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil)
-    createISeg(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, seuil)
-    createStacked(nbMod, nomIndic, nomEnq, ctry)
-  }
+    createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil, cheminOut)
+    createISeg(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, seuil, cheminOut)
+    createStacked(nbMod, nomIndic, nomEnq, ctry, cheminOut)  }
   
   
   
@@ -933,10 +942,9 @@ p2m <- function(nomEnq, perim, subpop, chemin){
   nomVar <- "KAGE"
   
   if(nomVar!=indicateur){
-    createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil)
-    createISeg(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, seuil)
-    createStacked(nbMod, nomIndic, nomEnq, ctry)
-  }
+    createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil, cheminOut)
+    createISeg(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, seuil, cheminOut)
+    createStacked(nbMod, nomIndic, nomEnq, ctry, cheminOut)  }
   
   ## OCCUPATION PRINCIPALE
   nbMod <- 5
@@ -944,10 +952,9 @@ p2m <- function(nomEnq, perim, subpop, chemin){
   nomVar <- "OCC"
   
   if(nomVar!=indicateur){
-    createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil)
-    createISeg(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, seuil)
-    createStacked(nbMod, nomIndic, nomEnq, ctry)
-  }
+    createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil, cheminOut)
+    createISeg(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, seuil, cheminOut)
+    createStacked(nbMod, nomIndic, nomEnq, ctry, cheminOut)  }
   
   
   ## ACTIVITE 
@@ -961,9 +968,8 @@ p2m <- function(nomEnq, perim, subpop, chemin){
   nomVar <- "MOTIF"
   
   if(nomVar!=indicateur){
-    createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil)
-    createStacked(nbMod, nomIndic, nomEnq, ctry)
-  }
+    createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil, cheminOut)
+    createStacked(nbMod, nomIndic, nomEnq, ctry, cheminOut)  }
   
   
   ## MODE DE TRANSPORT 
@@ -977,9 +983,8 @@ p2m <- function(nomEnq, perim, subpop, chemin){
   nomVar <- "MODE_ARR"
   
   if(nomVar!=indicateur){
-    createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil)
-    createStacked(nbMod, nomIndic, nomEnq, ctry)
-  }
+    createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil, cheminOut)
+    createStacked(nbMod, nomIndic, nomEnq, ctry, cheminOut)  }
   
   if(ctry %in% c("FR", "AS")){
     
@@ -989,10 +994,9 @@ p2m <- function(nomEnq, perim, subpop, chemin){
     nomVar <- "EDUC"
 
     if(nomVar!=indicateur){
-      createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil)
-      createISeg(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, seuil)
-      createStacked(nbMod, nomIndic, nomEnq, ctry)
-    }
+      createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil, cheminOut)
+      createISeg(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, seuil, cheminOut)
+      createStacked(nbMod, nomIndic, nomEnq, ctry, cheminOut)    }
     
     
     ## NIVEAU D'EDUCATION (MENAGE) 
@@ -1001,10 +1005,9 @@ p2m <- function(nomEnq, perim, subpop, chemin){
     nomVar <- "EDUCMEN"
 
     if(nomVar!=indicateur){
-      createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil)
-      createISeg(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, seuil)
-      createStacked(nbMod, nomIndic, nomEnq, ctry)
-    }
+      createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil, cheminOut)
+      createISeg(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, seuil, cheminOut)
+      createStacked(nbMod, nomIndic, nomEnq, ctry, cheminOut)    }
     
   }
   
@@ -1015,10 +1018,9 @@ p2m <- function(nomEnq, perim, subpop, chemin){
     nomVar <- "CSP"
 
     if(nomVar!=indicateur){
-      createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil)
-      createISeg(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, seuil)
-      createStacked(nbMod, nomIndic, nomEnq, ctry)
-    }
+      createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil, cheminOut)
+      createISeg(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, seuil, cheminOut)
+      createStacked(nbMod, nomIndic, nomEnq, ctry, cheminOut)    }
     
     
     ## CSP (MENAGE) 
@@ -1027,10 +1029,9 @@ p2m <- function(nomEnq, perim, subpop, chemin){
     nomVar <- "CSPMEN"
 
     if(nomVar!=indicateur){
-      createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil)
-      createISeg(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, seuil)
-      createStacked(nbMod, nomIndic, nomEnq, ctry)
-    }
+      createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil, cheminOut)
+      createISeg(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, seuil, cheminOut)
+      createStacked(nbMod, nomIndic, nomEnq, ctry, cheminOut)    }
     
   }
   
@@ -1047,10 +1048,9 @@ p2m <- function(nomEnq, perim, subpop, chemin){
     nomVar <- "ZONAGE"
     
     if(nomVar!=indicateur){
-      createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil)
-      createISeg(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, seuil)
-      createStacked(nbMod, nomIndic, nomEnq, ctry)
-    }
+      createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil, cheminOut)
+      createISeg(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, seuil, cheminOut)
+      createStacked(nbMod, nomIndic, nomEnq, ctry, cheminOut)    }
 
   }
   
@@ -1063,10 +1063,9 @@ p2m <- function(nomEnq, perim, subpop, chemin){
     nomVar <- "QPV"
 
     if(nomVar!=indicateur){
-      createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil)
-      createISeg(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, seuil)
-      createStacked(nbMod, nomIndic, nomEnq, ctry)
-    }
+      createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil, cheminOut)
+      createISeg(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, seuil, cheminOut)
+      createStacked(nbMod, nomIndic, nomEnq, ctry, cheminOut)    }
   }
   
   
@@ -1083,10 +1082,9 @@ p2m <- function(nomEnq, perim, subpop, chemin){
     nomVar <- "REV"
 
     if(nomVar!=indicateur){
-      createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil)
-      createISeg(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, seuil)
-      createStacked(nbMod, nomIndic, nomEnq, ctry)
-    }
+      createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil, cheminOut)
+      createISeg(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, seuil, cheminOut)
+      createStacked(nbMod, nomIndic, nomEnq, ctry, cheminOut)    }
     
   }
   
@@ -1099,10 +1097,9 @@ p2m <- function(nomEnq, perim, subpop, chemin){
     nomVar <- "DEP"
 
     if(nomVar!=indicateur){
-      createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil)
-      createISeg(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, seuil)
-      createStacked(nbMod, nomIndic, nomEnq, ctry)
-    }
+      createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil, cheminOut)
+      createISeg(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, seuil, cheminOut)
+      createStacked(nbMod, nomIndic, nomEnq, ctry, cheminOut)    }
   }
   
   if(ctry=="AS"){
@@ -1113,10 +1110,9 @@ p2m <- function(nomEnq, perim, subpop, chemin){
     nomVar <- "CSO"
 
     if(nomVar!=indicateur){
-      createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil)
-      createISeg(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, seuil)
-      createStacked(nbMod, nomIndic, nomEnq, ctry)
-    }
+      createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil, cheminOut)
+      createISeg(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, seuil, cheminOut)
+      createStacked(nbMod, nomIndic, nomEnq, ctry, cheminOut)    }
     
     
     ## COMPOSITION DU MENAGE
@@ -1125,10 +1121,9 @@ p2m <- function(nomEnq, perim, subpop, chemin){
     nomVar <- "STRM"
 
     if(nomVar!=indicateur){
-      createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil)
-      createISeg(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, seuil)
-      createStacked(nbMod, nomIndic, nomEnq, ctry)
-    }
+      createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil, cheminOut)
+      createISeg(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, seuil, cheminOut)
+      createStacked(nbMod, nomIndic, nomEnq, ctry, cheminOut)    }
     
     
     ## STATUT D'OCCUPATION DU LOGEMENT
@@ -1137,10 +1132,9 @@ p2m <- function(nomEnq, perim, subpop, chemin){
     nomVar <- "LOG"
 
     if(nomVar!=indicateur){
-      createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil)
-      createISeg(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, seuil)
-      createStacked(nbMod, nomIndic, nomEnq, ctry)
-    }
+      createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil, cheminOut)
+      createISeg(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, seuil, cheminOut)
+      createStacked(nbMod, nomIndic, nomEnq, ctry, cheminOut)    }
     
   }
   
@@ -1152,10 +1146,9 @@ p2m <- function(nomEnq, perim, subpop, chemin){
     nomVar <- "INFORMAL"
 
     if(nomVar!=indicateur){
-      createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil)
-      createISeg(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, seuil)
-      createStacked(nbMod, nomIndic, nomEnq, ctry)
-    }
+      createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil, cheminOut)
+      createISeg(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, seuil, cheminOut)
+      createStacked(nbMod, nomIndic, nomEnq, ctry, cheminOut)    }
   }
   
   
@@ -1167,10 +1160,9 @@ p2m <- function(nomEnq, perim, subpop, chemin){
     nomVar <- "ZONAGE"
 
     if(nomVar!=indicateur){
-      createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil)
-      createISeg(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, seuil)
-      createStacked(nbMod, nomIndic, nomEnq, ctry)
-    }
+      createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil, cheminOut)
+      createISeg(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, seuil, cheminOut)
+      createStacked(nbMod, nomIndic, nomEnq, ctry, cheminOut)    }
     
   }
   
@@ -1181,10 +1173,9 @@ p2m <- function(nomEnq, perim, subpop, chemin){
     nomVar <- "RES_SSE"
 
     if(nomVar!=indicateur){
-      createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil)
-      createISeg(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, seuil)
-      createStacked(nbMod, nomIndic, nomEnq, ctry)
-    }
+      createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil, cheminOut)
+      createISeg(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, seuil, cheminOut)
+      createStacked(nbMod, nomIndic, nomEnq, ctry, cheminOut)    }
   }
   
   if(ctry=="FR"){
@@ -1194,10 +1185,9 @@ p2m <- function(nomEnq, perim, subpop, chemin){
     nomVar <- "STRM"
 
     if(nomVar!=indicateur){
-      createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil)
-      createISeg(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, seuil)
-      createStacked(nbMod, nomIndic, nomEnq, ctry)
-    }
+      createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil, cheminOut)
+      createISeg(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, seuil, cheminOut)
+      createStacked(nbMod, nomIndic, nomEnq, ctry, cheminOut)    }
   }
   
   if(ctry=="CA"){
@@ -1207,10 +1197,9 @@ p2m <- function(nomEnq, perim, subpop, chemin){
     nomVar <- "STRM"
     
     if(nomVar!=indicateur){
-      createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil)
-      createISeg(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, seuil)
-      createStacked(nbMod, nomIndic, nomEnq, ctry)
-    }
+      createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil, cheminOut)
+      createISeg(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, seuil, cheminOut)
+      createStacked(nbMod, nomIndic, nomEnq, ctry, cheminOut)    }
   }
   
   

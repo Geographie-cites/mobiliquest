@@ -4,6 +4,7 @@ package shared
 object Data {
 
   type Study = String
+  type Directory = String
   type Modality = Int
   type RequestID = String
 

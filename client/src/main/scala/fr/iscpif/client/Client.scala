@@ -9,19 +9,38 @@ import org.scalajs
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.scalajs.js.typedarray.{ArrayBuffer, TypedArrayBuffer}
-import com.raquo.laminar.api.L._
 import fr.iscpif.client.RequestForm
 
 import scala.scalajs.js.annotation.{JSExportAll, JSExportTopLevel}
 
-@JSExportTopLevel (name="mobiliquest")
+import scaladget.bootstrapnative.bsn._
+import scaladget.tools._
+import com.raquo.laminar.api.L._
+
+import scala.concurrent.ExecutionContext.Implicits.global
+import autowire._
+import boopickle.Default._
+
+
+@JSExportTopLevel(name = "mobiliquest")
 @JSExportAll
 object App {
 
   //def main(args: Array[String]): Unit = {
 
   def gui() = {
-    val content = h1("Mobiliquest !")
+    val content =
+      div(
+        h1("Mobiliquest !"),
+        button("Run", onClick --> { _ =>
+          val request = shared.Data.Request("ALBI", Map())
+          Post[shared.Api].run(request).call().foreach { x =>
+            println("X " + x)
+
+          }
+        })
+      )
+
 
     val containerNode = dom.document.querySelector("#mobiliquest-content")
 
