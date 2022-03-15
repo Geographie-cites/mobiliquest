@@ -1,4 +1,4 @@
-package fr.iscpif.client
+package client
 
 object RequestForm {
 

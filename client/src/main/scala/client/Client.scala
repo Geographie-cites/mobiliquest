@@ -9,7 +9,6 @@ import org.scalajs
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.scalajs.js.typedarray.{ArrayBuffer, TypedArrayBuffer}
-import fr.iscpif.client.RequestForm
 
 import scala.scalajs.js.annotation.{JSExportAll, JSExportTopLevel}
 
@@ -31,8 +30,9 @@ object App {
   def gui() = {
     val content =
       div(
+        margin := "10",
         h1("Mobiliquest !"),
-        button("Run", onClick --> { _ =>
+        button("Run", btn_primary_outline, onClick --> { _ =>
           val request = shared.Data.Request("ALBI", Map())
           Post[shared.Api].run(request).call().foreach { x =>
             println("X " + x)
