@@ -10,6 +10,7 @@ import org.scalajs
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.scalajs.js.typedarray.{ArrayBuffer, TypedArrayBuffer}
 import com.raquo.laminar.api.L._
+import fr.iscpif.client.RequestForm
 
 import scala.scalajs.js.annotation.{JSExportAll, JSExportTopLevel}
 
@@ -24,6 +25,7 @@ object App {
 
     val containerNode = dom.document.querySelector("#mobiliquest-content")
 
+    RequestForm
     render(containerNode, content)
   }
 }
