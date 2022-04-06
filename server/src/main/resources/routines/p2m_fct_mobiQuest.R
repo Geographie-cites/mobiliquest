@@ -894,13 +894,10 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
   ctry <- unique(prez_long$PAYS)
   
   ### sous-population
-  indicateur <- subpop[1]
-  modalite <- subpop[2]
-
-  if(!is.na(indicateur) & !is.na(modalite)){
+  if(length(subpop)!=0){
+    fns <- imap(subpop, ~ call(if (length(.x) == 1) "==" else "%in%", sym(.y), .x))
     prez_long <- prez_long %>%
-      rename(indicateur = all_of(indicateur)) %>%
-      filter(indicateur == modalite)
+      filter(!!!unname(fns))
   }
   
   
@@ -920,7 +917,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
   nomIndic <- "res"
   nomVar <- "RES"
   
-  if(nomVar!=indicateur){
+  if(!nomVar%in%names(subpop)){
     createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil, cheminOut)
     createStacked(nbMod, nomIndic, nomEnq, ctry, cheminOut)  }
   
@@ -929,7 +926,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
   nomIndic <- "sex"
   nomVar <- "SEX"
 
-  if(nomVar!=indicateur){
+  if(!nomVar%in%names(subpop)){
     createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil, cheminOut)
     createISeg(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, seuil, cheminOut)
     createStacked(nbMod, nomIndic, nomEnq, ctry, cheminOut)  }
@@ -941,7 +938,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
   nomIndic <- "age"
   nomVar <- "KAGE"
   
-  if(nomVar!=indicateur){
+  if(!nomVar%in%names(subpop)){
     createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil, cheminOut)
     createISeg(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, seuil, cheminOut)
     createStacked(nbMod, nomIndic, nomEnq, ctry, cheminOut)  }
@@ -951,7 +948,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
   nomIndic <- "occ"
   nomVar <- "OCC"
   
-  if(nomVar!=indicateur){
+  if(!nomVar%in%names(subpop)){
     createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil, cheminOut)
     createISeg(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, seuil, cheminOut)
     createStacked(nbMod, nomIndic, nomEnq, ctry, cheminOut)  }
@@ -967,7 +964,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
   nomIndic <- "act"
   nomVar <- "MOTIF"
   
-  if(nomVar!=indicateur){
+  if(!nomVar%in%names(subpop)){
     createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil, cheminOut)
     createStacked(nbMod, nomIndic, nomEnq, ctry, cheminOut)  }
   
@@ -982,7 +979,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
   nomIndic <- "mode"
   nomVar <- "MODE_ARR"
   
-  if(nomVar!=indicateur){
+  if(!nomVar%in%names(subpop)){
     createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil, cheminOut)
     createStacked(nbMod, nomIndic, nomEnq, ctry, cheminOut)  }
   
@@ -993,7 +990,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
     nomIndic <- "cleduc"
     nomVar <- "EDUC"
 
-    if(nomVar!=indicateur){
+    if(!nomVar%in%names(subpop)){
       createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil, cheminOut)
       createISeg(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, seuil, cheminOut)
       createStacked(nbMod, nomIndic, nomEnq, ctry, cheminOut)    }
@@ -1004,7 +1001,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
     nomIndic <- "educmen"
     nomVar <- "EDUCMEN"
 
-    if(nomVar!=indicateur){
+    if(!nomVar%in%names(subpop)){
       createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil, cheminOut)
       createISeg(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, seuil, cheminOut)
       createStacked(nbMod, nomIndic, nomEnq, ctry, cheminOut)    }
@@ -1017,7 +1014,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
     nomIndic <- "cs"
     nomVar <- "CSP"
 
-    if(nomVar!=indicateur){
+    if(!nomVar%in%names(subpop)){
       createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil, cheminOut)
       createISeg(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, seuil, cheminOut)
       createStacked(nbMod, nomIndic, nomEnq, ctry, cheminOut)    }
@@ -1028,7 +1025,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
     nomIndic <- "cspmen"
     nomVar <- "CSPMEN"
 
-    if(nomVar!=indicateur){
+    if(!nomVar%in%names(subpop)){
       createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil, cheminOut)
       createISeg(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, seuil, cheminOut)
       createStacked(nbMod, nomIndic, nomEnq, ctry, cheminOut)    }
@@ -1047,7 +1044,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
     nomIndic <- "resarea"
     nomVar <- "ZONAGE"
     
-    if(nomVar!=indicateur){
+    if(!nomVar%in%names(subpop)){
       createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil, cheminOut)
       createISeg(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, seuil, cheminOut)
       createStacked(nbMod, nomIndic, nomEnq, ctry, cheminOut)    }
@@ -1062,7 +1059,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
     nomIndic <- "qpv"
     nomVar <- "QPV"
 
-    if(nomVar!=indicateur){
+    if(!nomVar%in%names(subpop)){
       createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil, cheminOut)
       createISeg(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, seuil, cheminOut)
       createStacked(nbMod, nomIndic, nomEnq, ctry, cheminOut)    }
@@ -1081,7 +1078,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
     nomIndic <- "rev"
     nomVar <- "REV"
 
-    if(nomVar!=indicateur){
+    if(!nomVar%in%names(subpop)){
       createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil, cheminOut)
       createISeg(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, seuil, cheminOut)
       createStacked(nbMod, nomIndic, nomEnq, ctry, cheminOut)    }
@@ -1096,7 +1093,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
     nomIndic <- "dep"
     nomVar <- "DEP"
 
-    if(nomVar!=indicateur){
+    if(!nomVar%in%names(subpop)){
       createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil, cheminOut)
       createISeg(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, seuil, cheminOut)
       createStacked(nbMod, nomIndic, nomEnq, ctry, cheminOut)    }
@@ -1109,7 +1106,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
     nomIndic <- "cso"
     nomVar <- "CSO"
 
-    if(nomVar!=indicateur){
+    if(!nomVar%in%names(subpop)){
       createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil, cheminOut)
       createISeg(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, seuil, cheminOut)
       createStacked(nbMod, nomIndic, nomEnq, ctry, cheminOut)    }
@@ -1120,7 +1117,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
     nomIndic <- "strm"
     nomVar <- "STRM"
 
-    if(nomVar!=indicateur){
+    if(!nomVar%in%names(subpop)){
       createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil, cheminOut)
       createISeg(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, seuil, cheminOut)
       createStacked(nbMod, nomIndic, nomEnq, ctry, cheminOut)    }
@@ -1131,7 +1128,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
     nomIndic <- "log"
     nomVar <- "LOG"
 
-    if(nomVar!=indicateur){
+    if(!nomVar%in%names(subpop)){
       createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil, cheminOut)
       createISeg(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, seuil, cheminOut)
       createStacked(nbMod, nomIndic, nomEnq, ctry, cheminOut)    }
@@ -1145,7 +1142,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
     nomIndic <- "inf"
     nomVar <- "INFORMAL"
 
-    if(nomVar!=indicateur){
+    if(!nomVar%in%names(subpop)){
       createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil, cheminOut)
       createISeg(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, seuil, cheminOut)
       createStacked(nbMod, nomIndic, nomEnq, ctry, cheminOut)    }
@@ -1159,7 +1156,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
     nomIndic <- "zona"
     nomVar <- "ZONAGE"
 
-    if(nomVar!=indicateur){
+    if(!nomVar%in%names(subpop)){
       createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil, cheminOut)
       createISeg(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, seuil, cheminOut)
       createStacked(nbMod, nomIndic, nomEnq, ctry, cheminOut)    }
@@ -1172,7 +1169,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
     nomIndic <- "sse"
     nomVar <- "RES_SSE"
 
-    if(nomVar!=indicateur){
+    if(!nomVar%in%names(subpop)){
       createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil, cheminOut)
       createISeg(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, seuil, cheminOut)
       createStacked(nbMod, nomIndic, nomEnq, ctry, cheminOut)    }
@@ -1184,7 +1181,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
     nomIndic <- "strmfr"
     nomVar <- "STRM"
 
-    if(nomVar!=indicateur){
+    if(!nomVar%in%names(subpop)){
       createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil, cheminOut)
       createISeg(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, seuil, cheminOut)
       createStacked(nbMod, nomIndic, nomEnq, ctry, cheminOut)    }
@@ -1196,7 +1193,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
     nomIndic <- "strmqc"
     nomVar <- "STRM"
     
-    if(nomVar!=indicateur){
+    if(!nomVar%in%names(subpop)){
       createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil, cheminOut)
       createISeg(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, seuil, cheminOut)
       createStacked(nbMod, nomIndic, nomEnq, ctry, cheminOut)    }

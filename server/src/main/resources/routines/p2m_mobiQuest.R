@@ -9,13 +9,10 @@
 ## Ville
 nomEnq = "ALBI"
 
-## requête : changement du périmètre observé
-# filter secteurs selon requête : 
-# ville centre = 3
-# ville centre + zone urbaine = c(3, 2)
-# all = c(3, 2, 1)
+## requête : changement du périmètre observé, exemple :
 perim <- c(3,1)
-subpop <- c("SEX", "2")
+## requête : sous-population avec n filtre, exemple :
+subpop <- list("SEX" = "2", "EDUC" = "4", "STRM" = "1")
 
 # une ED
 T1<-Sys.time()
