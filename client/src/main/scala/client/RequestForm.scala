@@ -11,15 +11,15 @@ object RequestForm {
   val studies = data.Indicators.availableIndicatorsAndModalities.keys.toSeq.sorted
   val currentStudy: Var[Study] = Var(studies.head)
   val rowFlex = Seq(display.flex, flexDirection.row)
+  val columnFlex = Seq(display.flex, flexDirection.column)
 
 
   def unactivateState(modalityName: String) = ToggleState(modalityName, btn_outline_secondary_string)
 
   def toggleOn(modalityName: String, onColor: String) = ToggleState(modalityName, onColor)
 
-  def modalityButton(modalityName: String): ToggleButtonState = toggle(toggleOn(modalityName, btn_outline_primary_string), false, unactivateState(modalityName), withCaret = false)
-
-
+  def modalityButton(modalityName: String): ToggleButtonState = toggle(toggleOn(modalityName, btn_primary_string), false, unactivateState(modalityName), withCaret = false)
+  
   class IndicatorUI(indicator: Indicator, availableModalities: Seq[Modality]) {
 
     private val modMap = indicator.modalityDescriptions.toMap
@@ -28,13 +28,15 @@ object RequestForm {
       modalityButton(modMap(am))
     }
 
-    def content = div(rowFlex, alignItems.center,
-      div(indicator.RName, cls := "indicatorName"),
-      div(rowFlex, toggleButtonStates.map {
-        _.element.amend(cls := "indicatorButton")
-      }
+    def content =
+      div(columnFlex, alignItems.center,
+        div(indicator.RName, cls := "indicatorName"),
+        div(indicator.description, cls := "indicatorDescription"),
+        div(columnFlex, toggleButtonStates.map {
+          _.element.amend(cls := "indicatorButton")
+        }
+        )
       )
-    )
 
     def indicatorAndModalities: (Indicator, Seq[Modality]) = {
       val modalities: Seq[Modality] = toggleButtonStates.zipWithIndex.filter { case (tbs, ind) =>

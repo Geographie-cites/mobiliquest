@@ -17,6 +17,7 @@ import com.raquo.laminar.api.L._
 import scala.concurrent.ExecutionContext.Implicits.global
 import autowire._
 import boopickle.Default._
+import client.RequestForm.rowFlex
 import shared.data
 import shared.data.Study
 
@@ -29,6 +30,7 @@ object App {
   def gui() = {
 
     def indicatorsUI(study: Study) = RequestForm.indicatorUIs(data.Indicators.availableIndicatorsAndModalities(study))
+
     val studiesUI = RequestForm.studyUI
 
     val content =
@@ -36,8 +38,10 @@ object App {
         margin := "10",
         h1("Mobiliquest !"),
         studiesUI.selector,
-        children <-- RequestForm.currentStudy.signal.map { cs =>
-          indicatorsUI(cs).map { iui => iui.content }
+        child <-- RequestForm.currentStudy.signal.map { cs =>
+          div(rowFlex, marginTop := "30px",
+            indicatorsUI(cs).map { iui => iui.content }
+          )
         },
         button("Run", btn_primary_outline, onClick --> { _ =>
           val request = data.Request("ALBI", Map())

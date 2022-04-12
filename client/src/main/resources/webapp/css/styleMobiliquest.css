@@ -1,13 +1,25 @@
 .indicatorName {
-    margin-right : 20px;
     font-weight: bold;
     width: 100px;
+    display: flex;
+    justify-content: center;
 }
 
 .indicatorButton {
-    margin-right : 20px;
     width : 120px;
     height: 80px;
-    margin:3px;
+    margin:7px;
     padding: 3px;
     font-size: 0.9rem !important;
+}
+
+.indicatorDescription {
+    display: flex;
+    justify-content: center;
+    color : #555;
+    font-size: 12px;
+    font-style: italic;
+    text-align: center;
+    height: 80px;
+    width: 120px;
+}
