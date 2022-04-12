@@ -145,8 +145,8 @@ object data {
       "QPV",
       "Zone fine de résidence",
       Seq(
-        0 -> "Hors QPV",
-        1 -> "en QPV"
+        1 -> "Hors QPV",
+        2 -> "en QPV"
       )
     )
 

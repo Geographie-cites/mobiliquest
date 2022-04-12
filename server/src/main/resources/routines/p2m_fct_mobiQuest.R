@@ -12,7 +12,7 @@ library(geojsonio)
 library(geojsonsf)
 library(OasisR) # Duncan
 library(spdep) # Moran
-#library(plyr)
+library(plyr)
 
 #==== GLOBAL FUNCTIONS ====
 

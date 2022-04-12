@@ -10,6 +10,7 @@ object RequestForm {
 
   val studies = data.Indicators.availableIndicatorsAndModalities.keys.toSeq.sorted
   val currentStudy: Var[Study] = Var(studies.head)
+  val currentIndicatorsAndModalities: Var[IndicatorAndModalities] = Var(Map())
   val rowFlex = Seq(display.flex, flexDirection.row)
   val columnFlex = Seq(display.flex, flexDirection.column)
 
@@ -19,10 +20,11 @@ object RequestForm {
   def toggleOn(modalityName: String, onColor: String) = ToggleState(modalityName, onColor)
 
   def modalityButton(modalityName: String): ToggleButtonState = toggle(toggleOn(modalityName, btn_primary_string), false, unactivateState(modalityName), withCaret = false)
-  
-  class IndicatorUI(indicator: Indicator, availableModalities: Seq[Modality]) {
+
+  class IndicatorUI(study: Study, indicator: Indicator, availableModalities: Seq[Modality]) {
 
     private val modMap = indicator.modalityDescriptions.toMap
+    private val modalities = data.Indicators.availableIndicatorsAndModalities(study)(indicator)
 
     private val toggleButtonStates = availableModalities.map { am =>
       modalityButton(modMap(am))
@@ -39,17 +41,19 @@ object RequestForm {
       )
 
     def indicatorAndModalities: (Indicator, Seq[Modality]) = {
-      val modalities: Seq[Modality] = toggleButtonStates.zipWithIndex.filter { case (tbs, ind) =>
+      val selectedModalities = toggleButtonStates.zip(modalities).filter { case (tbs, ind) =>
         tbs.toggled.now()
       }.map {
         _._2
       }
-      (indicator, modalities)
+      (indicator, selectedModalities)
     }
   }
 
-  def indicatorUIs(indicatorAndModalities: IndicatorAndModalities) =
-    indicatorAndModalities.map { iam => new IndicatorUI(iam._1, iam._2) }.toSeq
+  def indicatorUIs(study: Study) = {
+    val indicatorAndModalities = data.Indicators.availableIndicatorsAndModalities(study)
+    indicatorAndModalities.map { iam => new IndicatorUI(study, iam._1, iam._2) }.toSeq
+  }
 
   lazy val studyUI: Options[Study] = studies.options(
     key = btn_danger,

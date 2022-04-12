@@ -15,8 +15,20 @@ object R {
 
   val api = io.Source.fromResource("routines/p2m_fct_mobiQuest.R").getLines().mkString("\n")
 
-  def computeAll(study: Study)(implicit inputDirectory: Directory, outputDirectory: Directory) = {
-    val oo = s"""\np2m("$study", c(3,2), list("SEX" = "2", "KAGE" = c("1","2")), "$inputDir", "$outputDir")"""
+  def computeAll(request: Request)(implicit inputDirectory: Directory, outputDirectory: Directory) = {
+
+    println("Request " + request)
+
+    def c(modalities: Seq[Modality]) = {
+      if (modalities.isEmpty) "c()"
+      else s""" "c(${modalities.map{m=> s"${m}" }.mkString(",")})" """
+    }
+
+    val Rfilters = request.filters.map{f=>
+      s""" "${f._1.RName}" = ${c(f._2)} """
+    }.mkString(",")
+
+    val oo = s"""\np2m("${request.study}", c(3), list($Rfilters), "$inputDir", "$outputDir")"""
     println("R call :: " + oo)
     R.eval(api + oo)
   }

@@ -17,7 +17,7 @@ import com.raquo.laminar.api.L._
 import scala.concurrent.ExecutionContext.Implicits.global
 import autowire._
 import boopickle.Default._
-import client.RequestForm.rowFlex
+import client.RequestForm.{IndicatorUI, rowFlex}
 import shared.data
 import shared.data.Study
 
@@ -29,9 +29,16 @@ object App {
 
   def gui() = {
 
-    def indicatorsUI(study: Study) = RequestForm.indicatorUIs(data.Indicators.availableIndicatorsAndModalities(study))
+    def indicatorsUI(study: Study) = RequestForm.indicatorUIs(study)
 
     val studiesUI = RequestForm.studyUI
+    val currentIndicatorsUI: Var[Seq[RequestForm.IndicatorUI]] = Var(Seq())
+
+    def indicatorsUIToRequest(indicatorsUI: Seq[IndicatorUI]) = {
+      indicatorsUI.map{iUI=>
+        iUI.indicatorAndModalities
+      }.toMap
+    }
 
     val content =
       div(
@@ -39,12 +46,14 @@ object App {
         h1("Mobiliquest !"),
         studiesUI.selector,
         child <-- RequestForm.currentStudy.signal.map { cs =>
+          val newIndUI = indicatorsUI(cs)
+          currentIndicatorsUI.set(newIndUI)
           div(rowFlex, marginTop := "30px",
-            indicatorsUI(cs).map { iui => iui.content }
+            newIndUI.map { iui => iui.content }
           )
         },
         button("Run", btn_primary_outline, onClick --> { _ =>
-          val request = data.Request("ALBI", Map())
+          val request = data.Request(RequestForm.currentStudy.now(), indicatorsUIToRequest(currentIndicatorsUI.now()))
           Post[shared.Api].run(request).call().foreach { x =>
             println("X " + x)
 
@@ -53,6 +62,8 @@ object App {
       )
 
     val containerNode = dom.document.querySelector("#mobiliquest-content")
+
+
 
     RequestForm
     render(containerNode, content)
