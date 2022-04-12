@@ -368,7 +368,7 @@ createFiles <- function(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil
   
   
   # pour chaque modalité :
-  for(i in 1:nbMod){
+  for(i in nbMod){
     
     # Création des répertoires
     ## Répertoires parents (2 par indicateur)
@@ -382,7 +382,9 @@ createFiles <- function(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil
     dir.create(paste0(cheminOut, nomEnq, "/", nomIndic, i ,"_prop/data"))
     dir.create(paste0(cheminOut, nomEnq, "/", nomIndic, i ,"_choro/data"))
     
-    indic <- colnames(pvs)[3 + i]
+    for(j in length(nbMod)){
+      indic <- colnames(pvs)[3 + as.numeric(j)]
+    }
 
     ## Préparation du tableau de données à joindre au geojson
     ## data stock
@@ -645,7 +647,7 @@ createISeg <- function(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, 
     
     # Calcul de l'indice de Moran
     # nbMod+1 car jointure de perim 
-    for (j in colnames(dataMoran[ , (length(dataMoran)-nbMod+1):length(dataMoran)])){
+    for (j in colnames(dataMoran[ , (length(dataMoran)-length(nbMod)+1):length(dataMoran)])){
       
       Moran <- moran.mc(x = dataMoran[[j]],
                         listw = nb2listw(nbSecteurs), nsim=1000)
@@ -693,7 +695,7 @@ createStacked <- function(nbMod, nomIndic, nomEnq, ctry, cheminOut){
   ## load tous les dataSect.csv d'un indicateur
   listData <- list()
   
-  for (i in 1:nbMod){
+  for (i in nbMod){
     assign(paste0("dataSect", i, "_choro"),
            read.csv(paste0(cheminOut, nomEnq, "/", nomIndic, i, "_choro/data/dataSect.csv"), 
                      check.names = FALSE))
@@ -709,7 +711,7 @@ createStacked <- function(nbMod, nomIndic, nomEnq, ctry, cheminOut){
   tabFin <- Reduce(function(x, y) merge(x, y, by = c("secteur", "hour"), all=TRUE), listData)
   varColNames <- character()
   
-  for (i in 1:nbMod){
+  for (i in nbMod){
     varColNames <- c(varColNames, paste0(nomIndic, i))
   }
   
@@ -744,7 +746,7 @@ createStacked <- function(nbMod, nomIndic, nomEnq, ctry, cheminOut){
   ## load tous les dataSect.csv d'un indicateur
   listData <- list()
   
-  for (i in 1:nbMod){
+  for (i in nbMod){
     assign(paste0("dataSect", i, "_prop"),
            read.csv(paste0(cheminOut, nomEnq, "/", nomIndic, i, "_prop/data/dataSect.csv"),
                      check.names = FALSE))
@@ -760,7 +762,7 @@ createStacked <- function(nbMod, nomIndic, nomEnq, ctry, cheminOut){
   tabFin <- Reduce(function(x, y) merge(x, y, by = c("secteur", "hour"), all=TRUE), listData)
   varColNames <- character()
   
-  for (i in 1:nbMod){
+  for (i in nbMod){
     varColNames <- c(varColNames, paste0(nomIndic, i))
   }
   
@@ -797,7 +799,7 @@ createStacked <- function(nbMod, nomIndic, nomEnq, ctry, cheminOut){
     ## load tous les dataSect.csv d'un indicateur
     listData <- list()
 
-    for (i in 1:nbMod){
+    for (i in nbMod){
       assign(paste0("dataSect", i, "_flow"),
              read.csv(paste0(cheminOut, nomEnq, "/", nomIndic, i, "_flow/data/dataSect.csv"),
                        check.names = FALSE))
@@ -814,7 +816,7 @@ createStacked <- function(nbMod, nomIndic, nomEnq, ctry, cheminOut){
     tabFin <- Reduce(function(x, y) merge(x, y, by = c("secteur", "hour"), all=TRUE), listData)
     varColNames <- character()
     
-    for (i in 1:nbMod){
+    for (i in nbMod){
       varColNames <- c(varColNames, paste0(nomIndic, i))
     }
     
@@ -913,7 +915,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
   #~ 2. TOUS LES AUTRES INDICATEURS ----
   
   ## POPULATION RESIDENTE/NON RESIDENTE
-  nbMod <- 2
+  nbMod <- sort(unique(prez_long$RES))
   nomIndic <- "res"
   nomVar <- "RES"
   
@@ -922,7 +924,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
     createStacked(nbMod, nomIndic, nomEnq, ctry, cheminOut)  }
   
   ## SEX 
-  nbMod <- 2
+  nbMod <- sort(unique(prez_long$SEX))
   nomIndic <- "sex"
   nomVar <- "SEX"
 
@@ -934,7 +936,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
   
   
   ## AGE
-  nbMod <- 4
+  nbMod <- sort(unique(prez_long$KAGE))
   nomIndic <- "age"
   nomVar <- "KAGE"
   
@@ -944,7 +946,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
     createStacked(nbMod, nomIndic, nomEnq, ctry, cheminOut)  }
   
   ## OCCUPATION PRINCIPALE
-  nbMod <- 5
+  nbMod <- sort(unique(prez_long$OCC))
   nomIndic <- "occ"
   nomVar <- "OCC"
   
@@ -955,12 +957,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
   
   
   ## ACTIVITE 
-  if(ctry %in% c("FR", "CA")){
-    nbMod <- 5
-  }
-  if(ctry == "AS"){
-    nbMod <- 6
-  }
+  nbMod <- sort(unique(prez_long$MOTIF))
   nomIndic <- "act"
   nomVar <- "MOTIF"
   
@@ -969,13 +966,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
     createStacked(nbMod, nomIndic, nomEnq, ctry, cheminOut)  }
   
   
-  ## MODE DE TRANSPORT 
-  if(nomEnq!="BOGOTA"){
-    nbMod <- 3
-  }
-  if(nomEnq=="BOGOTA"){
-    nbMod <- 4
-  }
+  nbMod <- sort(unique(prez_long$MODE_ARR))
   nomIndic <- "mode"
   nomVar <- "MODE_ARR"
   
@@ -986,7 +977,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
   if(ctry %in% c("FR", "AS")){
     
     ## NIVEAU D'EDUCATION (INDIVIDUEL)
-    nbMod <- 4
+    nbMod <- sort(unique(prez_long$EDUC))
     nomIndic <- "cleduc"
     nomVar <- "EDUC"
 
@@ -997,7 +988,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
     
     
     ## NIVEAU D'EDUCATION (MENAGE) 
-    nbMod <- 4
+    nbMod <- sort(unique(prez_long$EDUCMEN))
     nomIndic <- "educmen"
     nomVar <- "EDUCMEN"
 
@@ -1010,7 +1001,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
   
   if(ctry == "FR"){
     ## CSP (INDIVIDUELLE) 
-    nbMod <- 5
+    nbMod <- sort(unique(prez_long$CSP))
     nomIndic <- "cs"
     nomVar <- "CSP"
 
@@ -1021,7 +1012,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
     
     
     ## CSP (MENAGE) 
-    nbMod <- 5
+    nbMod <- sort(unique(prez_long$CSPMEN))
     nomIndic <- "cspmen"
     nomVar <- "CSPMEN"
 
@@ -1035,12 +1026,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
   
   ## ZONE DE RESIDENCE 
   if(ctry == "FR"){
-    if(!nomEnq %in% c("CARCASSONNE", "BESANCON")){
-      nbMod <- 3
-    }
-    if(nomEnq %in% c("CARCASSONNE", "BESANCON")){ 
-      nbMod <- 2
-    }
+    nbMod <- sort(unique(prez_long$ZONAGE))
     nomIndic <- "resarea"
     nomVar <- "ZONAGE"
     
@@ -1055,7 +1041,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
   ## QPV 
   if(ctry == "FR" & nomEnq != "ANNECY"){
     
-    nbMod <- 2
+    nbMod <- sort(unique(prez_long$QPV))
     nomIndic <- "qpv"
     nomVar <- "QPV"
 
@@ -1069,12 +1055,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
   # REVENU (MENAGE) - PARIS, CANADA et Amérique du Sud
   if(nomEnq == "IDF" || ctry %in% c("CA", "AS")){
     
-    if(nomEnq == "IDF"){
-      nbMod <- 4
-    }
-    if(ctry %in% c("CA", "AS")){
-      nbMod <- 5
-    }  
+    nbMod <- sort(unique(prez_long$REV)) 
     nomIndic <- "rev"
     nomVar <- "REV"
 
@@ -1089,7 +1070,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
   if(nomEnq == "IDF"){
     
     # DEPARTEMENT DE RESIDENCE 
-    nbMod <- length(unique(prez_long$DEP))
+    nbMod <- sort(unique(prez_long$DEP))
     nomIndic <- "dep"
     nomVar <- "DEP"
 
@@ -1102,7 +1083,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
   if(ctry=="AS"){
     
     ## 3o. CSO (des actifs)
-    nbMod <- 4
+    nbMod <- sort(unique(prez_long$CSO))
     nomIndic <- "cso"
     nomVar <- "CSO"
 
@@ -1113,7 +1094,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
     
     
     ## COMPOSITION DU MENAGE
-    nbMod <- 5
+    nbMod <- sort(unique(prez_long$STRM))
     nomIndic <- "strm"
     nomVar <- "STRM"
 
@@ -1124,7 +1105,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
     
     
     ## STATUT D'OCCUPATION DU LOGEMENT
-    nbMod <- 3
+    nbMod <- sort(unique(prez_long$LOG))
     nomIndic <- "log"
     nomVar <- "LOG"
 
@@ -1138,7 +1119,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
   ## INFORMALITE (des actifs) 
   if(nomEnq %in% c("BOGOTA", "SAO PAULO")){
     
-    nbMod <- 2
+    nbMod <- sort(unique(prez_long$INFORMAL))
     nomIndic <- "inf"
     nomVar <- "INFORMAL"
 
@@ -1152,7 +1133,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
   
   if(ctry=="AS"){ 
     ## ZONAGE METAL 
-    nbMod <- 4
+    nbMod <- sort(unique(prez_long$ZONAGE))
     nomIndic <- "zona"
     nomVar <- "ZONAGE"
 
@@ -1165,7 +1146,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
   
   if(nomEnq == "BOGOTA"){    
     ## SSE
-    nbMod <- 4
+    nbMod <- sort(unique(prez_long$RES_SSE))
     nomIndic <- "sse"
     nomVar <- "RES_SSE"
 
@@ -1177,7 +1158,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
   
   if(ctry=="FR"){
     ## STATUT D'OCCUPATION DU LOGEMENT
-    nbMod <- 4
+    nbMod <- sort(unique(prez_long$STRM))
     nomIndic <- "strmfr"
     nomVar <- "STRM"
 
@@ -1189,7 +1170,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
   
   if(ctry=="CA"){
     ## STATUT D'OCCUPATION DU LOGEMENT
-    nbMod <- 3
+    nbMod <- sort(unique(prez_long$STRM))
     nomIndic <- "strmqc"
     nomVar <- "STRM"
     
