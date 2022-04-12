@@ -57,7 +57,7 @@ lazy val bootstrap = project.in(file("target/bootstrap")) enablePlugins(ScalaJSP
   version := Version,
   scalaVersion := ScalaVersion,
   buildUI := {
-      val jsBuild = (client / Compile / fullOptJS / webpack).value.head.data
+      val jsBuild = (client / Compile / fastOptJS / webpack).value.head.data
 
       val demoTarget = (server / Compile / target).value
       val demoResource = (client / Compile / resourceDirectory).value

@@ -35,9 +35,10 @@ object App {
     val currentIndicatorsUI: Var[Seq[RequestForm.IndicatorUI]] = Var(Seq())
 
     def indicatorsUIToRequest(indicatorsUI: Seq[IndicatorUI]) = {
-      indicatorsUI.map{iUI=>
+      val (perim, all) = indicatorsUI.partition(x=> x.indicatorAndModalities._1 == data.Indicators.perimetre)
+      (all.map{iUI=>
         iUI.indicatorAndModalities
-      }.toMap
+      }.toMap, perim.head.indicatorAndModalities._2)
     }
 
     val content =
@@ -53,7 +54,8 @@ object App {
           )
         },
         button("Run", btn_primary_outline, onClick --> { _ =>
-          val request = data.Request(RequestForm.currentStudy.now(), indicatorsUIToRequest(currentIndicatorsUI.now()))
+          val (all, perimModalities) = indicatorsUIToRequest(currentIndicatorsUI.now())
+          val request = data.Request(RequestForm.currentStudy.now(), perimModalities, all)
           Post[shared.Api].run(request).call().foreach { x =>
             println("X " + x)
 

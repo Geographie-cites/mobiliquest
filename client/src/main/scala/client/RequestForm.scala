@@ -24,7 +24,6 @@ object RequestForm {
   class IndicatorUI(study: Study, indicator: Indicator, availableModalities: Seq[Modality]) {
 
     private val modMap = indicator.modalityDescriptions.toMap
-    private val modalities = data.Indicators.availableIndicatorsAndModalities(study)(indicator)
 
     private val toggleButtonStates = availableModalities.map { am =>
       modalityButton(modMap(am))
@@ -41,7 +40,7 @@ object RequestForm {
       )
 
     def indicatorAndModalities: (Indicator, Seq[Modality]) = {
-      val selectedModalities = toggleButtonStates.zip(modalities).filter { case (tbs, ind) =>
+      val selectedModalities = toggleButtonStates.zip(availableModalities).filter { case (tbs, ind) =>
         tbs.toggled.now()
       }.map {
         _._2
@@ -52,7 +51,8 @@ object RequestForm {
 
   def indicatorUIs(study: Study) = {
     val indicatorAndModalities = data.Indicators.availableIndicatorsAndModalities(study)
-    indicatorAndModalities.map { iam => new IndicatorUI(study, iam._1, iam._2) }.toSeq
+    val (perim, all) = indicatorAndModalities.toSeq.partition(x=> x._1 == data.Indicators.perimetre)
+    (all ++ perim).map { iam => new IndicatorUI(study, iam._1, iam._2) }.toSeq
   }
 
   lazy val studyUI: Options[Study] = studies.options(

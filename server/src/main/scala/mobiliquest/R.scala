@@ -17,18 +17,16 @@ object R {
 
   def computeAll(request: Request)(implicit inputDirectory: Directory, outputDirectory: Directory) = {
 
-    println("Request " + request)
-
     def c(modalities: Seq[Modality]) = {
       if (modalities.isEmpty) "c()"
       else s""" "c(${modalities.map{m=> s"${m}" }.mkString(",")})" """
     }
 
-    val Rfilters = request.filters.map{f=>
-      s""" "${f._1.RName}" = ${c(f._2)} """
+    val Rfilters = request.filters.map{case (indicator, modalities)=>
+      s""" "${indicator.RName}" = ${c(modalities)} """
     }.mkString(",")
 
-    val oo = s"""\np2m("${request.study}", c(3), list($Rfilters), "$inputDir", "$outputDir")"""
+    val oo = s"""\np2m("${request.study}", c(${request.perimModalities.mkString(",")}), list($Rfilters), "$inputDir", "$outputDir")"""
     println("R call :: " + oo)
     R.eval(api + oo)
   }
