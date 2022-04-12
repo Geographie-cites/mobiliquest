@@ -1,14 +1,12 @@
 package mobiliquest
-
-import shared.Data._
-import shared.Data
+import shared.data
 
 object ApiImpl extends shared.Api {
 
-  val inputDir = "/home/mathieu/Documents/Geocite/Mobiliscope/data"
+  val inputDir = "/home/mathieu/Documents/Geocite/Mobiliscope/data/BD_presence_utile"
   val outputDir = "/tmp/mobiliquest/out"
 
-  def run(request: Data.Request): String = {
+  def run(request: data.Request): String = {
     R.computeAll(request.study)(inputDir, outputDir)
     "Finished"
   }

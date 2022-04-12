@@ -9,9 +9,7 @@ import org.scalajs
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.scalajs.js.typedarray.{ArrayBuffer, TypedArrayBuffer}
-
 import scala.scalajs.js.annotation.{JSExportAll, JSExportTopLevel}
-
 import scaladget.bootstrapnative.bsn._
 import scaladget.tools._
 import com.raquo.laminar.api.L._
@@ -19,7 +17,8 @@ import com.raquo.laminar.api.L._
 import scala.concurrent.ExecutionContext.Implicits.global
 import autowire._
 import boopickle.Default._
-
+import shared.data
+import shared.data.Study
 
 @JSExportTopLevel(name = "mobiliquest")
 @JSExportAll
@@ -28,19 +27,26 @@ object App {
   //def main(args: Array[String]): Unit = {
 
   def gui() = {
+
+    def indicatorsUI(study: Study) = RequestForm.indicatorUIs(data.Indicators.availableIndicatorsAndModalities(study))
+    val studiesUI = RequestForm.studyUI
+
     val content =
       div(
         margin := "10",
         h1("Mobiliquest !"),
+        studiesUI.selector,
+        children <-- RequestForm.currentStudy.signal.map { cs =>
+          indicatorsUI(cs).map { iui => iui.content }
+        },
         button("Run", btn_primary_outline, onClick --> { _ =>
-          val request = shared.Data.Request("ALBI", Map())
+          val request = data.Request("ALBI", Map())
           Post[shared.Api].run(request).call().foreach { x =>
             println("X " + x)
 
           }
         })
       )
-
 
     val containerNode = dom.document.querySelector("#mobiliquest-content")
 

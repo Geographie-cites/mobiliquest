@@ -1,7 +1,7 @@
 package shared
 
 
-object Data {
+object data {
 
   type Study = String
   type Directory = String
@@ -54,10 +54,10 @@ object Data {
       "EDUC",
       "Niveau d'éducation",
       Seq(
-        1 -> "Faible niveau d'éducation",
-        2 -> "Niveau intermédiaire d'éducation",
-        3 -> "Niveau élevé d'éducation",
-        4 -> "Niveau très élevé d'éducation"
+        1 -> "Faible niveau",
+        2 -> "Niveau intermédiaire",
+        3 -> "Niveau élevé",
+        4 -> "Niveau très élevé"
       )
     )
 
@@ -65,10 +65,10 @@ object Data {
       "EDUCMEN",
       "Niveau d'éducation le plus bas des adultes du ménage",
       Seq(
-        1 -> "Faible niveau d'éducation",
-        2 -> "Niveau intermédiaire d'éducation",
-        3 -> "Niveau élevé d'éducation",
-        4 -> "Niveau très élevé d'éducation"
+        1 -> "Faible niveau",
+        2 -> "Niveau intermédiaire",
+        3 -> "Niveau élevé",
+        4 -> "Niveau très élevé"
       )
     )
 
