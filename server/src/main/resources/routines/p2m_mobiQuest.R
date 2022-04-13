@@ -2,8 +2,7 @@
 # Adaptation p2m pour requêtes
 # AD - février 2022
 
-# load p2m functions
-suppressWarnings(source("p2m_fct_mobiQuest.R"))
+setwd("~/00_MobiQuest/git/mobiliquest/server/src/main/resources/routines")
 
 # dossier d'entrée
 cheminIn <- "../../../../../../../data/BD_presence_utile"
@@ -13,20 +12,27 @@ cheminOut <- "../../../../../../../data_web/data/"
 # choix des params
 
 ## Ville
-nomEnq = "ALBI"
+nomEnq = "ANGERS"
 
 ## requête : changement du périmètre observé, exemple :
-perim <- c(3, 1)
+perim <- c(3)
 ## requête : sous-population avec n filtre, exemple :
 # subpop <- list("SEX" = "2", "EDUC" = "4", "STRM" = "1")
 subpop <- list("SEX" = "2", "KAGE" = c("1","2"))
+subpop <- list("EDUCMEN" = c() , "OCC" = c() , "CSPMEN" = c() ,
+               "QPV" = c() , "CSP" = c() , "ZONAGE" = c() , 
+               "SEX" =  c(2)  , "KAGE" = c() , "STRM" = c() , "EDUC" = c())
+
+# load p2m functions
+suppressWarnings(source("p2m_fct_mobiQuest.R"))
+
+
 
 # une ED
 T1<-Sys.time()
 p2m(nomEnq, perim, subpop, cheminIn, cheminOut)
 T2<-Sys.time()
-Tdiff= difftime(T2, T1)
-
+(Tdiff= difftime(T2, T1))
 
 
 

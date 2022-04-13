@@ -12,7 +12,6 @@ library(geojsonio)
 library(geojsonsf)
 library(OasisR) # Duncan
 library(spdep) # Moran
-library(plyr)
 
 #==== GLOBAL FUNCTIONS ====
 
@@ -74,7 +73,7 @@ createPopFiles <- function(nomEnq, prez_long, sfSec, seuil, cheminOut){
   dfProp <- pvs %>% 
     select(-popSecB) %>% 
     pivot_wider(names_from = CODE_SEC, values_from = popSec) %>% 
-    mutate(hour = plyr::mapvalues(HOUR, oldH, newH)) %>% 
+    mutate(hour = recode(HOUR, !!!setNames(newH, oldH))) %>% 
     relocate(hour) %>% 
     select(-HOUR)
   
@@ -122,7 +121,7 @@ createPopFiles <- function(nomEnq, prez_long, sfSec, seuil, cheminOut){
   dfChoro <- pvs2 %>% 
     select(HOUR, CODE_SEC, dens) %>% 
     pivot_wider(names_from = CODE_SEC, values_from = dens) %>% 
-    mutate(hour = plyr::mapvalues(HOUR, oldH, newH)) %>% 
+    mutate(hour = recode(HOUR, !!!setNames(newH, oldH))) %>% 
     relocate(hour) %>% 
     select(-HOUR)
   
@@ -203,7 +202,7 @@ createPopFiles <- function(nomEnq, prez_long, sfSec, seuil, cheminOut){
   dfChoroNR <- pvs3 %>% 
     select(-popSecB) %>% 
     pivot_wider(names_from = CODE_SEC, values_from = popSec) %>% 
-    mutate(hour = plyr::mapvalues(HOUR, oldH, newH)) %>% 
+    mutate(hour = recode(HOUR, !!!setNames(newH, oldH))) %>% 
     relocate(hour) %>% 
     select(-HOUR) %>% 
     mutate_if(is.numeric, ~replace(., is.na(.), 0))
@@ -232,6 +231,7 @@ prepPVS <- function(nomEnq, prez_long, nomIndic, nomVar, seuil){
   if(is.na(seuil)){
     pvs <- prez_long %>% 
       select(HOUR, CODE_SEC, W_IND, all_of(nomVar)) %>%
+      mutate(nomVar = as.numeric(get(nomVar))) %>%
       filter(!is.na(nomVar)) %>% 
       filter(nomVar>0) %>% 
       arrange(nomVar) %>% 
@@ -255,6 +255,7 @@ prepPVS <- function(nomEnq, prez_long, nomIndic, nomVar, seuil){
   if(!is.na(seuil)){
     pvs <- prez_long %>% 
       select(HOUR, CODE_SEC, W_IND, all_of(nomVar)) %>%
+      mutate(nomVar = as.numeric(get(nomVar))) %>%
       filter(!is.na(nomVar)) %>% 
       filter(nomVar>0) %>% 
       arrange(nomVar) %>% 
@@ -293,6 +294,7 @@ prepPVS <- function(nomEnq, prez_long, nomIndic, nomVar, seuil){
     pvs3 <- prez_long %>%
       filter(CODE_SEC != RES_SEC) %>%
       select(HOUR, CODE_SEC, W_IND, all_of(nomVar)) %>%
+      mutate(nomVar = as.numeric(get(nomVar))) %>%
       filter(!is.na(nomVar)) %>% 
       filter(nomVar>0) %>% 
       arrange(nomVar) %>% 
@@ -316,6 +318,7 @@ prepPVS <- function(nomEnq, prez_long, nomIndic, nomVar, seuil){
     pvs3 <- prez_long %>% 
       filter(CODE_SEC != RES_SEC) %>%
       select(HOUR, CODE_SEC, W_IND, all_of(nomVar)) %>%
+      mutate(nomVar = as.numeric(get(nomVar))) %>%
       filter(!is.na(nomVar)) %>% 
       filter(nomVar>0) %>% 
       arrange(nomVar) %>% 
@@ -345,47 +348,61 @@ prepPVS <- function(nomEnq, prez_long, nomIndic, nomVar, seuil){
     
   }
   
+  if(nomVar=="MOTIF"){
+    pvs3 <- pvs3 %>% mutate(act1 = 0)
+  }
+  
+  mod <- prez_long %>% 
+    select(HOUR, CODE_SEC, W_IND, all_of(nomVar)) %>%
+    mutate(nomVar = as.numeric(get(nomVar))) %>%
+    filter(!is.na(nomVar)) %>% 
+    filter(nomVar>0) %>% 
+    arrange(nomVar) %>% 
+    pull()
+  mod <- unique(mod)
+  
   
   result[["pvs"]] <- pvs
   result[["pvs2"]] <- pvs2
   result[["pvs3"]] <- pvs3
+  result[["mod"]] <- mod
   return(result)
   
   
 }
 
 #~ création des geojson et des csv pour le graphique "simple" ----
-createFiles <- function(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil, cheminOut){
+createFiles <- function(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut){
 
-  # calcul des mini tables de présences de l'indicateur
-  data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
-  
+  # mini tables de présences de l'indicateur
   pvs <- data[["pvs"]]
   pvs2 <- data[["pvs2"]]
   if(nomIndic != "res"){
     pvs3 <- data[["pvs3"]]
   }
+  # valeur des modalités
+  mod <- data[["mod"]]
   
   
   # pour chaque modalité :
-  for(i in nbMod){
+  for(i in 1:length(mod)){
+    
+    indic <- colnames(pvs)[3 + as.numeric(i)]
     
     # Création des répertoires
     ## Répertoires parents (2 par indicateur)
-    dir.create(paste0(cheminOut, nomEnq, "/", nomIndic, i ,"_prop"))
-    dir.create(paste0(cheminOut, nomEnq, "/", nomIndic, i ,"_choro"))
+    dir.create(paste0(cheminOut, nomEnq, "/", indic ,"_prop"))
+    dir.create(paste0(cheminOut, nomEnq, "/", indic ,"_choro"))
     
     ## Répertoires enfants (2 par répertoire parent)
-    dir.create(paste0(cheminOut, nomEnq, "/", nomIndic, i ,"_prop/geo"))
-    dir.create(paste0(cheminOut, nomEnq, "/", nomIndic, i ,"_choro/geo"))
+    dir.create(paste0(cheminOut, nomEnq, "/", indic ,"_prop/geo"))
+    dir.create(paste0(cheminOut, nomEnq, "/", indic ,"_choro/geo"))
     
-    dir.create(paste0(cheminOut, nomEnq, "/", nomIndic, i ,"_prop/data"))
-    dir.create(paste0(cheminOut, nomEnq, "/", nomIndic, i ,"_choro/data"))
+    dir.create(paste0(cheminOut, nomEnq, "/", indic ,"_prop/data"))
+    dir.create(paste0(cheminOut, nomEnq, "/", indic ,"_choro/data"))
     
-    for(j in length(nbMod)){
-      indic <- colnames(pvs)[3 + as.numeric(j)]
-    }
-
+    
+    
     ## Préparation du tableau de données à joindre au geojson
     ## data stock
     dataShpProp <- pvs %>% 
@@ -402,7 +419,7 @@ createFiles <- function(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil
     ### Export des données spatiales
     shpProp <- sf_geojson(shpProp)
     geojson_write(shpProp,
-                  file = paste0(cheminOut, nomEnq, "/", nomIndic, i ,"_prop/geo/secteursData.geojson"),
+                  file = paste0(cheminOut, nomEnq, "/", indic ,"_prop/geo/secteursData.geojson"),
                   layer_options = "ENCODING=UTF-8")
     
     
@@ -421,7 +438,7 @@ createFiles <- function(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil
     ### Export des données spatiales
     shpChoro <- sf_geojson(shpChoro)
     geojson_write(shpChoro,
-                  file = paste0(cheminOut, nomEnq, "/", nomIndic, i ,"_choro/geo/secteursData.geojson"),
+                  file = paste0(cheminOut, nomEnq, "/", indic ,"_choro/geo/secteursData.geojson"),
                   layer_options = "ENCODING=UTF-8")
     
     
@@ -429,11 +446,11 @@ createFiles <- function(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil
     if(!nomIndic %in% c("res")){
       
       ## Répertoires parents (2 par indicateur)
-      dir.create(paste0(cheminOut, nomEnq, "/", nomIndic, i ,"_flow"))
+      dir.create(paste0(cheminOut, nomEnq, "/", indic ,"_flow"))
       
       ## Répertoires enfants (2 par répertoire parent)
-      dir.create(paste0(cheminOut, nomEnq, "/", nomIndic, i ,"_flow/geo"))
-      dir.create(paste0(cheminOut, nomEnq, "/", nomIndic, i ,"_flow/data"))
+      dir.create(paste0(cheminOut, nomEnq, "/", indic ,"_flow/geo"))
+      dir.create(paste0(cheminOut, nomEnq, "/", indic ,"_flow/data"))
       
       ### Flowdata : csv des flux OD avec seuil à 6
       flowdata <- prez_long %>% 
@@ -456,17 +473,17 @@ createFiles <- function(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil
         rename(Secteur_EM = CODE_SEC) %>% 
         arrange(Secteur_EM) %>% 
         mutate_if(is.numeric, ~replace(., is.na(.), 0))
-
+      
       ### Jointure des données au fond de carte
       shpChoroNR <- left_join(sfSec, dataShpChoroNR, by = "Secteur_EM")
       
       ### Export des données spatiales
       shpChoroNR <- sf_geojson(shpChoroNR)
       geojson_write(shpChoroNR,
-                    file = paste0(cheminOut, nomEnq, "/", nomIndic, i ,"_flow/geo/secteursData.geojson"),
+                    file = paste0(cheminOut, nomEnq, "/", indic ,"_flow/geo/secteursData.geojson"),
                     layer_options = "ENCODING=UTF-8")
       write.csv2(flowdata, 
-                 paste0(cheminOut, nomEnq, "/", nomIndic, i ,"_flow/geo/flowData.csv"), 
+                 paste0(cheminOut, nomEnq, "/", indic ,"_flow/geo/flowData.csv"), 
                  row.names = FALSE)
     }
     
@@ -485,30 +502,30 @@ createFiles <- function(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil
     dfProp <- pvs %>% 
       select(HOUR, CODE_SEC, all_of(indic)) %>% 
       pivot_wider(names_from = CODE_SEC, values_from = indic) %>% 
-      mutate(hour = plyr::mapvalues(HOUR, oldH, newH)) %>% 
+      mutate(hour = recode(HOUR, !!!setNames(newH, oldH))) %>% 
       relocate(hour) %>% 
       select(-HOUR)
-      
+    
     
     ### Export des données
     write.csv(dfProp, 
-               paste0(cheminOut, nomEnq, "/", nomIndic, i ,"_prop/data/dataSect.csv"), 
-               row.names = FALSE)
-
+              paste0(cheminOut, nomEnq, "/", indic ,"_prop/data/dataSect.csv"), 
+              row.names = FALSE)
+    
     
     ## mise en forme csv PART
     dfChoro <- pvs2 %>% 
       select(HOUR, CODE_SEC, all_of(indic)) %>% 
       pivot_wider(names_from = CODE_SEC, values_from = indic) %>% 
-      mutate(hour = plyr::mapvalues(HOUR, oldH, newH)) %>% 
+      mutate(hour = recode(HOUR, !!!setNames(newH, oldH))) %>%
       relocate(hour) %>% 
       select(-HOUR)
     
     
     ### Export des données
     write.csv(dfChoro, 
-               paste0(cheminOut, nomEnq, "/", nomIndic, i ,"_choro/data/dataSect.csv"), 
-               row.names = FALSE)
+              paste0(cheminOut, nomEnq, "/", indic ,"_choro/data/dataSect.csv"), 
+              row.names = FALSE)
     
     ## Oursins
     if(nomIndic != "res"){
@@ -517,28 +534,30 @@ createFiles <- function(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil
       dfChoroNR <- pvs3 %>% 
         select(HOUR, CODE_SEC, all_of(indic)) %>% 
         pivot_wider(names_from = CODE_SEC, values_from = indic) %>% 
-        mutate(hour = plyr::mapvalues(HOUR, oldH, newH)) %>% 
+        mutate(hour = recode(HOUR, !!!setNames(newH, oldH))) %>%
         relocate(hour) %>% 
         select(-HOUR) %>% 
         mutate_if(is.numeric, ~replace(., is.na(.), 0))
       
       ## Export des données
       write.csv(dfChoroNR, 
-                 paste0(cheminOut, nomEnq, "/", nomIndic, i ,"_flow/data/dataSect.csv"), 
-                 row.names = FALSE)
+                paste0(cheminOut, nomEnq, "/", indic ,"_flow/data/dataSect.csv"), 
+                row.names = FALSE)
     }
     
+      
   }
   
 }  
 
 #~ création des indices de ségrégation et csv ----
-createISeg <- function(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, seuil, cheminOut){
+createISeg <- function(nomIndic, nomVar, nomEnq, ctry, data, sfSec, cheminOut){
   
-  # sortie des mini tables de présences de l'indicateur
-  data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
+  # mini tables de présences de l'indicateur
   pvs <- data[["pvs"]]
   pvs2 <- data[["pvs2"]]
+  # valeur des modalités
+  mod <- data[["mod"]]
   
   # DUNCAN
   ## Init table
@@ -626,7 +645,7 @@ createISeg <- function(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, 
   ## Init table
   moran <- data.frame("hour" = '', "var" = '', "moran" = numeric(24))
   
-  for (i in unique(pvs$HOUR)){
+  for (i in unique(pvs2$HOUR)){
     
     # Trier les données
     dataMoran <- filter(pvs2 %>% select(-popSec), HOUR == i)
@@ -645,9 +664,14 @@ createISeg <- function(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, 
     dataMoran <- dataMoran %>%
       st_drop_geometry()
     
+    # replace hour na with i and indic na with zero
+    dataMoran <- dataMoran %>% 
+      mutate_if(is.factor, ~replace(., is.na(.), i)) %>%
+      mutate_if(is.numeric, ~replace(., is.na(.), 0))
+    
     # Calcul de l'indice de Moran
-    # nbMod+1 car jointure de perim 
-    for (j in colnames(dataMoran[ , (length(dataMoran)-length(nbMod)+1):length(dataMoran)])){
+    # n mod +1 car jointure de perim 
+    for (j in colnames(dataMoran[ , (length(dataMoran)-length(mod)+1):length(dataMoran)])){
       
       Moran <- moran.mc(x = dataMoran[[j]],
                         listw = nb2listw(nbSecteurs), nsim=1000)
@@ -688,107 +712,65 @@ createISeg <- function(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, 
 }  
 
 #~ création des csv pour graphique en aires empilées (stacked) ----
-createStacked <- function(nbMod, nomIndic, nomEnq, ctry, cheminOut){
+createStacked <- function(nomIndic, nomEnq, ctry, data, cheminOut){
+  
+  # mini tables de présences de l'indicateur
+  pvs <- data[["pvs"]]
+  pvs2 <- data[["pvs2"]]
+  pvs3 <- data[["pvs3"]]
+  #valeur des modalités
+  mod <- data[["mod"]]
+  
+  # hour vec
+  oldH <- unique(as.character(pvs$HOUR))
+  newH <- c("4am", "5am", "6am", "7am", 
+            "8am", "9am", "10am", "11am", 
+            "12am", "1pm", "2pm", "3pm", 
+            "4pm", "5pm", "6pm", "7pm", 
+            "8pm", "9pm", "10pm", "11pm", 
+            "12pm", "1am", "2am", "3am")
   
   # 1. Cartes choro
-  
-  ## load tous les dataSect.csv d'un indicateur
-  listData <- list()
-  
-  for (i in nbMod){
-    assign(paste0("dataSect", i, "_choro"),
-           read.csv(paste0(cheminOut, nomEnq, "/", nomIndic, i, "_choro/data/dataSect.csv"), 
-                     check.names = FALSE))
-    listData[[as.character(i)]] <- eval(parse(text = paste0("dataSect", i, "_choro")))
-  }
-  
-  listData <- lapply(listData, function(x){
-    x <- x %>% pivot_longer(-hour, names_to = "secteur", values_to = "value")
-    return(x)
-  })
-  
-  ## Jointure des df 
-  tabFin <- Reduce(function(x, y) merge(x, y, by = c("secteur", "hour"), all=TRUE), listData)
-  varColNames <- character()
-  
-  for (i in nbMod){
-    varColNames <- c(varColNames, paste0(nomIndic, i))
-  }
-  
-  colnames(tabFin) <- c("district", "hour", varColNames)
-  
-  ## mise en forme
-  desired_order <- c("4am", "5am", "6am", "7am", 
-                     "8am", "9am", "10am", "11am", 
-                     "12am", "1pm", "2pm", "3pm", 
-                     "4pm", "5pm", "6pm", "7pm", 
-                     "8pm", "9pm", "10pm", "11pm", 
-                     "12pm", "1am", "2am", "3am")
-  tabFin$hour <- factor(as.character(tabFin$hour), levels=desired_order)
-  tabFin <- tabFin[order(tabFin$hour), ]
+  df <- pvs2 %>% 
+    mutate(hour = recode(HOUR, !!!setNames(newH, oldH))) %>% 
+    rename(district = CODE_SEC) %>% 
+    relocate(district, hour) %>% 
+    select(-HOUR, -popSec)
   
   ## Pour le Canada rev5 en 3eme col
   if(ctry == "CA" & nomIndic == "rev") {
-    tabFin <- tabFin %>% relocate(c("hour", "district", "rev5"))
+    df <- df %>% relocate(c("hour", "district", "rev5"))
   }
   ## Pour Bogota mode4 en 3eme col
   if(nomEnq == "BOGOTA" & nomIndic == "mode") {
-    tabFin <- tabFin %>% relocate(c("hour", "district", "mode4"))
+    df <- df %>% relocate(c("hour", "district", "mode4"))
   }
   
   ## Export
-  write.csv(tabFin, paste0(cheminOut, nomEnq, "/stacked/", nomIndic, "_choro_stacked.csv"), 
+  write.csv(df, paste0(cheminOut, nomEnq, "/stacked/", nomIndic, "_choro_stacked.csv"), 
               row.names = FALSE)
   
   
   # 2. Cartes Proportionnelles
   
-  ## load tous les dataSect.csv d'un indicateur
-  listData <- list()
+  df <- pvs %>% 
+    mutate(hour = recode(HOUR, !!!setNames(newH, oldH))) %>% 
+    rename(district = CODE_SEC) %>% 
+    relocate(district, hour) %>% 
+    select(-HOUR, -popSec)
   
-  for (i in nbMod){
-    assign(paste0("dataSect", i, "_prop"),
-           read.csv(paste0(cheminOut, nomEnq, "/", nomIndic, i, "_prop/data/dataSect.csv"),
-                     check.names = FALSE))
-    listData[[as.character(i)]] <- eval(parse(text = paste0("dataSect", i, "_prop")))
-  }
-  
-  listData <- lapply(listData, function(x){
-    x <- x %>% pivot_longer(-hour, names_to = "secteur", values_to = "value")
-    return(x)
-  })
-  
-  ## Jointure des df
-  tabFin <- Reduce(function(x, y) merge(x, y, by = c("secteur", "hour"), all=TRUE), listData)
-  varColNames <- character()
-  
-  for (i in nbMod){
-    varColNames <- c(varColNames, paste0(nomIndic, i))
-  }
-  
-  colnames(tabFin) <- c("district", "hour", varColNames)
-  
-  ## Sort tableau
-  desired_order <- c("4am", "5am", "6am", "7am", 
-                     "8am", "9am", "10am", "11am", 
-                     "12am", "1pm", "2pm", "3pm", 
-                     "4pm", "5pm", "6pm", "7pm", 
-                     "8pm", "9pm", "10pm", "11pm", 
-                     "12pm", "1am", "2am", "3am")
-  tabFin$hour <- factor(as.character(tabFin$hour), levels=desired_order)
-  tabFin <- tabFin[order(tabFin$hour), ]
   
   ## Pour le Canada rev5 en 3eme col
   if(ctry == "CA" & nomIndic == "rev") {
-    tabFin <- tabFin %>% relocate(c("hour", "district", "rev5"))
+    df <- df %>% relocate(c("hour", "district", "rev5"))
   }
   ## Pour Bogota mode4 en 3eme col
   if(nomEnq == "BOGOTA" & nomIndic == "mode") {
-    tabFin <- tabFin %>% relocate(c("hour", "district", "mode4"))
+    df <- df %>% relocate(c("hour", "district", "mode4"))
   }
   
   ## Export
-  write.csv(tabFin, 
+  write.csv(df, 
              paste0(cheminOut, nomEnq, "/stacked/", nomIndic, "_prop_stacked.csv"), 
              row.names = FALSE)
   
@@ -796,54 +778,23 @@ createStacked <- function(nbMod, nomIndic, nomEnq, ctry, cheminOut){
   # 3. Cartes en oursins
   if(!nomIndic %in% c("res")){
     
-    ## load tous les dataSect.csv d'un indicateur
-    listData <- list()
-
-    for (i in nbMod){
-      assign(paste0("dataSect", i, "_flow"),
-             read.csv(paste0(cheminOut, nomEnq, "/", nomIndic, i, "_flow/data/dataSect.csv"),
-                       check.names = FALSE))
-      listData[[as.character(i)]] <- eval(parse(text = paste0("dataSect", i, "_flow")))
-    }
-    
-    listData <- lapply(listData, function(x){
-      x <- x %>% pivot_longer(-hour, names_to = "secteur", values_to = "value")
-      return(x)
-    })
-    
-    
-    ## Jointure des df
-    tabFin <- Reduce(function(x, y) merge(x, y, by = c("secteur", "hour"), all=TRUE), listData)
-    varColNames <- character()
-    
-    for (i in nbMod){
-      varColNames <- c(varColNames, paste0(nomIndic, i))
-    }
-    
-    colnames(tabFin) <- c("district", "hour", varColNames)
-    
-    ## Sort tableau
-    desired_order <- c("4am", "5am", "6am", "7am", 
-                       "8am", "9am", "10am", "11am", 
-                       "12am", "1pm", "2pm", "3pm", 
-                       "4pm", "5pm", "6pm", "7pm", 
-                       "8pm", "9pm", "10pm", "11pm", 
-                       "12pm", "1am", "2am", "3am")
-    tabFin$hour <- factor(as.character(tabFin$hour), levels=desired_order)
-    tabFin <- tabFin[order(tabFin$hour), ]
-    tabFin[is.na(tabFin)] <- 0 
+    df <- pvs3 %>% 
+      mutate(hour = recode(HOUR, !!!setNames(newH, oldH))) %>% 
+      rename(district = CODE_SEC) %>% 
+      relocate(district, hour) %>% 
+      select(-HOUR, -popSec)
     
     ## Pour le Canada rev5 en 3eme col
     if(ctry == "CA" & nomIndic == "rev") {
-      tabFin <- tabFin %>% relocate(c("hour", "district", "rev5"))
+      df <- df %>% relocate(c("hour", "district", "rev5"))
     }
     ## Pour Bogota mode4 en 3eme col
     if(nomEnq == "BOGOTA" & nomIndic == "mode") {
-      tabFin <- tabFin %>% relocate(c("hour", "district", "mode4"))
+      df <- df %>% relocate(c("hour", "district", "mode4"))
     }
     
     ## Export
-    write.csv(tabFin, 
+    write.csv(df, 
                paste0(cheminOut, nomEnq, "/stacked/", nomIndic, "_flow_stacked.csv"), 
                 row.names = FALSE)
   }
@@ -857,7 +808,6 @@ createStacked <- function(nbMod, nomIndic, nomEnq, ctry, cheminOut){
 ##---- Fonction p2m : de la table de présence aux indicateurs du Mobiliscope ----
 p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
 
-  print ("XXX")
   print(nomEnq)
   print(cheminIn)
   print(cheminOut)
@@ -885,6 +835,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
   
   ## données de présence
   prez_long <- readRDS(paste0(cheminIn, "/presence_utile_", nomEnq, ".RDS"))
+
   
   ### périmètre
   if(!is.na(perim)){
@@ -896,6 +847,8 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
   ctry <- unique(prez_long$PAYS)
   
   ### sous-population
+  subpop <- subpop %>% compact()
+    
   if(length(subpop)!=0){
     fns <- imap(subpop, ~ call(if (length(.x) == 1) "==" else "%in%", sym(.y), .x))
     prez_long <- prez_long %>%
@@ -915,125 +868,125 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
   #~ 2. TOUS LES AUTRES INDICATEURS ----
   
   ## POPULATION RESIDENTE/NON RESIDENTE
-  nbMod <- sort(unique(prez_long$RES))
   nomIndic <- "res"
   nomVar <- "RES"
   
   if(!nomVar%in%names(subpop)){
-    createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil, cheminOut)
-    createStacked(nbMod, nomIndic, nomEnq, ctry, cheminOut)  }
+    data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
+    createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
+    createStacked(nomIndic, nomEnq, ctry, data, cheminOut)  }
   
   ## SEX 
-  nbMod <- sort(unique(prez_long$SEX))
   nomIndic <- "sex"
   nomVar <- "SEX"
 
   if(!nomVar%in%names(subpop)){
-    createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil, cheminOut)
-    createISeg(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, seuil, cheminOut)
-    createStacked(nbMod, nomIndic, nomEnq, ctry, cheminOut)  }
+    data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
+    createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
+    createISeg(nomIndic, nomVar, nomEnq, ctry, data, sfSec, cheminOut)
+    createStacked(nomIndic, nomEnq, ctry, data, cheminOut)  }
   
   
   
   ## AGE
-  nbMod <- sort(unique(prez_long$KAGE))
   nomIndic <- "age"
   nomVar <- "KAGE"
   
   if(!nomVar%in%names(subpop)){
-    createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil, cheminOut)
-    createISeg(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, seuil, cheminOut)
-    createStacked(nbMod, nomIndic, nomEnq, ctry, cheminOut)  }
+    data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
+    createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
+    createISeg(nomIndic, nomVar, nomEnq, ctry, data, sfSec, cheminOut)
+    createStacked(nomIndic, nomEnq, ctry, data, cheminOut)  }
   
   ## OCCUPATION PRINCIPALE
-  nbMod <- sort(unique(prez_long$OCC))
   nomIndic <- "occ"
   nomVar <- "OCC"
   
   if(!nomVar%in%names(subpop)){
-    createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil, cheminOut)
-    createISeg(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, seuil, cheminOut)
-    createStacked(nbMod, nomIndic, nomEnq, ctry, cheminOut)  }
+    data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
+    createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
+    createISeg(nomIndic, nomVar, nomEnq, ctry, data, sfSec, cheminOut)
+    createStacked(nomIndic, nomEnq, ctry, data, cheminOut)  }
   
   
   ## ACTIVITE 
-  nbMod <- sort(unique(prez_long$MOTIF))
   nomIndic <- "act"
   nomVar <- "MOTIF"
   
   if(!nomVar%in%names(subpop)){
-    createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil, cheminOut)
-    createStacked(nbMod, nomIndic, nomEnq, ctry, cheminOut)  }
+    data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
+    createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
+    createStacked(nomIndic, nomEnq, ctry, data, cheminOut)  }
   
   
-  nbMod <- sort(unique(prez_long$MODE_ARR))
   nomIndic <- "mode"
   nomVar <- "MODE_ARR"
   
   if(!nomVar%in%names(subpop)){
-    createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil, cheminOut)
-    createStacked(nbMod, nomIndic, nomEnq, ctry, cheminOut)  }
+    data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
+    createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
+    createStacked(nomIndic, nomEnq, ctry, data, cheminOut)  }
   
   if(ctry %in% c("FR", "AS")){
     
     ## NIVEAU D'EDUCATION (INDIVIDUEL)
-    nbMod <- sort(unique(prez_long$EDUC))
     nomIndic <- "cleduc"
     nomVar <- "EDUC"
 
     if(!nomVar%in%names(subpop)){
-      createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil, cheminOut)
-      createISeg(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, seuil, cheminOut)
-      createStacked(nbMod, nomIndic, nomEnq, ctry, cheminOut)    }
+      data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
+      createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
+      createISeg(nomIndic, nomVar, nomEnq, ctry, data, sfSec, cheminOut)
+      createStacked(nomIndic, nomEnq, ctry, data, cheminOut)    }
     
     
     ## NIVEAU D'EDUCATION (MENAGE) 
-    nbMod <- sort(unique(prez_long$EDUCMEN))
     nomIndic <- "educmen"
     nomVar <- "EDUCMEN"
 
     if(!nomVar%in%names(subpop)){
-      createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil, cheminOut)
-      createISeg(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, seuil, cheminOut)
-      createStacked(nbMod, nomIndic, nomEnq, ctry, cheminOut)    }
+      data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
+      createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
+      createISeg(nomIndic, nomVar, nomEnq, ctry, data, sfSec, cheminOut)
+      createStacked(nomIndic, nomEnq, ctry, data, cheminOut)    }
     
   }
   
   if(ctry == "FR"){
     ## CSP (INDIVIDUELLE) 
-    nbMod <- sort(unique(prez_long$CSP))
     nomIndic <- "cs"
     nomVar <- "CSP"
 
     if(!nomVar%in%names(subpop)){
-      createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil, cheminOut)
-      createISeg(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, seuil, cheminOut)
-      createStacked(nbMod, nomIndic, nomEnq, ctry, cheminOut)    }
+      data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
+      createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
+      createISeg(nomIndic, nomVar, nomEnq, ctry, data, sfSec, cheminOut)
+      createStacked(nomIndic, nomEnq, ctry, data, cheminOut)    }
     
     
     ## CSP (MENAGE) 
-    nbMod <- sort(unique(prez_long$CSPMEN))
     nomIndic <- "cspmen"
     nomVar <- "CSPMEN"
 
     if(!nomVar%in%names(subpop)){
-      createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil, cheminOut)
-      createISeg(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, seuil, cheminOut)
-      createStacked(nbMod, nomIndic, nomEnq, ctry, cheminOut)    }
+      data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
+      createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
+      createISeg(nomIndic, nomVar, nomEnq, ctry, data, sfSec, cheminOut)
+      createStacked(nomIndic, nomEnq, ctry, data, cheminOut)    }
     
   }
   
   
   ## ZONE DE RESIDENCE 
   if(ctry == "FR"){
-    nbMod <- sort(unique(prez_long$ZONAGE))
     nomIndic <- "resarea"
     nomVar <- "ZONAGE"
     
     if(!nomVar%in%names(subpop)){
-      createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil, cheminOut)
-      createISeg(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, seuil, cheminOut)
-      createStacked(nbMod, nomIndic, nomEnq, ctry, cheminOut)    }
+      data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
+      createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
+      createISeg(nomIndic, nomVar, nomEnq, ctry, data, sfSec, cheminOut)
+      createStacked(nomIndic, nomEnq, ctry, data, cheminOut)    }
 
   }
   
@@ -1041,28 +994,28 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
   ## QPV 
   if(ctry == "FR" & nomEnq != "ANNECY"){
     
-    nbMod <- sort(unique(prez_long$QPV))
     nomIndic <- "qpv"
     nomVar <- "QPV"
 
     if(!nomVar%in%names(subpop)){
-      createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil, cheminOut)
-      createISeg(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, seuil, cheminOut)
-      createStacked(nbMod, nomIndic, nomEnq, ctry, cheminOut)    }
+      data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
+      createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
+      createISeg(nomIndic, nomVar, nomEnq, ctry, data, sfSec, cheminOut)
+      createStacked(nomIndic, nomEnq, ctry, data, cheminOut)    }
   }
   
   
   # REVENU (MENAGE) - PARIS, CANADA et Amérique du Sud
   if(nomEnq == "IDF" || ctry %in% c("CA", "AS")){
     
-    nbMod <- sort(unique(prez_long$REV)) 
     nomIndic <- "rev"
     nomVar <- "REV"
 
     if(!nomVar%in%names(subpop)){
-      createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil, cheminOut)
-      createISeg(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, seuil, cheminOut)
-      createStacked(nbMod, nomIndic, nomEnq, ctry, cheminOut)    }
+      data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
+      createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
+      createISeg(nomIndic, nomVar, nomEnq, ctry, data, sfSec, cheminOut)
+      createStacked(nomIndic, nomEnq, ctry, data, cheminOut)    }
     
   }
   
@@ -1070,114 +1023,114 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
   if(nomEnq == "IDF"){
     
     # DEPARTEMENT DE RESIDENCE 
-    nbMod <- sort(unique(prez_long$DEP))
     nomIndic <- "dep"
     nomVar <- "DEP"
 
     if(!nomVar%in%names(subpop)){
-      createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil, cheminOut)
-      createISeg(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, seuil, cheminOut)
-      createStacked(nbMod, nomIndic, nomEnq, ctry, cheminOut)    }
+      data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
+      createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
+      createISeg(nomIndic, nomVar, nomEnq, ctry, data, sfSec, cheminOut)
+      createStacked(nomIndic, nomEnq, ctry, data, cheminOut)    }
   }
   
   if(ctry=="AS"){
     
     ## 3o. CSO (des actifs)
-    nbMod <- sort(unique(prez_long$CSO))
     nomIndic <- "cso"
     nomVar <- "CSO"
 
     if(!nomVar%in%names(subpop)){
-      createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil, cheminOut)
-      createISeg(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, seuil, cheminOut)
-      createStacked(nbMod, nomIndic, nomEnq, ctry, cheminOut)    }
+      data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
+      createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
+      createISeg(nomIndic, nomVar, nomEnq, ctry, data, sfSec, cheminOut)
+      createStacked(nomIndic, nomEnq, ctry, data, cheminOut)    }
     
     
     ## COMPOSITION DU MENAGE
-    nbMod <- sort(unique(prez_long$STRM))
     nomIndic <- "strm"
     nomVar <- "STRM"
 
     if(!nomVar%in%names(subpop)){
-      createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil, cheminOut)
-      createISeg(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, seuil, cheminOut)
-      createStacked(nbMod, nomIndic, nomEnq, ctry, cheminOut)    }
+      data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
+      createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
+      createISeg(nomIndic, nomVar, nomEnq, ctry, data, sfSec, cheminOut)
+      createStacked(nomIndic, nomEnq, ctry, data, cheminOut)    }
     
     
     ## STATUT D'OCCUPATION DU LOGEMENT
-    nbMod <- sort(unique(prez_long$LOG))
     nomIndic <- "log"
     nomVar <- "LOG"
 
     if(!nomVar%in%names(subpop)){
-      createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil, cheminOut)
-      createISeg(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, seuil, cheminOut)
-      createStacked(nbMod, nomIndic, nomEnq, ctry, cheminOut)    }
+      data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
+      createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
+      createISeg(nomIndic, nomVar, nomEnq, ctry, data, sfSec, cheminOut)
+      createStacked(nomIndic, nomEnq, ctry, data, cheminOut)    }
     
   }
   
   ## INFORMALITE (des actifs) 
   if(nomEnq %in% c("BOGOTA", "SAO PAULO")){
     
-    nbMod <- sort(unique(prez_long$INFORMAL))
     nomIndic <- "inf"
     nomVar <- "INFORMAL"
 
     if(!nomVar%in%names(subpop)){
-      createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil, cheminOut)
-      createISeg(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, seuil, cheminOut)
-      createStacked(nbMod, nomIndic, nomEnq, ctry, cheminOut)    }
+      data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
+      createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
+      createISeg(nomIndic, nomVar, nomEnq, ctry, data, sfSec, cheminOut)
+      createStacked(nomIndic, nomEnq, ctry, data, cheminOut)    }
   }
   
   
   
   if(ctry=="AS"){ 
     ## ZONAGE METAL 
-    nbMod <- sort(unique(prez_long$ZONAGE))
     nomIndic <- "zona"
     nomVar <- "ZONAGE"
 
     if(!nomVar%in%names(subpop)){
-      createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil, cheminOut)
-      createISeg(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, seuil, cheminOut)
-      createStacked(nbMod, nomIndic, nomEnq, ctry, cheminOut)    }
+      data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
+      createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
+      createISeg(nomIndic, nomVar, nomEnq, ctry, data, sfSec, cheminOut)
+      createStacked(nomIndic, nomEnq, ctry, data, cheminOut)    }
     
   }
   
   if(nomEnq == "BOGOTA"){    
     ## SSE
-    nbMod <- sort(unique(prez_long$RES_SSE))
     nomIndic <- "sse"
     nomVar <- "RES_SSE"
 
     if(!nomVar%in%names(subpop)){
-      createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil, cheminOut)
-      createISeg(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, seuil, cheminOut)
-      createStacked(nbMod, nomIndic, nomEnq, ctry, cheminOut)    }
+      data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
+      createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
+      createISeg(nomIndic, nomVar, nomEnq, ctry, data, sfSec, cheminOut)
+      createStacked(nomIndic, nomEnq, ctry, data, cheminOut)    }
   }
   
   if(ctry=="FR"){
     ## STATUT D'OCCUPATION DU LOGEMENT
-    nbMod <- sort(unique(prez_long$STRM))
     nomIndic <- "strmfr"
     nomVar <- "STRM"
 
     if(!nomVar%in%names(subpop)){
-      createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil, cheminOut)
-      createISeg(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, seuil, cheminOut)
-      createStacked(nbMod, nomIndic, nomEnq, ctry, cheminOut)    }
+      data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
+      createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
+      createISeg(nomIndic, nomVar, nomEnq, ctry, data, sfSec, cheminOut)
+      createStacked(nomIndic, nomEnq, ctry, data, cheminOut)    }
   }
   
   if(ctry=="CA"){
     ## STATUT D'OCCUPATION DU LOGEMENT
-    nbMod <- sort(unique(prez_long$STRM))
     nomIndic <- "strmqc"
     nomVar <- "STRM"
     
     if(!nomVar%in%names(subpop)){
-      createFiles(nbMod, nomIndic, nomVar, nomEnq, prez_long, sfSec, seuil, cheminOut)
-      createISeg(nbMod, nomIndic, nomVar, nomEnq, ctry, prez_long, sfSec, seuil, cheminOut)
-      createStacked(nbMod, nomIndic, nomEnq, ctry, cheminOut)    }
+      data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
+      createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
+      createISeg(nomIndic, nomVar, nomEnq, ctry, data, sfSec, cheminOut)
+      createStacked(nomIndic, nomEnq, ctry, data, cheminOut)    }
   }
   
   
