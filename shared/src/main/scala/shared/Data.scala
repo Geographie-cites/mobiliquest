@@ -18,14 +18,44 @@ object data {
 
   object Indicators {
 
-    val perimetre = Indicator(
+    /*val perimetre = Indicator(
       "PERIM",
       "Zone du secteur de résidence",
       Seq(
         1 -> "Couronne des pôles urbains",
         2 -> "Pôles urbains",
         3 -> "Centre ville",
-        4 -> "XXX"
+         4 -> "XXX"
+      )
+    )*/
+
+    val perimetreFR = Indicator(
+      "PERIM",
+      "Périmètre selon le zonage en aire urbaine",
+      Seq(
+        1 -> "Zone périphérique",
+        2 -> "Zone urbaine",
+        3 -> "Ville-centre"
+      )
+    )
+
+    val perimetreCaBe = Indicator(
+      "PERIM",
+      "Périmètre selon le zonage en aire urbaine",
+      Seq(
+        1 -> "Zone périphérique",
+        2 -> "Ville-centre"
+      )
+    )
+
+    val perimetreAL = Indicator(
+      "PERIM",
+      "Périmètre selon le zonage centre/périphérie",
+      Seq(
+        1 -> "périphérie lointaine",
+        2 -> "Périphérie proche",
+        3 -> "Péricentre",
+        4 -> "Centre"
       )
     )
 
@@ -50,21 +80,42 @@ object data {
       )
     )
 
-    val strM = Indicator(
+    val strM_fr = Indicator(
       "STRM",
-      "Structure du ménage",
+      "Composition du ménage",
       Seq(
         1 -> "Ménage d'une personne",
         2 -> "Couple sans enfant",
         3 -> "Ménage (hors couple) sans enfant",
-        4 -> "Ménage avec enfant",
-        5 -> "ménage complexe avec enfant"
+        4 -> "Ménage avec enfant"
+      )
+    )
+
+    val strM_ca = Indicator(
+      "STRM",
+      "Composition du ménage",
+      Seq(
+        1 -> "Ménage d'une personne",
+        2 -> "Ménage sans enfant",
+        3 -> "Ménage avec enfant"
+      )
+    )
+
+    val strM_al = Indicator(
+      "STRM",
+      "Composition du ménage",
+      Seq(
+        1 -> "Ménage d'une personne",
+        2 -> "Famille sans enfant",
+        3 -> "Ménage complexe sans enfant",
+        4 -> "Famille avec enfant",
+        5 -> "Ménage complexe avec enfant"
       )
     )
 
     val educ = Indicator(
       "EDUC",
-      "Niveau d'éducation",
+      "Niveau d'éducation (individuel)",
       Seq(
         1 -> "Faible niveau",
         2 -> "Niveau intermédiaire",
@@ -75,7 +126,7 @@ object data {
 
     val educMen = Indicator(
       "EDUCMEN",
-      "Niveau d'éducation le plus bas des adultes du ménage",
+      "Niveau d'éducation du ménage",
       Seq(
         1 -> "Faible niveau",
         2 -> "Niveau intermédiaire",
@@ -86,7 +137,7 @@ object data {
 
     val rev = Indicator(
       "REV",
-      "Revenus du ménage",
+      "Revenu du ménage",
       Seq(
         1 -> "Faible",
         2 -> "Intermédiaire - Tranche inférieure",
@@ -96,9 +147,21 @@ object data {
       )
     )
 
+    val rev_al = Indicator(
+      "REV",
+      "Revenu du ménage",
+      Seq(
+        1 -> "Très faible",
+        2 -> "Faible",
+        3 -> "Intermédiaire",
+        4 -> "Élevé",
+        5 -> "Très élevé"
+      )
+    )
+
     val cso = Indicator(
       "CSO",
-      "",
+      "Catégorie socioprofessionnelle",
       Seq(
         1 -> "Travailleurs non qualifiés",
         2 -> "Travailleurs qualifiés",
@@ -118,12 +181,12 @@ object data {
 
     val sse = Indicator(
       "SSE",
-      "Strate socio économique",
+      "Strate socio-économique de résidence",
       Seq(
-        1 -> "Résident strate 1 ou non stratifiée",
-        2 -> "Résident strate 2",
-        3 -> "Résident strate 2",
-        4 -> "Résident strate 4, 5 ou 6"
+        1 -> "Strate 1 ou non stratifié",
+        2 -> "Strate 2",
+        3 -> "Strate 3",
+        4 -> "Strate 4, 5 ou 6"
       )
     )
 
@@ -139,11 +202,11 @@ object data {
 
     val csp = Indicator(
       "CSP",
-      "Classe socio-professionnelle",
+      "Catégorie socioprofessionnelle (individuelle)",
       Seq(
-        1 -> "Inactif",
-        2 -> "Ouvrier",
-        3 -> "Employé",
+        1 -> "Inactifs",
+        2 -> "Ouvriers",
+        3 -> "Employés",
         4 -> "Intermédiaire",
         5 -> "Cadres et professions intellectuelles"
       )
@@ -151,11 +214,11 @@ object data {
 
     val cspMen = Indicator(
       "CSPMEN",
-      "Classe socio-professionnelle la plus basse des adultes du ménage",
+      "Catégorie socioprofessionnelle du ménage",
       Seq(
-        1 -> "Inactif",
-        2 -> "Ouvrier",
-        3 -> "Employé",
+        1 -> "Inactifs",
+        2 -> "Ouvriers",
+        3 -> "Employés",
         4 -> "Intermédiaire",
         5 -> "Cadres et professions intellectuelles"
       )
@@ -163,19 +226,19 @@ object data {
 
     val occ = Indicator(
       "OCC",
-      "Statut d'occupation",
+      "Occupation principale",
       Seq(
-        1 -> "Actif",
-        2 -> "Étudiant",
+        1 -> "Actifs",
+        2 -> "Étudiants",
         3 -> "Sans emploi",
-        4 -> "Retraité",
-        5 -> "Inactif"
+        4 -> "Retraités",
+        5 -> "Inactifs"
       )
     )
 
     val dep = Indicator(
       "DEP",
-      "Département",
+      "Département de résidence",
       Seq(
         1 -> "Paris",
         2 -> "Seine-Saint-Denis",
@@ -185,68 +248,87 @@ object data {
       )
     )
 
-    val zonage = Indicator(
+    val zonage_fr = Indicator(
       "ZONAGE",
-      "Zone du secteur de résidence",
+      "Résidence selon le zonage en aire urbaine",
       Seq(
-        1 -> "Résident de périphérie lointaine",
-        2 -> "Résident de périphérie proche",
-        3 -> "Résident du péricentre",
-        4 -> "Résidents du centre"
+        1 -> "Zone périphérique",
+        2 -> "Zone urbaine",
+        3 -> "Ville-centre"
+      )
+    )
+
+    val zonage_cabe = Indicator(
+      "ZONAGE",
+      "Résidence selon le zonage en aire urbaine",
+      Seq(
+        1 -> "Zone périphérique",
+        2 -> "Ville-centre"
+      )
+    )
+
+    val zonage_al = Indicator(
+      "ZONAGE",
+      "Couronne de résidence",
+      Seq(
+        1 -> "périphérie lointaine",
+        2 -> "Périphérie proche",
+        3 -> "Péricentre",
+        4 -> "Centre"
       )
     )
 
     val qpv = Indicator(
       "QPV",
-      "Zone fine de résidence",
+      "Résidence dans/hors Quartier Prioritaire (QPV)",
       Seq(
         1 -> "Hors QPV",
-        2 -> "en QPV"
+        2 -> "Dans QPV"
       )
     )
 
     val basic: IndicatorAndModalities = Map(
       kAge -> Seq(1, 2, 3, 4),
       sex -> Seq(1, 2),
-      strM -> Seq(1, 2, 3, 4),
+      strM_fr -> Seq(1, 2, 3, 4),
       educ -> Seq(1, 2, 3, 4),
       educMen -> Seq(1, 2, 3, 4),
       csp -> Seq(1, 2, 3, 4, 5),
       cspMen -> Seq(1, 2, 3, 4, 5),
       occ -> Seq(1, 2, 3, 4, 5),
-      zonage -> Seq(1, 2, 3),
-      qpv -> Seq(1,2)
+      zonage_fr -> Seq(1, 2, 3),
+      qpv -> Seq(1, 2)
     )
 
     val annecy: IndicatorAndModalities = Map(
       kAge -> Seq(1, 2, 3, 4),
       sex -> Seq(1, 2),
-      strM -> Seq(1, 2, 3, 4),
+      strM_fr -> Seq(1, 2, 3, 4),
       educ -> Seq(1, 2, 3, 4),
       educMen -> Seq(1, 2, 3, 4),
       csp -> Seq(1, 2, 3, 4, 5),
       cspMen -> Seq(1, 2, 3, 4, 5),
       occ -> Seq(1, 2, 3, 4, 5),
-      zonage -> Seq(1, 2, 3)
+      zonage_fr -> Seq(1, 2, 3)
     )
 
     val besCarc: IndicatorAndModalities = Map(
       kAge -> Seq(1, 2, 3, 4),
       sex -> Seq(1, 2),
-      strM -> Seq(1, 2, 3, 4),
+      strM_fr -> Seq(1, 2, 3, 4),
       educ -> Seq(1, 2, 3, 4),
       educMen -> Seq(1, 2, 3, 4),
       csp -> Seq(1, 2, 3, 4, 5),
       cspMen -> Seq(1, 2, 3, 4, 5),
       occ -> Seq(1, 2, 3, 4, 5),
-      zonage -> Seq(1, 2),
-      qpv -> Seq(1,2)
+      zonage_cabe -> Seq(1, 2),
+      qpv -> Seq(1, 2)
     )
 
     val idf: IndicatorAndModalities = Map(
       kAge -> Seq(1, 2, 3, 4),
       sex -> Seq(1, 2),
-      strM -> Seq(1, 2, 3, 4),
+      strM_fr -> Seq(1, 2, 3, 4),
       educ -> Seq(1, 2, 3, 4),
       educMen -> Seq(1, 2, 3, 4),
       rev -> Seq(1, 2, 3, 4),
@@ -254,71 +336,136 @@ object data {
       cspMen -> Seq(1, 2, 3, 4, 5),
       occ -> Seq(1, 2, 3, 4, 5),
       dep -> Seq(1, 2, 3, 4, 5),
-      zonage -> Seq(1, 2, 3),
+      zonage_fr -> Seq(1, 2, 3),
       qpv -> Seq(1, 2)
     )
 
     val bogota: IndicatorAndModalities = Map(
       kAge -> Seq(1, 2, 3, 4),
       sex -> Seq(1, 2),
-      strM -> Seq(1, 2, 3, 4, 5),
+      strM_al -> Seq(1, 2, 3, 4, 5),
       educ -> Seq(1, 2, 3, 4),
       educMen -> Seq(1, 2, 3, 4),
-      rev -> Seq(1, 2, 3, 4, 5),
+      rev_al -> Seq(1, 2, 3, 4, 5),
       cso -> Seq(1, 2, 3, 4),
-      inf-> Seq(1,2),
+      inf-> Seq(1, 2),
       occ -> Seq(1, 2, 3, 4, 5),
-      zonage -> Seq(1, 2, 3, 4),
-      sse -> Seq(1,2,3,4),
-      log-> Seq(1,2,3)
+      zonage_al -> Seq(1, 2, 3, 4),
+      sse -> Seq(1, 2, 3, 4),
+      log-> Seq(1, 2, 3)
     )
 
     val santiago: IndicatorAndModalities = Map(
       kAge -> Seq(1, 2, 3, 4),
       sex -> Seq(1, 2),
-      strM -> Seq(1, 2, 3, 4, 5),
+      strM_al -> Seq(1, 2, 3, 4, 5),
       educ -> Seq(1, 2, 3, 4),
       educMen -> Seq(1, 2, 3, 4),
-      rev -> Seq(1, 2, 3, 4, 5),
+      rev_al -> Seq(1, 2, 3, 4, 5),
       cso -> Seq(1, 2, 3, 4),
       occ -> Seq(1, 2, 3, 4, 5),
-      zonage -> Seq(1, 2, 3, 4),
-      log-> Seq(1,2,3)
+      zonage_al -> Seq(1, 2, 3, 4),
+      log-> Seq(1, 2, 3)
     )
 
     val saopaulo: IndicatorAndModalities = Map(
       kAge -> Seq(1, 2, 3, 4),
       sex -> Seq(1, 2),
-      strM -> Seq(1, 2, 3, 4, 5),
+      strM_al -> Seq(1, 2, 3, 4, 5),
       educ -> Seq(1, 2, 3, 4),
       educMen -> Seq(1, 2, 3, 4),
-      rev -> Seq(1, 2, 3, 4, 5),
+      rev_al -> Seq(1, 2, 3, 4, 5),
       cso -> Seq(1, 2, 3, 4),
-      inf-> Seq(1,2),
+      inf-> Seq(1, 2),
       occ -> Seq(1, 2, 3, 4, 5),
-      zonage -> Seq(1, 2, 3, 4),
-      log-> Seq(1,2,3)
+      zonage_al -> Seq(1, 2, 3, 4),
+      log-> Seq(1, 2, 3)
     )
 
 
     val canadians: IndicatorAndModalities = Map(
       kAge -> Seq(1, 2, 3, 4),
       sex -> Seq(1, 2),
-      strM -> Seq(1, 2, 3),
+      strM_ca -> Seq(1, 2, 3),
       rev -> Seq(1, 2, 3, 4, 5),
       occ -> Seq(1, 2, 3, 4, 5)
     )
 
-    val spatialOnly2: IndicatorAndModalities = Map(perimetre -> Seq(2))
+    /*val spatialOnly2: IndicatorAndModalities = Map(perimetre -> Seq(2))
     val spatialOnly3: IndicatorAndModalities = Map(perimetre -> Seq(3))
     val spatialOnly4: IndicatorAndModalities = Map(perimetre -> Seq(4))
     val spatial2And3: IndicatorAndModalities = Map(perimetre -> Seq(2, 3))
     val spatial3And4: IndicatorAndModalities = Map(perimetre -> Seq(3, 4))
     val spatial2And3And4: IndicatorAndModalities = Map(perimetre -> Seq(2, 3, 4))
-    val spatialNone: IndicatorAndModalities = Map(perimetre -> Seq())
+    val spatialNone: IndicatorAndModalities = Map(perimetre -> Seq())*/
 
+    val spatialFR: IndicatorAndModalities = Map(perimetreFR -> Seq(2, 3))
+    val spatialCaBe: IndicatorAndModalities = Map(perimetreCaBe -> Seq(2))
+    val spatialAL: IndicatorAndModalities = Map(perimetreAL -> Seq(2, 3, 4))
+    val spatialNone: IndicatorAndModalities = Map(perimetreFR -> Seq())
 
     val availableIndicatorsAndModalities: Map[Study, IndicatorAndModalities] = Map(
+      "ALBI" -> (basic ++ spatialFR),
+      "ALENCON" -> (basic ++ spatialFR),
+      "AMIENS" -> (basic ++ spatialFR),
+      "ANNECY" -> (annecy ++ spatialFR),
+      "ANGERS" -> (basic ++ spatialFR),
+      "ANGOULEME" -> (basic ++ spatialFR),
+      "ANNEMASSE" -> (basic ++ spatialFR),
+      "BAYONNE" -> (basic ++ spatialFR),
+      "BESANCON" -> (besCarc ++ spatialOnly2),
+      "BEZIERS" -> (basic ++ spatialFR),
+      "BOGOTA" -> (bogota ++ spatialAL),
+      "BORDEAUX" -> (basic ++ spatialFR),
+      "BREST" -> (basic ++ spatialFR),
+      "CAEN" -> (basic ++ spatialFR),
+      "CARCASSONNE" -> (besCarc ++ spatialCaBe),
+      "CHERBOURG" -> (basic ++ spatialFR),
+      "CLERMONT FERRAND" -> (basic ++ spatialFR),
+      "CREIL" -> (basic ++ spatialFR),
+      "DIJON" -> (basic ++ spatialFR),
+      "DOUAI" -> (basic ++ spatialFR),
+      "DUNKERQUE" -> (basic ++ spatialFR),
+      "GRENOBLE" -> (basic ++ spatialFR),
+      "IDF" -> (idf ++ spatialFR),
+      "LA REUNION" -> (basic ++ spatialFR),
+      "LA ROCHELLE" -> (basic ++ spatialFR),
+      "LE HAVRE" -> (basic ++ spatialFR),
+      "LILLE" -> (basic ++ spatialFR),
+      "LONGWY" -> (basic ++ spatialFR),
+      "LYON" -> (basic ++ spatialFR),
+      "MARSEILLE" -> (basic ++ spatialFR),
+      "MARTINIQUE" -> (basic ++ spatialFR),
+      "METZ" -> (basic ++ spatialFR),
+      "MONTPELLIER" -> (basic ++ spatialFR),
+      "MONTREAL" -> (canadians ++ spatialFR),
+      "NANCY" -> (basic ++ spatialFR),
+      "NANTES" -> (basic ++ spatialFR),
+      "NICE" -> (basic ++ spatialFR),
+      "NIMES" -> (basic ++ spatialFR),
+      "NIORT" -> (basic ++ spatialFR),
+      "OTTAWA GATINEAU" -> (canadians ++ spatialNone),
+      "POITIERS" -> (basic ++ spatialFR),
+      "QUEBEC" -> (basic ++ spatialFR),
+      "QUIMPER" -> (basic ++ spatialFR),
+      "RENNES" -> (basic ++ spatialFR),
+      "ROUEN" -> (basic ++ spatialFR),
+      "SAGUENAY" -> (canadians ++ spatialNone),
+      "SAINT BRIEUC" -> (basic ++ spatialFR),
+      "SAINT ETIENNE" -> (basic ++ spatialFR),
+      "SANTIAGO" -> (santiago ++ spatialAL),
+      "SAO PAULO" -> (saopaulo ++ spatialAL),
+      "SHERBROOK" -> (canadians ++ spatialFR),
+      "STRASBOURG" -> (basic ++ spatialFR),
+      "THIONVILLE" -> (basic ++ spatialFR),
+      "TOULOUSE" -> (basic ++ spatialFR),
+      "TOURS" -> (basic ++ spatialFR),
+      "TROIS RIVIERE" -> (canadians ++ spatialNone),
+      "VALENCE" -> (basic ++ spatialFR),
+      "VALENCIENNES" -> (basic ++ spatialFR)
+    )
+
+    /*val availableIndicatorsAndModalities: Map[Study, IndicatorAndModalities] = Map(
       "ALBI" -> (basic ++ spatialOnly3),
       "ALENCON" -> (basic ++ spatial2And3),
       "AMIENS" -> (basic ++ spatial2And3),
@@ -377,7 +524,7 @@ object data {
       "TROIS RIVIERE" -> (canadians ++ spatialNone),
       "VALENCE" -> (basic ++ spatial2And3),
       "VALENCIENNES" -> (basic ++ spatial2And3)
-    )
+    )*/
   }
 
 }
