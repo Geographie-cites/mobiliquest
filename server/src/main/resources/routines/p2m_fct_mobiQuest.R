@@ -828,7 +828,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
     rename(Secteur_EM = CODE_SEC, CENTROID_X = X_W84, CENTROID_Y = Y_W84) 
   
   ### périmètre
-  if(!is.na(perim)){
+  if(length(perim)!=0){
     sfSec <- sfSec %>% 
       filter(ZONAGE_SEC %in% perim)
   }
@@ -838,7 +838,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
 
   
   ### périmètre
-  if(!is.na(perim)){
+  if(length(perim)!=0){
     prez_long <- prez_long %>% 
       filter(CODE_SEC %in% sfSec$Secteur_EM)
   }
