@@ -109,7 +109,7 @@ object data {
 
     val inf = Indicator(
       "INF",
-      "",
+      "Informalité professionnelle des actifs",
       Seq(
         1 -> "Actifs avec emploi formel",
         2 -> "Actifs avec emploi informel",
@@ -118,7 +118,7 @@ object data {
 
     val sse = Indicator(
       "SSE",
-      "",
+      "Strate socio économique",
       Seq(
         1 -> "Résident strate 1 ou non stratifiée",
         2 -> "Résident strate 2",
@@ -129,7 +129,7 @@ object data {
 
     val log = Indicator(
       "LOG",
-      "",
+      "Statut d'occupation du logement",
       Seq(
         1 -> "Personnes hébergées",
         2 -> "Locataires",
