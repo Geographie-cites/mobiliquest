@@ -19,7 +19,7 @@ object R {
 
     def c(modalities: Seq[Modality]) = {
       if (modalities.isEmpty) "c()"
-      else s""" "c(${modalities.map{m=> s"${m}" }.mkString(",")})" """
+      else s""" c(${modalities.map{m=> s"${m}" }.mkString(",")}) """
     }
 
     val Rfilters = request.filters.map{case (indicator, modalities)=>
