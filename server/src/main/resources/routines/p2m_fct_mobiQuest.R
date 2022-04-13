@@ -808,9 +808,7 @@ createStacked <- function(nomIndic, nomEnq, ctry, data, cheminOut){
 ##---- Fonction p2m : de la table de présence aux indicateurs du Mobiliscope ----
 p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
 
-  print(nomEnq)
-  print(cheminIn)
-  print(cheminOut)
+
   # Création des répertoires de sortie 
   dir.create(paste0(cheminOut, nomEnq))
   dir.create(paste0(cheminOut, nomEnq, "/stacked"))
@@ -835,8 +833,10 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
   
   ## données de présence
   prez_long <- readRDS(paste0(cheminIn, "/presence_utile_", nomEnq, ".RDS"))
-
   
+  ### effectif de départ avant filtrage
+  eff_start <- nrow(prez_long)
+
   ### périmètre
   if(length(perim)!=0){
     prez_long <- prez_long %>% 
@@ -859,279 +859,285 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
   ### SEUIL
   seuil <- NA
   
-  
-  
-  #~ 1. INDICATEUR "WHOLE POPULATION" ----
-  createPopFiles(nomEnq, prez_long, sfSec, seuil, cheminOut)
-  
-  
-  #~ 2. TOUS LES AUTRES INDICATEURS ----
-  
-  ## POPULATION RESIDENTE/NON RESIDENTE
-  nomIndic <- "res"
-  nomVar <- "RES"
-  
-  if(!nomVar%in%names(subpop)){
-    data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
-    createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
-    createStacked(nomIndic, nomEnq, ctry, data, cheminOut)  }
-  
-  ## SEX 
-  nomIndic <- "sex"
-  nomVar <- "SEX"
-
-  if(!nomVar%in%names(subpop)){
-    data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
-    createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
-    createISeg(nomIndic, nomVar, nomEnq, ctry, data, sfSec, cheminOut)
-    createStacked(nomIndic, nomEnq, ctry, data, cheminOut)  }
-  
-  
-  
-  ## AGE
-  nomIndic <- "age"
-  nomVar <- "KAGE"
-  
-  if(!nomVar%in%names(subpop)){
-    data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
-    createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
-    createISeg(nomIndic, nomVar, nomEnq, ctry, data, sfSec, cheminOut)
-    createStacked(nomIndic, nomEnq, ctry, data, cheminOut)  }
-  
-  ## OCCUPATION PRINCIPALE
-  nomIndic <- "occ"
-  nomVar <- "OCC"
-  
-  if(!nomVar%in%names(subpop)){
-    data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
-    createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
-    createISeg(nomIndic, nomVar, nomEnq, ctry, data, sfSec, cheminOut)
-    createStacked(nomIndic, nomEnq, ctry, data, cheminOut)  }
-  
-  
-  ## ACTIVITE 
-  nomIndic <- "act"
-  nomVar <- "MOTIF"
-  
-  if(!nomVar%in%names(subpop)){
-    data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
-    createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
-    createStacked(nomIndic, nomEnq, ctry, data, cheminOut)  }
-  
-  
-  nomIndic <- "mode"
-  nomVar <- "MODE_ARR"
-  
-  if(!nomVar%in%names(subpop)){
-    data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
-    createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
-    createStacked(nomIndic, nomEnq, ctry, data, cheminOut)  }
-  
-  if(ctry %in% c("FR", "AS")){
+  if(nrow(prez_long)==0){
+    cat("STOP PROCESS: ", "zero population")
+  } else if(nrow(prez_long) < (5*eff_start)/100){
+    cat("STOP PROCESS: ", "insufficient population (", nrow(prez_long), "presences remain after filtering)")
+  } else {
+    #~ 1. INDICATEUR "WHOLE POPULATION" ----
+    createPopFiles(nomEnq, prez_long, sfSec, seuil, cheminOut)
     
-    ## NIVEAU D'EDUCATION (INDIVIDUEL)
-    nomIndic <- "cleduc"
-    nomVar <- "EDUC"
-
+    
+    #~ 2. TOUS LES AUTRES INDICATEURS ----
+    
+    ## POPULATION RESIDENTE/NON RESIDENTE
+    nomIndic <- "res"
+    nomVar <- "RES"
+    
+    if(!nomVar%in%names(subpop)){
+      data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
+      createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
+      createStacked(nomIndic, nomEnq, ctry, data, cheminOut)  }
+    
+    ## SEX 
+    nomIndic <- "sex"
+    nomVar <- "SEX"
+    
     if(!nomVar%in%names(subpop)){
       data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
       createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
       createISeg(nomIndic, nomVar, nomEnq, ctry, data, sfSec, cheminOut)
-      createStacked(nomIndic, nomEnq, ctry, data, cheminOut)    }
+      createStacked(nomIndic, nomEnq, ctry, data, cheminOut)  }
     
     
-    ## NIVEAU D'EDUCATION (MENAGE) 
-    nomIndic <- "educmen"
-    nomVar <- "EDUCMEN"
-
+    
+    ## AGE
+    nomIndic <- "age"
+    nomVar <- "KAGE"
+    
     if(!nomVar%in%names(subpop)){
       data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
       createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
       createISeg(nomIndic, nomVar, nomEnq, ctry, data, sfSec, cheminOut)
-      createStacked(nomIndic, nomEnq, ctry, data, cheminOut)    }
+      createStacked(nomIndic, nomEnq, ctry, data, cheminOut)  }
     
+    ## OCCUPATION PRINCIPALE
+    nomIndic <- "occ"
+    nomVar <- "OCC"
+    
+    if(!nomVar%in%names(subpop)){
+      data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
+      createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
+      createISeg(nomIndic, nomVar, nomEnq, ctry, data, sfSec, cheminOut)
+      createStacked(nomIndic, nomEnq, ctry, data, cheminOut)  }
+    
+    
+    ## ACTIVITE 
+    nomIndic <- "act"
+    nomVar <- "MOTIF"
+    
+    if(!nomVar%in%names(subpop)){
+      data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
+      createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
+      createStacked(nomIndic, nomEnq, ctry, data, cheminOut)  }
+    
+    
+    nomIndic <- "mode"
+    nomVar <- "MODE_ARR"
+    
+    if(!nomVar%in%names(subpop)){
+      data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
+      createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
+      createStacked(nomIndic, nomEnq, ctry, data, cheminOut)  }
+    
+    if(ctry %in% c("FR", "AS")){
+      
+      ## NIVEAU D'EDUCATION (INDIVIDUEL)
+      nomIndic <- "cleduc"
+      nomVar <- "EDUC"
+      
+      if(!nomVar%in%names(subpop)){
+        data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
+        createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
+        createISeg(nomIndic, nomVar, nomEnq, ctry, data, sfSec, cheminOut)
+        createStacked(nomIndic, nomEnq, ctry, data, cheminOut)    }
+      
+      
+      ## NIVEAU D'EDUCATION (MENAGE) 
+      nomIndic <- "educmen"
+      nomVar <- "EDUCMEN"
+      
+      if(!nomVar%in%names(subpop)){
+        data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
+        createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
+        createISeg(nomIndic, nomVar, nomEnq, ctry, data, sfSec, cheminOut)
+        createStacked(nomIndic, nomEnq, ctry, data, cheminOut)    }
+      
+    }
+    
+    if(ctry == "FR"){
+      ## CSP (INDIVIDUELLE) 
+      nomIndic <- "cs"
+      nomVar <- "CSP"
+      
+      if(!nomVar%in%names(subpop)){
+        data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
+        createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
+        createISeg(nomIndic, nomVar, nomEnq, ctry, data, sfSec, cheminOut)
+        createStacked(nomIndic, nomEnq, ctry, data, cheminOut)    }
+      
+      
+      ## CSP (MENAGE) 
+      nomIndic <- "cspmen"
+      nomVar <- "CSPMEN"
+      
+      if(!nomVar%in%names(subpop)){
+        data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
+        createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
+        createISeg(nomIndic, nomVar, nomEnq, ctry, data, sfSec, cheminOut)
+        createStacked(nomIndic, nomEnq, ctry, data, cheminOut)    }
+      
+    }
+    
+    
+    ## ZONE DE RESIDENCE 
+    if(ctry == "FR"){
+      nomIndic <- "resarea"
+      nomVar <- "ZONAGE"
+      
+      if(!nomVar%in%names(subpop)){
+        data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
+        createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
+        createISeg(nomIndic, nomVar, nomEnq, ctry, data, sfSec, cheminOut)
+        createStacked(nomIndic, nomEnq, ctry, data, cheminOut)    }
+      
+    }
+    
+    
+    ## QPV 
+    if(ctry == "FR" & nomEnq != "ANNECY"){
+      
+      nomIndic <- "qpv"
+      nomVar <- "QPV"
+      
+      if(!nomVar%in%names(subpop)){
+        data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
+        createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
+        createISeg(nomIndic, nomVar, nomEnq, ctry, data, sfSec, cheminOut)
+        createStacked(nomIndic, nomEnq, ctry, data, cheminOut)    }
+    }
+    
+    
+    # REVENU (MENAGE) - PARIS, CANADA et Amérique du Sud
+    if(nomEnq == "IDF" || ctry %in% c("CA", "AS")){
+      
+      nomIndic <- "rev"
+      nomVar <- "REV"
+      
+      if(!nomVar%in%names(subpop)){
+        data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
+        createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
+        createISeg(nomIndic, nomVar, nomEnq, ctry, data, sfSec, cheminOut)
+        createStacked(nomIndic, nomEnq, ctry, data, cheminOut)    }
+      
+    }
+    
+    
+    if(nomEnq == "IDF"){
+      
+      # DEPARTEMENT DE RESIDENCE 
+      nomIndic <- "dep"
+      nomVar <- "DEP"
+      
+      if(!nomVar%in%names(subpop)){
+        data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
+        createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
+        createISeg(nomIndic, nomVar, nomEnq, ctry, data, sfSec, cheminOut)
+        createStacked(nomIndic, nomEnq, ctry, data, cheminOut)    }
+    }
+    
+    if(ctry=="AS"){
+      
+      ## 3o. CSO (des actifs)
+      nomIndic <- "cso"
+      nomVar <- "CSO"
+      
+      if(!nomVar%in%names(subpop)){
+        data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
+        createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
+        createISeg(nomIndic, nomVar, nomEnq, ctry, data, sfSec, cheminOut)
+        createStacked(nomIndic, nomEnq, ctry, data, cheminOut)    }
+      
+      
+      ## COMPOSITION DU MENAGE
+      nomIndic <- "strm"
+      nomVar <- "STRM"
+      
+      if(!nomVar%in%names(subpop)){
+        data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
+        createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
+        createISeg(nomIndic, nomVar, nomEnq, ctry, data, sfSec, cheminOut)
+        createStacked(nomIndic, nomEnq, ctry, data, cheminOut)    }
+      
+      
+      ## STATUT D'OCCUPATION DU LOGEMENT
+      nomIndic <- "log"
+      nomVar <- "LOG"
+      
+      if(!nomVar%in%names(subpop)){
+        data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
+        createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
+        createISeg(nomIndic, nomVar, nomEnq, ctry, data, sfSec, cheminOut)
+        createStacked(nomIndic, nomEnq, ctry, data, cheminOut)    }
+      
+    }
+    
+    ## INFORMALITE (des actifs) 
+    if(nomEnq %in% c("BOGOTA", "SAO PAULO")){
+      
+      nomIndic <- "inf"
+      nomVar <- "INFORMAL"
+      
+      if(!nomVar%in%names(subpop)){
+        data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
+        createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
+        createISeg(nomIndic, nomVar, nomEnq, ctry, data, sfSec, cheminOut)
+        createStacked(nomIndic, nomEnq, ctry, data, cheminOut)    }
+    }
+    
+    
+    
+    if(ctry=="AS"){ 
+      ## ZONAGE METAL 
+      nomIndic <- "zona"
+      nomVar <- "ZONAGE"
+      
+      if(!nomVar%in%names(subpop)){
+        data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
+        createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
+        createISeg(nomIndic, nomVar, nomEnq, ctry, data, sfSec, cheminOut)
+        createStacked(nomIndic, nomEnq, ctry, data, cheminOut)    }
+      
+    }
+    
+    if(nomEnq == "BOGOTA"){    
+      ## SSE
+      nomIndic <- "sse"
+      nomVar <- "RES_SSE"
+      
+      if(!nomVar%in%names(subpop)){
+        data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
+        createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
+        createISeg(nomIndic, nomVar, nomEnq, ctry, data, sfSec, cheminOut)
+        createStacked(nomIndic, nomEnq, ctry, data, cheminOut)    }
+    }
+    
+    if(ctry=="FR"){
+      ## STATUT D'OCCUPATION DU LOGEMENT
+      nomIndic <- "strmfr"
+      nomVar <- "STRM"
+      
+      if(!nomVar%in%names(subpop)){
+        data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
+        createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
+        createISeg(nomIndic, nomVar, nomEnq, ctry, data, sfSec, cheminOut)
+        createStacked(nomIndic, nomEnq, ctry, data, cheminOut)    }
+    }
+    
+    if(ctry=="CA"){
+      ## STATUT D'OCCUPATION DU LOGEMENT
+      nomIndic <- "strmqc"
+      nomVar <- "STRM"
+      
+      if(!nomVar%in%names(subpop)){
+        data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
+        createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
+        createISeg(nomIndic, nomVar, nomEnq, ctry, data, sfSec, cheminOut)
+        createStacked(nomIndic, nomEnq, ctry, data, cheminOut)    }
+    }
   }
   
-  if(ctry == "FR"){
-    ## CSP (INDIVIDUELLE) 
-    nomIndic <- "cs"
-    nomVar <- "CSP"
-
-    if(!nomVar%in%names(subpop)){
-      data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
-      createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
-      createISeg(nomIndic, nomVar, nomEnq, ctry, data, sfSec, cheminOut)
-      createStacked(nomIndic, nomEnq, ctry, data, cheminOut)    }
-    
-    
-    ## CSP (MENAGE) 
-    nomIndic <- "cspmen"
-    nomVar <- "CSPMEN"
-
-    if(!nomVar%in%names(subpop)){
-      data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
-      createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
-      createISeg(nomIndic, nomVar, nomEnq, ctry, data, sfSec, cheminOut)
-      createStacked(nomIndic, nomEnq, ctry, data, cheminOut)    }
-    
-  }
   
-  
-  ## ZONE DE RESIDENCE 
-  if(ctry == "FR"){
-    nomIndic <- "resarea"
-    nomVar <- "ZONAGE"
-    
-    if(!nomVar%in%names(subpop)){
-      data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
-      createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
-      createISeg(nomIndic, nomVar, nomEnq, ctry, data, sfSec, cheminOut)
-      createStacked(nomIndic, nomEnq, ctry, data, cheminOut)    }
-
-  }
-  
-  
-  ## QPV 
-  if(ctry == "FR" & nomEnq != "ANNECY"){
-    
-    nomIndic <- "qpv"
-    nomVar <- "QPV"
-
-    if(!nomVar%in%names(subpop)){
-      data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
-      createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
-      createISeg(nomIndic, nomVar, nomEnq, ctry, data, sfSec, cheminOut)
-      createStacked(nomIndic, nomEnq, ctry, data, cheminOut)    }
-  }
-  
-  
-  # REVENU (MENAGE) - PARIS, CANADA et Amérique du Sud
-  if(nomEnq == "IDF" || ctry %in% c("CA", "AS")){
-    
-    nomIndic <- "rev"
-    nomVar <- "REV"
-
-    if(!nomVar%in%names(subpop)){
-      data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
-      createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
-      createISeg(nomIndic, nomVar, nomEnq, ctry, data, sfSec, cheminOut)
-      createStacked(nomIndic, nomEnq, ctry, data, cheminOut)    }
-    
-  }
-  
-  
-  if(nomEnq == "IDF"){
-    
-    # DEPARTEMENT DE RESIDENCE 
-    nomIndic <- "dep"
-    nomVar <- "DEP"
-
-    if(!nomVar%in%names(subpop)){
-      data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
-      createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
-      createISeg(nomIndic, nomVar, nomEnq, ctry, data, sfSec, cheminOut)
-      createStacked(nomIndic, nomEnq, ctry, data, cheminOut)    }
-  }
-  
-  if(ctry=="AS"){
-    
-    ## 3o. CSO (des actifs)
-    nomIndic <- "cso"
-    nomVar <- "CSO"
-
-    if(!nomVar%in%names(subpop)){
-      data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
-      createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
-      createISeg(nomIndic, nomVar, nomEnq, ctry, data, sfSec, cheminOut)
-      createStacked(nomIndic, nomEnq, ctry, data, cheminOut)    }
-    
-    
-    ## COMPOSITION DU MENAGE
-    nomIndic <- "strm"
-    nomVar <- "STRM"
-
-    if(!nomVar%in%names(subpop)){
-      data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
-      createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
-      createISeg(nomIndic, nomVar, nomEnq, ctry, data, sfSec, cheminOut)
-      createStacked(nomIndic, nomEnq, ctry, data, cheminOut)    }
-    
-    
-    ## STATUT D'OCCUPATION DU LOGEMENT
-    nomIndic <- "log"
-    nomVar <- "LOG"
-
-    if(!nomVar%in%names(subpop)){
-      data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
-      createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
-      createISeg(nomIndic, nomVar, nomEnq, ctry, data, sfSec, cheminOut)
-      createStacked(nomIndic, nomEnq, ctry, data, cheminOut)    }
-    
-  }
-  
-  ## INFORMALITE (des actifs) 
-  if(nomEnq %in% c("BOGOTA", "SAO PAULO")){
-    
-    nomIndic <- "inf"
-    nomVar <- "INFORMAL"
-
-    if(!nomVar%in%names(subpop)){
-      data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
-      createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
-      createISeg(nomIndic, nomVar, nomEnq, ctry, data, sfSec, cheminOut)
-      createStacked(nomIndic, nomEnq, ctry, data, cheminOut)    }
-  }
-  
-  
-  
-  if(ctry=="AS"){ 
-    ## ZONAGE METAL 
-    nomIndic <- "zona"
-    nomVar <- "ZONAGE"
-
-    if(!nomVar%in%names(subpop)){
-      data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
-      createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
-      createISeg(nomIndic, nomVar, nomEnq, ctry, data, sfSec, cheminOut)
-      createStacked(nomIndic, nomEnq, ctry, data, cheminOut)    }
-    
-  }
-  
-  if(nomEnq == "BOGOTA"){    
-    ## SSE
-    nomIndic <- "sse"
-    nomVar <- "RES_SSE"
-
-    if(!nomVar%in%names(subpop)){
-      data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
-      createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
-      createISeg(nomIndic, nomVar, nomEnq, ctry, data, sfSec, cheminOut)
-      createStacked(nomIndic, nomEnq, ctry, data, cheminOut)    }
-  }
-  
-  if(ctry=="FR"){
-    ## STATUT D'OCCUPATION DU LOGEMENT
-    nomIndic <- "strmfr"
-    nomVar <- "STRM"
-
-    if(!nomVar%in%names(subpop)){
-      data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
-      createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
-      createISeg(nomIndic, nomVar, nomEnq, ctry, data, sfSec, cheminOut)
-      createStacked(nomIndic, nomEnq, ctry, data, cheminOut)    }
-  }
-  
-  if(ctry=="CA"){
-    ## STATUT D'OCCUPATION DU LOGEMENT
-    nomIndic <- "strmqc"
-    nomVar <- "STRM"
-    
-    if(!nomVar%in%names(subpop)){
-      data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
-      createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
-      createISeg(nomIndic, nomVar, nomEnq, ctry, data, sfSec, cheminOut)
-      createStacked(nomIndic, nomEnq, ctry, data, cheminOut)    }
-  }
   
   
 }
