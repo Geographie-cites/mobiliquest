@@ -1143,9 +1143,9 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
     }
     
     cat("Presences: ", nrow(prez_long))
-    return(eff_end)
+    
   }
-  
+  return(eff_end)
   
   
   
