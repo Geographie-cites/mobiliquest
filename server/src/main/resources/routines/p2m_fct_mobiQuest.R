@@ -6,7 +6,9 @@
 
 # library
 library(tidylog)
-library(tidyverse)
+# library(tidyverse)
+library(dplyr)
+library(purrr)
 library(sf)
 library(geojsonio)
 library(geojsonsf)
@@ -857,6 +859,8 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
       filter(!!!unname(fns))
   }
   
+  eff_end <- nrow(prez_long)
+  P_eff_end <- (eff_end/eff_start)*100
   
   ### SEUIL
   seuil <- NA
@@ -1139,7 +1143,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
     }
     
     cat("Presences: ", nrow(prez_long))
-    return(nrow(prez_long))
+    return(eff_end)
   }
   
   
