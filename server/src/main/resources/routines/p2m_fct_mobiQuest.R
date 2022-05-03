@@ -717,7 +717,9 @@ createStacked <- function(nomIndic, nomEnq, ctry, data, cheminOut){
   # mini tables de présences de l'indicateur
   pvs <- data[["pvs"]]
   pvs2 <- data[["pvs2"]]
-  pvs3 <- data[["pvs3"]]
+  if(nomIndic != "res"){
+    pvs3 <- data[["pvs3"]]
+  }
   #valeur des modalités
   mod <- data[["mod"]]
   
@@ -1135,6 +1137,8 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
         createISeg(nomIndic, nomVar, nomEnq, ctry, data, sfSec, cheminOut)
         createStacked(nomIndic, nomEnq, ctry, data, cheminOut)    }
     }
+    
+    cat("Presences: ", nrow(prez_long))
   }
   
   
