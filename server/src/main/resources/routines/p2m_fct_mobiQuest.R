@@ -865,6 +865,14 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
   ### SEUIL
   seuil <- NA
   
+  
+  ### on recode les modalités de ZONAGE
+  prez_long <- prez_long %>% 
+    mutate(ZONAGE = case_when(PAYS=="AS" ~ ZONAGE-3,
+                              ENQUETE%in% c("BESANCON", "CARCASSONNE") & ZONAGE==3 ~ 2,
+                              TRUE ~ ZONAGE))
+  
+  
   if(nrow(prez_long)==0){
     cat("STOP PROCESS: ", "zero population")
   } else if(nrow(prez_long) < (5*eff_start)/100){

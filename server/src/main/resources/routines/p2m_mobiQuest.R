@@ -12,10 +12,10 @@ cheminOut <- "../../../../../../../data_web/data/"
 # choix des params
 
 ## Ville
-nomEnq = "ALBI"
+nomEnq = "CARCASSONNE"
 
 ## requête : changement du périmètre observé, exemple :
-perim <- c()
+perim <- c(1, 3)
 ## requête : sous-population avec n filtre, exemple :
 # subpop <- list("SEX" = "2", "EDUC" = "4", "STRM" = "1")
 subpop <- list("SEX" = "2", "KAGE" = c("1","2"))
