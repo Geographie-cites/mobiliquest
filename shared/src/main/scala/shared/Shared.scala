@@ -2,5 +2,5 @@ package shared
 
 trait Api {
 
-  def run(request: data.Request): String
+  def run(request: data.Request): Int
 }

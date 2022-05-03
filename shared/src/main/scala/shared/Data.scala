@@ -15,47 +15,24 @@ object data {
 
   case class Request(study: Study, perimModalities: Seq[Modality], filters: IndicatorAndModalities)
 
+  sealed trait RequestStatus
+  case object Off extends RequestStatus
+  case object Running extends RequestStatus
+  case class Done(nbRecords: Int) extends RequestStatus
 
   object Indicators {
 
-    /*val perimetre = Indicator(
-      "PERIM",
-      "Zone du secteur de résidence",
-      Seq(
-        1 -> "Couronne des pôles urbains",
-        2 -> "Pôles urbains",
-        3 -> "Centre ville",
-         4 -> "XXX"
-      )
-    )*/
-
-    val perimetreFR = Indicator(
+    val perimetre = Indicator(
       "PERIM",
       "Périmètre selon le zonage en aire urbaine",
       Seq(
-        1 -> "Zone périphérique",
-        2 -> "Zone urbaine",
-        3 -> "Ville-centre"
-      )
-    )
-
-    val perimetreCaBe = Indicator(
-      "PERIM",
-      "Périmètre selon le zonage en aire urbaine",
-      Seq(
-        1 -> "Zone périphérique",
-        2 -> "Ville-centre"
-      )
-    )
-
-    val perimetreAL = Indicator(
-      "PERIM",
-      "Périmètre selon le zonage centre/périphérie",
-      Seq(
-        1 -> "périphérie lointaine",
+        1 -> "Périphérie lointaine",
         2 -> "Périphérie proche",
         3 -> "Péricentre",
-        4 -> "Centre"
+        4 -> "Centre",
+        5 -> "Zone périphérique",
+        6 -> "Zone urbaine",
+        7 -> "Ville-centre"
       )
     )
 
@@ -391,18 +368,10 @@ object data {
       occ -> Seq(1, 2, 3, 4, 5)
     )
 
-    /*val spatialOnly2: IndicatorAndModalities = Map(perimetre -> Seq(2))
-    val spatialOnly3: IndicatorAndModalities = Map(perimetre -> Seq(3))
-    val spatialOnly4: IndicatorAndModalities = Map(perimetre -> Seq(4))
-    val spatial2And3: IndicatorAndModalities = Map(perimetre -> Seq(2, 3))
-    val spatial3And4: IndicatorAndModalities = Map(perimetre -> Seq(3, 4))
-    val spatial2And3And4: IndicatorAndModalities = Map(perimetre -> Seq(2, 3, 4))
-    val spatialNone: IndicatorAndModalities = Map(perimetre -> Seq())*/
-
-    val spatialFR: IndicatorAndModalities = Map(perimetreFR -> Seq(2, 3))
-    val spatialCaBe: IndicatorAndModalities = Map(perimetreCaBe -> Seq(2))
-    val spatialAL: IndicatorAndModalities = Map(perimetreAL -> Seq(2, 3, 4))
-    val spatialNone: IndicatorAndModalities = Map(perimetreFR -> Seq())
+    val spatialFR: IndicatorAndModalities = Map(perimetre -> Seq(5, 6, 7))
+    val spatialCaBe: IndicatorAndModalities = Map(perimetre -> Seq(5, 7))
+    val spatialAL: IndicatorAndModalities = Map(perimetre -> Seq(1, 2, 3, 4))
+    val spatialNone: IndicatorAndModalities = Map(perimetre -> Seq())
 
     val availableIndicatorsAndModalities: Map[Study, IndicatorAndModalities] = Map(
       "ALBI" -> (basic ++ spatialFR),
@@ -413,7 +382,7 @@ object data {
       "ANGOULEME" -> (basic ++ spatialFR),
       "ANNEMASSE" -> (basic ++ spatialFR),
       "BAYONNE" -> (basic ++ spatialFR),
-      "BESANCON" -> (besCarc ++ spatialOnly2),
+      "BESANCON" -> (besCarc ++ spatialCaBe),
       "BEZIERS" -> (basic ++ spatialFR),
       "BOGOTA" -> (bogota ++ spatialAL),
       "BORDEAUX" -> (basic ++ spatialFR),
@@ -464,67 +433,6 @@ object data {
       "VALENCE" -> (basic ++ spatialFR),
       "VALENCIENNES" -> (basic ++ spatialFR)
     )
-
-    /*val availableIndicatorsAndModalities: Map[Study, IndicatorAndModalities] = Map(
-      "ALBI" -> (basic ++ spatialOnly3),
-      "ALENCON" -> (basic ++ spatial2And3),
-      "AMIENS" -> (basic ++ spatial2And3),
-      "ANNECY" -> (annecy ++ spatial2And3),
-      "ANGERS" -> (basic ++ spatial2And3),
-      "ANGOULEME" -> (basic ++ spatial2And3),
-      "ANNEMASSE" -> (basic ++ spatial2And3),
-      "BAYONNE" -> (basic ++ spatial2And3),
-      "BESANCON" -> (besCarc ++ spatialOnly2),
-      "BEZIERS" -> (basic ++ spatial2And3),
-      "BOGOTA" -> (bogota ++ spatialOnly4),
-      "BORDEAUX" -> (basic ++ spatial2And3),
-      "BREST" -> (basic ++ spatial2And3),
-      "CAEN" -> (basic ++ spatial2And3),
-      "CARCASSONNE" -> (besCarc ++ spatialOnly2),
-      "CHERBOURG" -> (basic ++ spatial2And3),
-      "CLERMONT FERRAND" -> (basic ++ spatial2And3),
-      "CREIL" -> (basic ++ spatial2And3),
-      "DIJON" -> (basic ++ spatial2And3),
-      "DOUAI" -> (basic ++ spatial2And3),
-      "DUNKERQUE" -> (basic ++ spatial2And3),
-      "GRENOBLE" -> (basic ++ spatial2And3),
-      "IDF" -> (idf ++ spatial2And3),
-      "LA REUNION" -> (basic ++ spatial2And3),
-      "LA ROCHELLE" -> (basic ++ spatial2And3),
-      "LE HAVRE" -> (basic ++ spatial2And3),
-      "LILLE" -> (basic ++ spatial2And3),
-      "LONGWY" -> (basic ++ spatial2And3),
-      "LYON" -> (basic ++ spatial2And3),
-      "MARSEILLE" -> (basic ++ spatial2And3),
-      "MARTINIQUE" -> (basic ++ spatial2And3),
-      "METZ" -> (basic ++ spatial2And3),
-      "MONTPELLIER" -> (basic ++ spatial2And3),
-      "MONTREAL" -> (canadians ++ spatialNone),
-      "NANCY" -> (basic ++ spatial2And3),
-      "NANTES" -> (basic ++ spatial2And3),
-      "NICE" -> (basic ++ spatial2And3),
-      "NIMES" -> (basic ++ spatial2And3),
-      "NIORT" -> (basic ++ spatial2And3),
-      "OTTAWA GATINEAU" -> (canadians ++ spatialNone),
-      "POITIERS" -> (basic ++ spatial2And3),
-      "QUEBEC" -> (basic ++ spatial2And3),
-      "QUIMPER" -> (basic ++ spatial2And3),
-      "RENNES" -> (basic ++ spatial2And3),
-      "ROUEN" -> (basic ++ spatial2And3),
-      "SAGUENAY" -> (canadians ++ spatialNone),
-      "SAINT BRIEUC" -> (basic ++ spatial2And3),
-      "SAINT ETIENNE" -> (basic ++ spatial2And3),
-      "SANTIAGO" -> (santiago ++ spatial3And4),
-      "SAO PAULO" -> (saopaulo ++ spatial2And3And4),
-      "SHERBROOK" -> (canadians ++ spatialNone),
-      "STRASBOURG" -> (basic ++ spatial2And3),
-      "THIONVILLE" -> (basic ++ spatial2And3),
-      "TOULOUSE" -> (basic ++ spatial2And3),
-      "TOURS" -> (basic ++ spatial2And3),
-      "TROIS RIVIERE" -> (canadians ++ spatialNone),
-      "VALENCE" -> (basic ++ spatial2And3),
-      "VALENCIENNES" -> (basic ++ spatial2And3)
-    )*/
   }
 
 }

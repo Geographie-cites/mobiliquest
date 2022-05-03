@@ -42,6 +42,7 @@ lazy val server = project.in(file("server")) settings(
   scalaVersion := ScalaVersion,
   libraryDependencies ++= Seq(
     "org.ddahl" %% "rscala" % "3.2.19",
+    "com.lihaoyi" %% "upickle" % "2.0.0",
     "com.lihaoyi" %% "autowire" % autowireVersion,
     "io.suzaku" %% "boopickle" % boopickleVersion,
     "com.lihaoyi" %% "scalatags" % scalatagsVersion,

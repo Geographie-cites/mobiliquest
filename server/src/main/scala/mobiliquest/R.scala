@@ -28,6 +28,6 @@ object R {
 
     val oo = s"""\np2m("${request.study}", c(${request.perimModalities.mkString(",")}), list($Rfilters), "$inputDir", "$outputDir")"""
     println("R call :: " + oo)
-    R.eval(api + oo)
+    R.evalI0(api + oo)
   }
 }

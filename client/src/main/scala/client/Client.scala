@@ -19,7 +19,7 @@ import autowire._
 import boopickle.Default._
 import client.RequestForm.{IndicatorUI, rowFlex}
 import shared.data
-import shared.data.Study
+import shared.data.{Running, Study}
 
 @JSExportTopLevel(name = "mobiliquest")
 @JSExportAll
@@ -33,10 +33,11 @@ object App {
 
     val studiesUI = RequestForm.studyUI
     val currentIndicatorsUI: Var[Seq[RequestForm.IndicatorUI]] = Var(Seq())
+    val nbRequestedRecords: Var[data.RequestStatus] = Var(data.Off)
 
     def indicatorsUIToRequest(indicatorsUI: Seq[IndicatorUI]) = {
-      val (perim, all) = indicatorsUI.partition(x=> x.indicatorAndModalities._1 == data.Indicators.perimetre)
-      (all.map{iUI=>
+      val (perim, all) = indicatorsUI.partition(x => x.indicatorAndModalities._1 == data.Indicators.perimetre)
+      (all.map { iUI =>
         iUI.indicatorAndModalities
       }.toMap, perim.head.indicatorAndModalities._2)
     }
@@ -54,17 +55,31 @@ object App {
           )
         },
         button("Run", btn_primary_outline, onClick --> { _ =>
+          nbRequestedRecords.set(data.Running)
           val (all, perimModalities) = indicatorsUIToRequest(currentIndicatorsUI.now())
           val request = data.Request(RequestForm.currentStudy.now(), perimModalities, all)
           Post[shared.Api].run(request).call().foreach { x =>
-            println("X " + x)
-
+            nbRequestedRecords.set(data.Done(x))
           }
+        },
+          disabled <-- nbRequestedRecords.signal.map {
+            _ match {
+              case Running => true
+              case _ => false
+            }
+          }
+        ),
+        child <-- nbRequestedRecords.signal.map { x =>
+          div(
+            x match {
+              case data.Done(r) => r.toString
+              case _ => ""
+            },
+            marginLeft := "10"
+          )
         })
-      )
 
     val containerNode = dom.document.querySelector("#mobiliquest-content")
-
 
 
     RequestForm
