@@ -368,9 +368,9 @@ object data {
       occ -> Seq(1, 2, 3, 4, 5)
     )
 
-    val spatialFR: IndicatorAndModalities = Map(perimetre -> Seq(5, 6, 7))
-    val spatialCaBe: IndicatorAndModalities = Map(perimetre -> Seq(5, 7))
-    val spatialAL: IndicatorAndModalities = Map(perimetre -> Seq(1, 2, 3, 4))
+    val spatialFR: IndicatorAndModalities = Map(perimetre -> Seq(3, 2, 1))
+    val spatialCaBe: IndicatorAndModalities = Map(perimetre -> Seq(3, 1))
+    val spatialAL: IndicatorAndModalities = Map(perimetre -> Seq(7, 6, 5, 4))
     val spatialNone: IndicatorAndModalities = Map(perimetre -> Seq())
 
     val availableIndicatorsAndModalities: Map[Study, IndicatorAndModalities] = Map(
