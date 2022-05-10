@@ -25,7 +25,7 @@ object R {
             case Left(m: Modality) => Seq(m)
             case Right(sm: Seq[Modality])=> sm
           }
-        }.flatten.mkString(", ")
+        }.flatten.distinct.mkString(", ")
       }
       )"""
     }
@@ -34,8 +34,8 @@ object R {
       s""" "${indicator.RName}" = ${c(modalities)} """
     }.mkString(",")
 
-    val oo = s"""\np2m("${request.study}", ${c(request.perimModalities)}, list($Rfilters), "$inputDir", "$outputDir")"""
-    println("R call :: " + oo)
-    R.evalI0(api + oo)
+    val call = s"""\np2m("${request.study}", ${c(request.perimModalities)}, list($Rfilters), "$inputDir", "$outputDir")"""
+    println("R call :: " + call)
+    R.evalI0(api + call)
   }
 }

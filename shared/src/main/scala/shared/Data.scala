@@ -38,10 +38,10 @@ object data {
       "PERIM",
       "Périmètre selon le zonage en aire urbaine",
       Seq(
-        1 -> "Zone périphérique",
+        1 -> "périphérique",
         2 -> "Zone urbaine",
         3 -> "Ville-centre",
-        4 -> "Périphérie lointaine",
+        4 -> "lointaine",
         5 -> "Périphérie proche",
         6 -> "Péricentre",
         7 -> "Centre"
@@ -160,7 +160,7 @@ object data {
     )
 
     val inf = Indicator(
-      "INF",
+      "INFORMAL",
       "Informalité professionnelle des actifs",
       Seq(
         1 -> "Actifs avec emploi formel",
@@ -260,7 +260,7 @@ object data {
       "ZONAGE",
       "Couronne de résidence",
       Seq(
-        1 -> "périphérie lointaine",
+        1 -> "Périphérie lointaine",
         2 -> "Périphérie proche",
         3 -> "Péricentre",
         4 -> "Centre"
