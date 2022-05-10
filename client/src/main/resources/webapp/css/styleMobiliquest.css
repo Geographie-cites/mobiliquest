@@ -7,7 +7,7 @@
 
 .indicatorButton {
     width : 120px;
-    height: 80px;
+    height: 100px;
     margin:7px;
     padding: 3px;
     font-size: 0.9rem !important;
@@ -20,6 +20,6 @@
     font-size: 12px;
     font-style: italic;
     text-align: center;
-    height: 80px;
+    height: 100px;
     width: 120px;
 }

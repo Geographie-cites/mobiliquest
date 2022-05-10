@@ -1,7 +1,7 @@
 package client
 
 import shared.data
-import shared.data.{Indicator, IndicatorAndModalities, Modality, Study}
+import shared.data.{Indicator, IndicatorAndModalities, Modalities, Modality, Study}
 import scaladget.bootstrapnative.bsn._
 import com.raquo.laminar.api.L._
 import scaladget.bootstrapnative.Selector.Options
@@ -19,14 +19,17 @@ object RequestForm {
 
   def toggleOn(modalityName: String, onColor: String) = ToggleState(modalityName, onColor)
 
-  def modalityButton(modalityName: String): ToggleButtonState = toggle(toggleOn(modalityName, btn_primary_string), false, unactivateState(modalityName), withCaret = false)
+  def modalityButton(modalityName: String): ToggleButtonState = toggle(toggleOn(modalityName, btn_primary_string), true, unactivateState(modalityName), withCaret = false)
 
-  class IndicatorUI(study: Study, indicator: Indicator, availableModalities: Seq[Modality]) {
+  class IndicatorUI(study: Study, indicator: Indicator, availableModalities: Modalities) {
 
     private val modMap = indicator.modalityDescriptions.toMap
 
-    private val toggleButtonStates = availableModalities.map { am =>
-      modalityButton(modMap(am))
+    private val toggleButtonStates = availableModalities.map {
+      _ match {
+        case Left(m: Modality) => modalityButton(modMap(m))
+        case Right(sOfM: Seq[Modality]) => modalityButton(sOfM.map{modMap(_)}.mkString(" et "))
+      }
     }
 
     def content =
@@ -39,8 +42,8 @@ object RequestForm {
         )
       )
 
-    def indicatorAndModalities: (Indicator, Seq[Modality]) = {
-      val selectedModalities = toggleButtonStates.zip(availableModalities).filter { case (tbs, ind) =>
+    def indicatorAndModalities: (Indicator, Modalities) = {
+      val selectedModalities = toggleButtonStates.zip(availableModalities).filter { case (tbs, _) =>
         tbs.toggled.now()
       }.map {
         _._2
@@ -51,7 +54,7 @@ object RequestForm {
 
   def indicatorUIs(study: Study) = {
     val indicatorAndModalities = data.Indicators.availableIndicatorsAndModalities(study)
-    val (perim, all) = indicatorAndModalities.toSeq.partition(x=> x._1 == data.Indicators.perimetre)
+    val (perim, all) = indicatorAndModalities.toSeq.partition(x => x._1 == data.Indicators.perimetre)
     (all ++ perim).map { iam => new IndicatorUI(study, iam._1, iam._2) }.toSeq
   }
 
