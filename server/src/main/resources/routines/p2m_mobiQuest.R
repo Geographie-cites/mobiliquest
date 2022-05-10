@@ -12,16 +12,18 @@ cheminOut <- "../../../../../../../data_web/data/"
 # choix des params
 
 ## Ville
-nomEnq = "CARCASSONNE"
+nomEnq = "IDF"
 
 ## requête : changement du périmètre observé, exemple :
-perim <- c(1, 3)
+perim <- c(1, 2, 3)
+perim <- c()
 ## requête : sous-population avec n filtre, exemple :
 # subpop <- list("SEX" = "2", "EDUC" = "4", "STRM" = "1")
-subpop <- list("SEX" = "2", "KAGE" = c("1","2"))
-subpop <- list("OCC" = c() , "CSPMEN" =  c()  , "QPV" = c() , 
-               "CSP" = c() , "SEX" =  c(2)  , "ZONAGE" =  c(1,2) , "KAGE" =  c()  ,
-               "EDUC" =  c(4)  , "EDUCMEN" =  c(3)  , "STRM" =  c())
+# subpop <- list("SEX" = "2", "KAGE" = c("1","2"))
+subpop <- list("OCC" = c(1, 2, 3, 4, 5) , "CSPMEN" =  c(1, 2, 3, 4, 5)  , "QPV" = c(1, 2) , 
+               "CSP" = c(1, 2, 3, 4, 5) , "SEX" =  c(1, 2)  , "ZONAGE" =  c(1, 2, 3) , 
+               "KAGE" =  c(1, 2, 3, 4), "EDUC" =  c(1, 2, 3, 4), "EDUCMEN" =  c(1, 2, 3, 4), 
+               "STRM" =  c(1, 2, 3, 4), "REV" = c(), "DEP" = c(1, 2, 3, 4, 5))
 
 # load p2m functions
 suppressWarnings(source("p2m_fct_mobiQuest.R"))

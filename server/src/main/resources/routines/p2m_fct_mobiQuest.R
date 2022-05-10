@@ -853,11 +853,11 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
   ### sous-population
   # subpop <- subpop %>% compact()
     
-  if(length(subpop)!=0){
+  # if(length(subpop)!=0){
     fns <- imap(subpop, ~ call(if (length(.x) == 1) "==" else "%in%", sym(.y), .x))
     prez_long <- prez_long %>%
       filter(!!!unname(fns))
-  }
+  # }
   
   eff_end <- nrow(prez_long)
   P_eff_end <- (eff_end/eff_start)*100
