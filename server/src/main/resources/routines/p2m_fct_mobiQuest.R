@@ -851,7 +851,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
   ctry <- unique(prez_long$PAYS)
   
   ### sous-population
-  subpop <- subpop %>% compact()
+  # subpop <- subpop %>% compact()
     
   if(length(subpop)!=0){
     fns <- imap(subpop, ~ call(if (length(.x) == 1) "==" else "%in%", sym(.y), .x))
