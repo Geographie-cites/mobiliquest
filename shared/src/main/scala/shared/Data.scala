@@ -1,5 +1,7 @@
 package shared
 
+import scala.scalajs.js.|
+
 
 object data {
 
@@ -7,17 +9,27 @@ object data {
   type Directory = String
   type Modality = Int
   type RequestID = String
-
+  type Modalities = Seq[Either[Modality, Seq[Modality]]]
   case class Indicator(RName: String, description: String, modalityDescriptions: Seq[(Modality, String)])
 
-  type IndicatorAndModalities = Map[Indicator, Seq[Modality]]
+  type IndicatorAndModalities = Map[Indicator, Modalities]
 
+  implicit def intToLeftModality(m: Int): Left[Modality, Seq[Modality]] = Left(m)
 
-  case class Request(study: Study, perimModalities: Seq[Modality], filters: IndicatorAndModalities)
+  implicit def seqOfIntToLeftModality(ms: Seq[Int]): Right[Modality, Seq[Modality]] = Right(ms)
+
+ // implicit def ModalityToLeftModality(m: Seq[Modality]): Seq[Left[Modality, Seq[Modality]]] = m.map{Left(_)}
+
+  implicit def ModalityToRightModality(m: Seq[Seq[Modality]]): Seq[Right[Modality, Seq[Modality]]] = m.map{Right(_)}
+
+  case class Request(study: Study, perimModalities: Modalities, filters: IndicatorAndModalities)
 
   sealed trait RequestStatus
+
   case object Off extends RequestStatus
+
   case object Running extends RequestStatus
+
   case class Done(nbRecords: Int) extends RequestStatus
 
   object Indicators {
@@ -26,13 +38,13 @@ object data {
       "PERIM",
       "Périmètre selon le zonage en aire urbaine",
       Seq(
-        1 -> "Périphérie lointaine",
-        2 -> "Périphérie proche",
-        3 -> "Péricentre",
-        4 -> "Centre",
-        5 -> "Zone périphérique",
-        6 -> "Zone urbaine",
-        7 -> "Ville-centre"
+        1 -> "Zone périphérique",
+        2 -> "Zone urbaine",
+        3 -> "Ville-centre",
+        4 -> "Périphérie lointaine",
+        5 -> "Périphérie proche",
+        6 -> "Péricentre",
+        7 -> "Centre"
       )
     )
 
@@ -325,11 +337,11 @@ object data {
       educMen -> Seq(1, 2, 3, 4),
       rev_al -> Seq(1, 2, 3, 4, 5),
       cso -> Seq(1, 2, 3, 4),
-      inf-> Seq(1, 2),
+      inf -> Seq(1, 2),
       occ -> Seq(1, 2, 3, 4, 5),
       zonage_al -> Seq(1, 2, 3, 4),
       sse -> Seq(1, 2, 3, 4),
-      log-> Seq(1, 2, 3)
+      log -> Seq(1, 2, 3)
     )
 
     val santiago: IndicatorAndModalities = Map(
@@ -342,7 +354,7 @@ object data {
       cso -> Seq(1, 2, 3, 4),
       occ -> Seq(1, 2, 3, 4, 5),
       zonage_al -> Seq(1, 2, 3, 4),
-      log-> Seq(1, 2, 3)
+      log -> Seq(1, 2, 3)
     )
 
     val saopaulo: IndicatorAndModalities = Map(
@@ -353,10 +365,10 @@ object data {
       educMen -> Seq(1, 2, 3, 4),
       rev_al -> Seq(1, 2, 3, 4, 5),
       cso -> Seq(1, 2, 3, 4),
-      inf-> Seq(1, 2),
+      inf -> Seq(1, 2),
       occ -> Seq(1, 2, 3, 4, 5),
       zonage_al -> Seq(1, 2, 3, 4),
-      log-> Seq(1, 2, 3)
+      log -> Seq(1, 2, 3)
     )
 
 
@@ -368,9 +380,9 @@ object data {
       occ -> Seq(1, 2, 3, 4, 5)
     )
 
-    val spatialFR: IndicatorAndModalities = Map(perimetre -> Seq(3, 2, 1))
-    val spatialCaBe: IndicatorAndModalities = Map(perimetre -> Seq(3, 1))
-    val spatialAL: IndicatorAndModalities = Map(perimetre -> Seq(7, 6, 5, 4))
+    val spatialFR: IndicatorAndModalities = Map(perimetre -> Seq(Seq(3, 2, 1), Seq(3, 2), Seq(3)))
+    val spatialCaBe: IndicatorAndModalities = Map(perimetre -> Seq(Seq(3, 1), Seq(3)))
+    val spatialAL: IndicatorAndModalities = Map(perimetre -> Seq(Seq(7, 6, 5, 4), Seq(7, 6, 5), Seq(7, 6), Seq(7)))
     val spatialNone: IndicatorAndModalities = Map(perimetre -> Seq())
 
     val availableIndicatorsAndModalities: Map[Study, IndicatorAndModalities] = Map(
