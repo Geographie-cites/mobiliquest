@@ -5,13 +5,11 @@ import org.scalajs.dom
 
 import scala.concurrent.Future
 import boopickle.Default._
-import org.scalajs
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.scalajs.js.typedarray.{ArrayBuffer, TypedArrayBuffer}
 import scala.scalajs.js.annotation.{JSExportAll, JSExportTopLevel}
 import scaladget.bootstrapnative.bsn._
-import scaladget.tools._
 import com.raquo.laminar.api.L._
 
 import scala.concurrent.ExecutionContext.Implicits.global
