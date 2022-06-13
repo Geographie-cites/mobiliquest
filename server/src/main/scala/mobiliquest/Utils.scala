@@ -1,5 +1,6 @@
 package mobiliquest
 
+import mobiliquest.ThreadService.pool
 import shared.data.{Modalities, Modality}
 
 object Utils {
