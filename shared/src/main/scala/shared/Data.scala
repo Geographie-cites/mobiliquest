@@ -382,7 +382,7 @@ object data {
 
     val spatialFR: IndicatorAndModalities = Map(perimetre -> Seq(Seq(3, 2, 1), Seq(3, 2), Seq(3)))
     val spatialCaBe: IndicatorAndModalities = Map(perimetre -> Seq(Seq(3, 1), Seq(3)))
-    val spatialAL: IndicatorAndModalities = Map(perimetre -> Seq(Seq(7, 6, 5, 4), Seq(7, 6, 5), Seq(7, 6), Seq(7)))
+    val spatialAL: IndicatorAndModalities = Map(perimetre -> Seq(Seq(7, 6, 5, 4), Seq(7, 6, 5), Seq(7, 6)))
     val spatialNone: IndicatorAndModalities = Map(perimetre -> Seq())
 
     val availableIndicatorsAndModalities: Map[Study, IndicatorAndModalities] = Map(
