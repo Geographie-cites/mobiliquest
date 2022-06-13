@@ -4,17 +4,19 @@ val Version = "0.1-SNAPSHOT"
 
 val scalatraVersion = "2.7.1"
 val jettyVersion = "11.0.2"
-val json4sVersion = "3.6.11"
+//val json4sVersion = "3.6.11"
 val autowireVersion = "0.3.3"
 val boopickleVersion = "1.3.3"
 val laminarVersion = "0.12.2"
 val scaladgetVersion = "1.9.2-SNAPSHOT"
 val scalajsDomVersion = "2.0.0"
 val scalatagsVersion = "0.9.4"
+val json4sVersion = "4.0.5"
+val betterFilesVersion = "3.9.1"
 
-lazy val shared = project.in(file("shared")) settings(
+lazy val shared = project.in(file("shared")) settings (
   scalaVersion := ScalaVersion
-) enablePlugins (ScalaJSPlugin)
+  ) enablePlugins (ScalaJSPlugin)
 
 lazy val buildUI = taskKey[Unit]("builUI")
 
@@ -32,7 +34,7 @@ lazy val client = project.in(file("client")) enablePlugins(ScalaJSPlugin, ScalaJ
     "org.openmole.scaladget" %%% "svg" % scaladgetVersion,
     "org.openmole.scaladget" %%% "bootstrapnative" % scaladgetVersion,
     "org.scala-js" %%% "scalajs-dom" % scalajsDomVersion,
-    "org.json4s" %% "json4s-jackson" % json4sVersion
+    // "org.json4s" %% "json4s-jackson" % json4sVersion
   )
 ) dependsOn (shared)
 
@@ -50,7 +52,9 @@ lazy val server = project.in(file("server")) settings(
     "ch.qos.logback" % "logback-classic" % "1.2.3" % "runtime",
     "javax.servlet" % "javax.servlet-api" % "4.0.1" % "provided",
     "org.eclipse.jetty" % "jetty-webapp" % jettyVersion,
-    "org.eclipse.jetty" % "jetty-server" % jettyVersion
+    "org.eclipse.jetty" % "jetty-server" % jettyVersion,
+    "org.json4s" %% "json4s-jackson" % json4sVersion,
+    "com.github.pathikrit" %% "better-files-akka" % betterFilesVersion,
   )
 ) dependsOn (shared) enablePlugins (ScalatraPlugin)
 
@@ -58,11 +62,11 @@ lazy val bootstrap = project.in(file("target/bootstrap")) enablePlugins(ScalaJSP
   version := Version,
   scalaVersion := ScalaVersion,
   buildUI := {
-      val jsBuild = (client / Compile / fastOptJS / webpack).value.head.data
+    val jsBuild = (client / Compile / fastOptJS / webpack).value.head.data
 
-      val demoTarget = (server / Compile / target).value
-      val demoResource = (client / Compile / resourceDirectory).value
+    val demoTarget = (server / Compile / target).value
+    val demoResource = (client / Compile / resourceDirectory).value
 
-      IO.copyFile(jsBuild, demoTarget / "webapp/js/demo.js")
-      IO.copyDirectory(demoResource, demoTarget)
+    IO.copyFile(jsBuild, demoTarget / "webapp/js/demo.js")
+    IO.copyDirectory(demoResource, demoTarget)
   }) dependsOn(client, server)
