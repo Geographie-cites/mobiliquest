@@ -6,7 +6,7 @@
 
 # library
 library(tidylog)
-# library(tidyverse)
+library(stringr)
 library(dplyr)
 library(purrr)
 library(sf)
@@ -153,7 +153,7 @@ createPopFiles <- function(nomEnq, prez_long, sfSec, seuil, cheminOut){
     summarise(W_IND = round(sum(W_IND, na.rm = TRUE),2),
               n = length(ID_IND)) %>% 
     ungroup() %>% 
-    filter(CODE_SEC != RES_SEC & n >= 6) %>%   ### seuil toujours appliqué
+    filter(CODE_SEC != RES_SEC & n >= seuil) %>%   ### ancien seuil de 6
     select(-n) %>% 
     arrange(CODE_SEC, HOUR)
   
@@ -269,7 +269,7 @@ prepPVS <- function(nomEnq, prez_long, nomIndic, nomVar, seuil){
                   values_from = c(W_IND, N_IND),
                   values_fn = sum) %>% 
       mutate_if(is.numeric, ~replace(., is.na(.), 0)) %>% 
-      mutate_if(is.numeric, ~round(.,2)) %>%
+      mutate_if(is.numeric, ~round(.,2))
     
     # Application du filtre
     pvs <- pvs %>% 
@@ -332,7 +332,7 @@ prepPVS <- function(nomEnq, prez_long, nomIndic, nomVar, seuil){
                   values_from = c(W_IND, N_IND),
                   values_fn = sum) %>% 
       mutate_if(is.numeric, ~replace(., is.na(.), 0)) %>% 
-      mutate_if(is.numeric, ~round(.,2)) %>%
+      mutate_if(is.numeric, ~round(.,2)) 
     
     # Application du filtre
     pvs3 <- pvs3 %>% 
@@ -362,19 +362,29 @@ prepPVS <- function(nomEnq, prez_long, nomIndic, nomVar, seuil){
     arrange(nomVar) %>% 
     pull()
   mod <- unique(mod)
+  mod3 <- prez_long %>% 
+    select(HOUR, CODE_SEC, RES_SEC, W_IND, all_of(nomVar)) %>%
+    mutate(nomVar = as.numeric(get(nomVar))) %>%
+    filter(CODE_SEC != RES_SEC) %>%
+    filter(!is.na(nomVar)) %>% 
+    filter(nomVar>0) %>% 
+    arrange(nomVar) %>% 
+    pull()
+  mod3 <- unique(mod3)
   
   
   result[["pvs"]] <- pvs
   result[["pvs2"]] <- pvs2
   result[["pvs3"]] <- pvs3
   result[["mod"]] <- mod
+  result[["mod3"]] <- mod3
   return(result)
   
   
 }
 
 #~ création des geojson et des csv pour le graphique "simple" ----
-createFiles <- function(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut){
+createFiles <- function(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut, seuil){
 
   # mini tables de présences de l'indicateur
   pvs <- data[["pvs"]]
@@ -384,6 +394,18 @@ createFiles <- function(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, chemin
   }
   # valeur des modalités
   mod <- data[["mod"]]
+  mod3 <- data[["mod3"]]
+  
+  
+  # Création des tables pour le graphique simple
+  oldH <- unique(as.character(pvs$HOUR))
+  newH <- c("4am", "5am", "6am", "7am", 
+            "8am", "9am", "10am", "11am", 
+            "12am", "1pm", "2pm", "3pm", 
+            "4pm", "5pm", "6pm", "7pm", 
+            "8pm", "9pm", "10pm", "11pm", 
+            "12pm", "1am", "2am", "3am")
+  
   
   
   # pour chaque modalité :
@@ -444,62 +466,6 @@ createFiles <- function(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, chemin
                   layer_options = "ENCODING=UTF-8")
     
     
-    ## Création des données pour les cartes en oursins
-    if(!nomIndic %in% c("res")){
-      
-      ## Répertoires parents (2 par indicateur)
-      dir.create(paste0(cheminOut, nomEnq, "/", indic ,"_flow"))
-      
-      ## Répertoires enfants (2 par répertoire parent)
-      dir.create(paste0(cheminOut, nomEnq, "/", indic ,"_flow/geo"))
-      dir.create(paste0(cheminOut, nomEnq, "/", indic ,"_flow/data"))
-      
-      ### Flowdata : csv des flux OD avec seuil à 6
-      flowdata <- prez_long %>% 
-        select(ID_IND, W_IND, HOUR, CODE_SEC, RES_SEC, nomVar) %>%
-        filter(nomVar == i) %>% 
-        group_by(HOUR, CODE_SEC, RES_SEC) %>% 
-        summarise(W_IND = round(sum(W_IND, na.rm = TRUE),2),
-                  n = length(ID_IND)) %>% 
-        filter(CODE_SEC != RES_SEC & n  >= 6) %>% ## application du seuil
-        select(-n) %>% 
-        arrange(CODE_SEC, HOUR)
-      
-      ### data stock NR
-      dataShpChoroNR <- pvs3 %>% 
-        select(HOUR, CODE_SEC, all_of(indic)) %>%
-        pivot_wider(names_from = HOUR, 
-                    values_from = indic, 
-                    names_sort = TRUE,
-                    names_prefix = paste0(indic, "_")) %>% 
-        rename(Secteur_EM = CODE_SEC) %>% 
-        arrange(Secteur_EM) %>% 
-        mutate_if(is.numeric, ~replace(., is.na(.), 0))
-      
-      ### Jointure des données au fond de carte
-      shpChoroNR <- left_join(sfSec, dataShpChoroNR, by = "Secteur_EM")
-      
-      ### Export des données spatiales
-      shpChoroNR <- sf_geojson(shpChoroNR)
-      geojson_write(shpChoroNR,
-                    file = paste0(cheminOut, nomEnq, "/", indic ,"_flow/geo/secteursData.geojson"),
-                    layer_options = "ENCODING=UTF-8")
-      write.csv2(flowdata, 
-                 paste0(cheminOut, nomEnq, "/", indic ,"_flow/geo/flowData.csv"), 
-                 row.names = FALSE)
-    }
-    
-    
-    
-    # Création des tables pour le graphique simple
-    oldH <- unique(as.character(pvs$HOUR))
-    newH <- c("4am", "5am", "6am", "7am", 
-              "8am", "9am", "10am", "11am", 
-              "12am", "1pm", "2pm", "3pm", 
-              "4pm", "5pm", "6pm", "7pm", 
-              "8pm", "9pm", "10pm", "11pm", 
-              "12pm", "1am", "2am", "3am")
-    
     ## mise en forme csv STOCK
     dfProp <- pvs %>% 
       select(HOUR, CODE_SEC, all_of(indic)) %>% 
@@ -528,10 +494,58 @@ createFiles <- function(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, chemin
     write.csv(dfChoro, 
               paste0(cheminOut, nomEnq, "/", indic ,"_choro/data/dataSect.csv"), 
               row.names = FALSE)
-    
-    ## Oursins
-    if(nomIndic != "res"){
       
+  }
+  
+  ## Création des données pour les cartes en oursins
+  if(!nomIndic %in% c("res")){
+    
+    for(i in 1:length(mod3)){
+      
+      indic <- colnames(pvs3)[3 + as.numeric(i)]
+      
+      ## Répertoires parents (2 par indicateur)
+      dir.create(paste0(cheminOut, nomEnq, "/", indic ,"_flow"))
+      
+      ## Répertoires enfants (2 par répertoire parent)
+      dir.create(paste0(cheminOut, nomEnq, "/", indic ,"_flow/geo"))
+      dir.create(paste0(cheminOut, nomEnq, "/", indic ,"_flow/data"))
+      
+      ### Flowdata : csv des flux OD avec seuil 
+      flowdata <- prez_long %>% 
+        select(ID_IND, W_IND, HOUR, CODE_SEC, RES_SEC, nomVar) %>%
+        filter(nomVar == i) %>% 
+        group_by(HOUR, CODE_SEC, RES_SEC) %>% 
+        summarise(W_IND = round(sum(W_IND, na.rm = TRUE),2),
+                  n = length(ID_IND)) %>% 
+        filter(CODE_SEC != RES_SEC & n  >= seuil) %>% ## application du seuil
+        select(-n) %>% 
+        arrange(CODE_SEC, HOUR)
+      
+      ### data stock NR
+      dataShpChoroNR <- pvs3 %>% 
+        select(HOUR, CODE_SEC, all_of(indic)) %>%
+        pivot_wider(names_from = HOUR, 
+                    values_from = indic, 
+                    names_sort = TRUE,
+                    names_prefix = paste0(indic, "_")) %>% 
+        rename(Secteur_EM = CODE_SEC) %>% 
+        arrange(Secteur_EM) %>% 
+        mutate_if(is.numeric, ~replace(., is.na(.), 0))
+      
+      ### Jointure des données au fond de carte
+      shpChoroNR <- left_join(sfSec, dataShpChoroNR, by = "Secteur_EM")
+      
+      ### Export des données spatiales
+      shpChoroNR <- sf_geojson(shpChoroNR)
+      geojson_write(shpChoroNR,
+                    file = paste0(cheminOut, nomEnq, "/", indic ,"_flow/geo/secteursData.geojson"),
+                    layer_options = "ENCODING=UTF-8")
+      write.csv2(flowdata, 
+                 paste0(cheminOut, nomEnq, "/", indic ,"_flow/geo/flowData.csv"), 
+                 row.names = FALSE)
+      
+      ## Oursins
       ## mise en forme csv STOCK NR
       dfChoroNR <- pvs3 %>% 
         select(HOUR, CODE_SEC, all_of(indic)) %>% 
@@ -545,9 +559,9 @@ createFiles <- function(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, chemin
       write.csv(dfChoroNR, 
                 paste0(cheminOut, nomEnq, "/", indic ,"_flow/data/dataSect.csv"), 
                 row.names = FALSE)
-    }
-    
       
+    }
+
   }
   
 }  
@@ -565,11 +579,14 @@ createISeg <- function(nomIndic, nomVar, nomEnq, ctry, data, sfSec, cheminOut){
   ## Init table
   duncan <- data.frame("hour" = unique(pvs$HOUR))
   
+  ## replace NaN by 0
+  pvs <- pvs %>% 
+    mutate_if(is.numeric, ~replace(., is.na(.), 0))
+  
   ## Calcul de l'indice
   for (i in unique(pvs$HOUR)){
     
     duncan <- bind_rows(duncan, as.data.frame(t(ISDuncan(pvs[pvs$HOUR == i , 4:length(pvs)]))))
-    
   }
   
   ## mise en forme 
@@ -588,14 +605,14 @@ createISeg <- function(nomIndic, nomVar, nomEnq, ctry, data, sfSec, cheminOut){
   ## Rename variables
   colnames(duncan)[2:length(duncan)] <- colnames(pvs[ , 4:length(pvs)])
   
-  ## Pour le Canada rev5 en 2eme col
-  if(ctry == "CA" & nomIndic == "rev") {
-    duncan <- duncan %>% relocate(c("hour", "rev5"))
-  }
-  ## Pour Bogota mode4 en 2eme col
-  if(nomEnq == "BOGOTA" & nomIndic == "mode") {
-    duncan <- duncan %>% relocate(c("hour", "mode4"))
-  }
+  # ## Pour le Canada rev5 en 2eme col
+  # if(ctry == "CA" & nomIndic == "rev") {
+  #   duncan <- duncan %>% relocate(c("hour", "rev5"))
+  # }
+  # ## Pour Bogota mode4 en 2eme col
+  # if(nomEnq == "BOGOTA" & nomIndic == "mode") {
+  #   duncan <- duncan %>% relocate(c("hour", "mode4"))
+  # }
   
   
   # MORAN
@@ -694,14 +711,14 @@ createISeg <- function(nomIndic, nomVar, nomEnq, ctry, data, sfSec, cheminOut){
     pivot_wider(names_from = var, values_from = moran) %>% 
     mutate(hour = newH) # !! pvs$HOUR doit être factor with 24 levels from h4 to h27
   
-  ## Pour le Canada rev5 en 2eme col
-  if(ctry == "CA" & nomIndic == "rev") {
-    moran <- moran %>% relocate(c("hour", "rev5"))
-  }
-  ## Pour Bogota mode4 en 2eme col
-  if(nomEnq == "BOGOTA" & nomIndic == "mode") {
-    moran <- moran %>% relocate(c("hour", "mode4"))
-  }
+  # ## Pour le Canada rev5 en 2eme col
+  # if(ctry == "CA" & nomIndic == "rev") {
+  #   moran <- moran %>% relocate(c("hour", "rev5"))
+  # }
+  # ## Pour Bogota mode4 en 2eme col
+  # if(nomEnq == "BOGOTA" & nomIndic == "mode") {
+  #   moran <- moran %>% relocate(c("hour", "mode4"))
+  # }
   
   
   ## EXPORT 
@@ -863,7 +880,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
   P_eff_end <- (eff_end/eff_start)*100
   
   ### SEUIL
-  seuil <- NA
+  seuil <- 5
   
   
   ### on recode les modalités de ZONAGE
@@ -878,6 +895,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
   } else if(nrow(prez_long) < (5*eff_start)/100){
     cat("STOP PROCESS: ", "insufficient population (", nrow(prez_long), "presences remain after filtering)")
   } else {
+    
     #~ 1. INDICATEUR "WHOLE POPULATION" ----
     createPopFiles(nomEnq, prez_long, sfSec, seuil, cheminOut)
     
@@ -890,7 +908,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
     
     if(!nomVar%in%names(subpop)){
       data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
-      createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
+      createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut, seuil)
       createStacked(nomIndic, nomEnq, ctry, data, cheminOut)  }
     
     ## SEX 
@@ -899,7 +917,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
     
     if(!nomVar%in%names(subpop)){
       data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
-      createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
+      createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut, seuil)
       createISeg(nomIndic, nomVar, nomEnq, ctry, data, sfSec, cheminOut)
       createStacked(nomIndic, nomEnq, ctry, data, cheminOut)  }
     
@@ -911,7 +929,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
     
     if(!nomVar%in%names(subpop)){
       data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
-      createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
+      createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut, seuil)
       createISeg(nomIndic, nomVar, nomEnq, ctry, data, sfSec, cheminOut)
       createStacked(nomIndic, nomEnq, ctry, data, cheminOut)  }
     
@@ -921,7 +939,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
     
     if(!nomVar%in%names(subpop)){
       data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
-      createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
+      createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut, seuil)
       createISeg(nomIndic, nomVar, nomEnq, ctry, data, sfSec, cheminOut)
       createStacked(nomIndic, nomEnq, ctry, data, cheminOut)  }
     
@@ -932,7 +950,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
     
     if(!nomVar%in%names(subpop)){
       data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
-      createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
+      createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut, seuil)
       createStacked(nomIndic, nomEnq, ctry, data, cheminOut)  }
     
     
@@ -941,7 +959,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
     
     if(!nomVar%in%names(subpop)){
       data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
-      createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
+      createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut, seuil)
       createStacked(nomIndic, nomEnq, ctry, data, cheminOut)  }
     
     if(ctry %in% c("FR", "AS")){
@@ -952,7 +970,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
       
       if(!nomVar%in%names(subpop)){
         data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
-        createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
+        createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut, seuil)
         createISeg(nomIndic, nomVar, nomEnq, ctry, data, sfSec, cheminOut)
         createStacked(nomIndic, nomEnq, ctry, data, cheminOut)    }
       
@@ -963,7 +981,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
       
       if(!nomVar%in%names(subpop)){
         data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
-        createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
+        createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut, seuil)
         createISeg(nomIndic, nomVar, nomEnq, ctry, data, sfSec, cheminOut)
         createStacked(nomIndic, nomEnq, ctry, data, cheminOut)    }
       
@@ -976,7 +994,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
       
       if(!nomVar%in%names(subpop)){
         data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
-        createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
+        createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut, seuil)
         createISeg(nomIndic, nomVar, nomEnq, ctry, data, sfSec, cheminOut)
         createStacked(nomIndic, nomEnq, ctry, data, cheminOut)    }
       
@@ -987,7 +1005,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
       
       if(!nomVar%in%names(subpop)){
         data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
-        createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
+        createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut, seuil)
         createISeg(nomIndic, nomVar, nomEnq, ctry, data, sfSec, cheminOut)
         createStacked(nomIndic, nomEnq, ctry, data, cheminOut)    }
       
@@ -1001,7 +1019,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
       
       if(!nomVar%in%names(subpop)){
         data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
-        createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
+        createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut, seuil)
         createISeg(nomIndic, nomVar, nomEnq, ctry, data, sfSec, cheminOut)
         createStacked(nomIndic, nomEnq, ctry, data, cheminOut)    }
       
@@ -1016,7 +1034,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
       
       if(!nomVar%in%names(subpop)){
         data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
-        createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
+        createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut, seuil)
         createISeg(nomIndic, nomVar, nomEnq, ctry, data, sfSec, cheminOut)
         createStacked(nomIndic, nomEnq, ctry, data, cheminOut)    }
     }
@@ -1030,7 +1048,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
       
       if(!nomVar%in%names(subpop)){
         data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
-        createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
+        createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut, seuil)
         createISeg(nomIndic, nomVar, nomEnq, ctry, data, sfSec, cheminOut)
         createStacked(nomIndic, nomEnq, ctry, data, cheminOut)    }
       
@@ -1045,7 +1063,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
       
       if(!nomVar%in%names(subpop)){
         data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
-        createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
+        createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut, seuil)
         createISeg(nomIndic, nomVar, nomEnq, ctry, data, sfSec, cheminOut)
         createStacked(nomIndic, nomEnq, ctry, data, cheminOut)    }
     }
@@ -1058,7 +1076,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
       
       if(!nomVar%in%names(subpop)){
         data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
-        createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
+        createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut, seuil)
         createISeg(nomIndic, nomVar, nomEnq, ctry, data, sfSec, cheminOut)
         createStacked(nomIndic, nomEnq, ctry, data, cheminOut)    }
       
@@ -1069,7 +1087,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
       
       if(!nomVar%in%names(subpop)){
         data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
-        createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
+        createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut, seuil)
         createISeg(nomIndic, nomVar, nomEnq, ctry, data, sfSec, cheminOut)
         createStacked(nomIndic, nomEnq, ctry, data, cheminOut)    }
       
@@ -1080,7 +1098,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
       
       if(!nomVar%in%names(subpop)){
         data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
-        createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
+        createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut, seuil)
         createISeg(nomIndic, nomVar, nomEnq, ctry, data, sfSec, cheminOut)
         createStacked(nomIndic, nomEnq, ctry, data, cheminOut)    }
       
@@ -1094,7 +1112,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
       
       if(!nomVar%in%names(subpop)){
         data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
-        createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
+        createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut, seuil)
         createISeg(nomIndic, nomVar, nomEnq, ctry, data, sfSec, cheminOut)
         createStacked(nomIndic, nomEnq, ctry, data, cheminOut)    }
     }
@@ -1108,7 +1126,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
       
       if(!nomVar%in%names(subpop)){
         data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
-        createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
+        createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut, seuil)
         createISeg(nomIndic, nomVar, nomEnq, ctry, data, sfSec, cheminOut)
         createStacked(nomIndic, nomEnq, ctry, data, cheminOut)    }
       
@@ -1121,7 +1139,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
       
       if(!nomVar%in%names(subpop)){
         data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
-        createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
+        createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut, seuil)
         createISeg(nomIndic, nomVar, nomEnq, ctry, data, sfSec, cheminOut)
         createStacked(nomIndic, nomEnq, ctry, data, cheminOut)    }
     }
@@ -1133,7 +1151,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
       
       if(!nomVar%in%names(subpop)){
         data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
-        createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
+        createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut, seuil)
         createISeg(nomIndic, nomVar, nomEnq, ctry, data, sfSec, cheminOut)
         createStacked(nomIndic, nomEnq, ctry, data, cheminOut)    }
     }
@@ -1145,7 +1163,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
       
       if(!nomVar%in%names(subpop)){
         data <- prepPVS(nomEnq, prez_long, nomIndic, nomVar, seuil)
-        createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut)
+        createFiles(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, cheminOut, seuil)
         createISeg(nomIndic, nomVar, nomEnq, ctry, data, sfSec, cheminOut)
         createStacked(nomIndic, nomEnq, ctry, data, cheminOut)    }
     }
