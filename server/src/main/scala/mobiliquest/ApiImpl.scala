@@ -21,14 +21,18 @@ object ApiImpl extends shared.Api {
 
     FileService.withPresenceUtile[RequestResponse] { inputDir =>
       FileService.withTmpDir[RequestResponse] { outputDir =>
-        val rFuture = ThreadService.submit(() => R.computeAll(cleanRequest, inputDir.pathAsString, outputDir.pathAsString))
-        val nbRecords = Await.result(rFuture, 1 hour)
+        val hash = Serializer.toJson(cleanRequest, (s"$outputDir/filters.json").toFile)
 
-        if (nbRecords > 0) {
-          val hash = Serializer.toJson(cleanRequest, (s"$outputDir/filters.json").toFile)
-          FileService.uploadFiles(outputDir.listRecursively.toSeq, outputDir.pathAsString, hash)
-          RequestResponse(Some(nbRecords), Some(FileService.getURL(hash, "filters.json")))
-        } else emptyResponse
+        if (FileService.exists(hash)) RequestResponse(None, Some(FileService.getURL(hash, "filters.json")))
+        else {
+          val rFuture = ThreadService.submit(() => R.computeAll(cleanRequest, inputDir.pathAsString, outputDir.pathAsString))
+          val nbRecords = Await.result(rFuture, 1 hour)
+
+          if (nbRecords > 0) {
+            FileService.uploadFiles(outputDir.listRecursively.toSeq, outputDir.pathAsString, hash)
+            RequestResponse(Some(nbRecords), Some(FileService.getURL(hash, "filters.json")))
+          } else emptyResponse
+        }
       }
     }
   }

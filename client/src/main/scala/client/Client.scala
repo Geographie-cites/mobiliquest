@@ -70,7 +70,8 @@ object App {
         child <-- requestStatus.signal.map { x =>
           x match {
             case data.Done(r) =>
-              div(span(r.nbRecords.getOrElse(0).toString, marginRight := "10px"), r.resultURL.map{url=> a("filters.json", href := url, target := "_blank" )}.getOrElse(emptyNode), marginLeft := "10")
+              val nbRec = r.nbRecords.map{_.toString}.getOrElse("?")
+              div(span(nbRec, marginRight := "10px"), r.resultURL.map{url=> a("filters.json", href := url, target := "_blank" )}.getOrElse(emptyNode), marginLeft := "10")
             case _ => emptyNode
           }
         })
