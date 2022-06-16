@@ -34,8 +34,8 @@ class Servlet extends ScalatraServlet {
         tags.script(tags.`type` := "text/javascript", tags.src := "js/demo.js")
       ),
       body(
-      tags.div(id := "mobiliquest-content"),
-      tags.script("mobiliquest.gui();")
+        tags.div(id := "mobiliquest-content"),
+        tags.script("mobiliquest.gui();")
       )
     )
   }

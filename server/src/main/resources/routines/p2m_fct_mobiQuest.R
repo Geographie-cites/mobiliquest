@@ -23,9 +23,9 @@ createPopFiles <- function(nomEnq, prez_long, sfSec, seuil, cheminOut){
   # 1a. CONSTRUCTION DES DONNEES POUR la carte en cercle proportionnelle - pop0_prop : 
   # nombre estimé de personnes présentes par secteur et par heure
   
-  dir.create(paste0(cheminOut, nomEnq,"/pop0_prop"))
-  dir.create(paste0(cheminOut, nomEnq,"/pop0_prop/data"))
-  dir.create(paste0(cheminOut, nomEnq,"/pop0_prop/geo"))
+  dir.create(paste0(cheminOut,"/pop0_prop"))
+  dir.create(paste0(cheminOut,"/pop0_prop/data"))
+  dir.create(paste0(cheminOut,"/pop0_prop/geo"))
   
   ## Comptage des présences par secteur et par heure : 
   ## POPULATION PRESENTE (STOCK PONDERE)
@@ -57,7 +57,7 @@ createPopFiles <- function(nomEnq, prez_long, sfSec, seuil, cheminOut){
   ### Export
   shpProp <- sf_geojson(shpProp)
   geojson_write(shpProp,
-                file = paste0(cheminOut, nomEnq,"/pop0_prop/geo/secteursData.geojson"),
+                file = paste0(cheminOut,"/pop0_prop/geo/secteursData.geojson"),
                 layer_options = "ENCODING=UTF-8")
   
   
@@ -82,7 +82,7 @@ createPopFiles <- function(nomEnq, prez_long, sfSec, seuil, cheminOut){
   
   ### Export
   write.csv(dfProp, 
-             paste0(cheminOut, nomEnq,"/pop0_prop/data/dataSect.csv"), 
+             paste0(cheminOut,"/pop0_prop/data/dataSect.csv"), 
              row.names = FALSE)   
   
   
@@ -90,9 +90,9 @@ createPopFiles <- function(nomEnq, prez_long, sfSec, seuil, cheminOut){
   # 1b. CONSTRUCTION DES DONNEES POUR la carte de densité - pop0_choro : 
   # Densité de personnes (km2) présentes par secteur et par heure
   
-  dir.create(paste0(cheminOut, nomEnq,"/pop0_choro"))
-  dir.create(paste0(cheminOut, nomEnq,"/pop0_choro/data"))
-  dir.create(paste0(cheminOut, nomEnq,"/pop0_choro/geo"))
+  dir.create(paste0(cheminOut,"/pop0_choro"))
+  dir.create(paste0(cheminOut,"/pop0_choro/data"))
+  dir.create(paste0(cheminOut,"/pop0_choro/geo"))
   
   ### joindre la variable 'AREA' de la couche des secteurs à la table de présence et calcul
   options(scipen = 999)
@@ -116,7 +116,7 @@ createPopFiles <- function(nomEnq, prez_long, sfSec, seuil, cheminOut){
   ### Export
   shpChoro <- sf_geojson(shpChoro)
   geojson_write(shpChoro,
-                file = paste0(cheminOut, nomEnq,"/pop0_choro/geo/secteursData.geojson"),
+                file = paste0(cheminOut,"/pop0_choro/geo/secteursData.geojson"),
                 layer_options = "ENCODING=UTF-8")
 
   ## mise en forme csv DENS
@@ -130,7 +130,7 @@ createPopFiles <- function(nomEnq, prez_long, sfSec, seuil, cheminOut){
   
   ### Export
   write.csv(dfChoro, 
-             paste0(cheminOut, nomEnq,"/pop0_choro/data/dataSect.csv"), 
+             paste0(cheminOut,"/pop0_choro/data/dataSect.csv"), 
              row.names = FALSE) 
   
   
@@ -140,9 +140,9 @@ createPopFiles <- function(nomEnq, prez_long, sfSec, seuil, cheminOut){
   # nombre estimé de personnes non résidentes par secteur et par heure + flux OD
   
   # Création des dossiers   
-  dir.create(paste0(cheminOut, nomEnq,"/pop0_flow"))
-  dir.create(paste0(cheminOut, nomEnq,"/pop0_flow/data"))
-  dir.create(paste0(cheminOut, nomEnq,"/pop0_flow/geo"))
+  dir.create(paste0(cheminOut,"/pop0_flow"))
+  dir.create(paste0(cheminOut,"/pop0_flow/data"))
+  dir.create(paste0(cheminOut,"/pop0_flow/geo"))
   
 
   ## Calcul des flux OD (origine = secteur de résidence - RES_SEC, destination = secteur de présence - CODE_SEC)
@@ -159,7 +159,7 @@ createPopFiles <- function(nomEnq, prez_long, sfSec, seuil, cheminOut){
   
   ## Export de flowdata
   write.csv2(flowdata, 
-             paste0(cheminOut,nomEnq,"/pop0_flow/geo/flowData.csv"), 
+             paste0(cheminOut,"/pop0_flow/geo/flowData.csv"), 
              row.names = FALSE)  
   
   
@@ -197,7 +197,7 @@ createPopFiles <- function(nomEnq, prez_long, sfSec, seuil, cheminOut){
   ## Export
   shpChoroNR <- sf_geojson(shpChoroNR)
   geojson_write(shpChoroNR,
-                file = paste0(cheminOut, nomEnq, "/pop0_flow/geo/secteursData.geojson"),
+                file = paste0(cheminOut, "/pop0_flow/geo/secteursData.geojson"),
                 layer_options = "ENCODING=UTF-8")
   
   ## mise en forme csv STOCK NR
@@ -212,7 +212,7 @@ createPopFiles <- function(nomEnq, prez_long, sfSec, seuil, cheminOut){
   
   ## Export des tables
   write.csv(dfChoroNR, 
-             paste0(cheminOut, nomEnq,"/pop0_flow/data/dataSect.csv"), 
+             paste0(cheminOut,"/pop0_flow/data/dataSect.csv"), 
              row.names = FALSE) 
 }
 
@@ -415,15 +415,15 @@ createFiles <- function(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, chemin
     
     # Création des répertoires
     ## Répertoires parents (2 par indicateur)
-    dir.create(paste0(cheminOut, nomEnq, "/", indic ,"_prop"))
-    dir.create(paste0(cheminOut, nomEnq, "/", indic ,"_choro"))
+    dir.create(paste0(cheminOut, "/", indic ,"_prop"))
+    dir.create(paste0(cheminOut, "/", indic ,"_choro"))
     
     ## Répertoires enfants (2 par répertoire parent)
-    dir.create(paste0(cheminOut, nomEnq, "/", indic ,"_prop/geo"))
-    dir.create(paste0(cheminOut, nomEnq, "/", indic ,"_choro/geo"))
+    dir.create(paste0(cheminOut, "/", indic ,"_prop/geo"))
+    dir.create(paste0(cheminOut, "/", indic ,"_choro/geo"))
     
-    dir.create(paste0(cheminOut, nomEnq, "/", indic ,"_prop/data"))
-    dir.create(paste0(cheminOut, nomEnq, "/", indic ,"_choro/data"))
+    dir.create(paste0(cheminOut, "/", indic ,"_prop/data"))
+    dir.create(paste0(cheminOut, "/", indic ,"_choro/data"))
     
     
     
@@ -443,7 +443,7 @@ createFiles <- function(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, chemin
     ### Export des données spatiales
     shpProp <- sf_geojson(shpProp)
     geojson_write(shpProp,
-                  file = paste0(cheminOut, nomEnq, "/", indic ,"_prop/geo/secteursData.geojson"),
+                  file = paste0(cheminOut, "/", indic ,"_prop/geo/secteursData.geojson"),
                   layer_options = "ENCODING=UTF-8")
     
     
@@ -462,7 +462,7 @@ createFiles <- function(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, chemin
     ### Export des données spatiales
     shpChoro <- sf_geojson(shpChoro)
     geojson_write(shpChoro,
-                  file = paste0(cheminOut, nomEnq, "/", indic ,"_choro/geo/secteursData.geojson"),
+                  file = paste0(cheminOut, "/", indic ,"_choro/geo/secteursData.geojson"),
                   layer_options = "ENCODING=UTF-8")
     
     
@@ -477,7 +477,7 @@ createFiles <- function(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, chemin
     
     ### Export des données
     write.csv(dfProp, 
-              paste0(cheminOut, nomEnq, "/", indic ,"_prop/data/dataSect.csv"), 
+              paste0(cheminOut, "/", indic ,"_prop/data/dataSect.csv"), 
               row.names = FALSE)
     
     
@@ -492,7 +492,7 @@ createFiles <- function(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, chemin
     
     ### Export des données
     write.csv(dfChoro, 
-              paste0(cheminOut, nomEnq, "/", indic ,"_choro/data/dataSect.csv"), 
+              paste0(cheminOut, "/", indic ,"_choro/data/dataSect.csv"), 
               row.names = FALSE)
       
   }
@@ -505,11 +505,11 @@ createFiles <- function(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, chemin
       indic <- colnames(pvs3)[3 + as.numeric(i)]
       
       ## Répertoires parents (2 par indicateur)
-      dir.create(paste0(cheminOut, nomEnq, "/", indic ,"_flow"))
+      dir.create(paste0(cheminOut, "/", indic ,"_flow"))
       
       ## Répertoires enfants (2 par répertoire parent)
-      dir.create(paste0(cheminOut, nomEnq, "/", indic ,"_flow/geo"))
-      dir.create(paste0(cheminOut, nomEnq, "/", indic ,"_flow/data"))
+      dir.create(paste0(cheminOut, "/", indic ,"_flow/geo"))
+      dir.create(paste0(cheminOut, "/", indic ,"_flow/data"))
       
       ### Flowdata : csv des flux OD avec seuil 
       flowdata <- prez_long %>% 
@@ -539,10 +539,10 @@ createFiles <- function(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, chemin
       ### Export des données spatiales
       shpChoroNR <- sf_geojson(shpChoroNR)
       geojson_write(shpChoroNR,
-                    file = paste0(cheminOut, nomEnq, "/", indic ,"_flow/geo/secteursData.geojson"),
+                    file = paste0(cheminOut, "/", indic ,"_flow/geo/secteursData.geojson"),
                     layer_options = "ENCODING=UTF-8")
       write.csv2(flowdata, 
-                 paste0(cheminOut, nomEnq, "/", indic ,"_flow/geo/flowData.csv"), 
+                 paste0(cheminOut, "/", indic ,"_flow/geo/flowData.csv"), 
                  row.names = FALSE)
       
       ## Oursins
@@ -557,7 +557,7 @@ createFiles <- function(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, chemin
       
       ## Export des données
       write.csv(dfChoroNR, 
-                paste0(cheminOut, nomEnq, "/", indic ,"_flow/data/dataSect.csv"), 
+                paste0(cheminOut, "/", indic ,"_flow/data/dataSect.csv"), 
                 row.names = FALSE)
       
     }
@@ -723,10 +723,10 @@ createISeg <- function(nomIndic, nomVar, nomEnq, ctry, data, sfSec, cheminOut){
   
   ## EXPORT 
   write.csv(duncan, 
-              paste0(cheminOut, nomEnq, "/indice_segreg/", nomIndic,"_Duncan.csv"), 
+              paste0(cheminOut, "/indice_segreg/", nomIndic,"_Duncan.csv"), 
               row.names = FALSE)
   write.csv(moran, 
-              paste0(cheminOut, nomEnq, "/indice_segreg/", nomIndic,"_Moran.csv"), 
+              paste0(cheminOut, "/indice_segreg/", nomIndic,"_Moran.csv"), 
               row.names = FALSE)
 }  
 
@@ -768,7 +768,7 @@ createStacked <- function(nomIndic, nomEnq, ctry, data, cheminOut){
   }
   
   ## Export
-  write.csv(df, paste0(cheminOut, nomEnq, "/stacked/", nomIndic, "_choro_stacked.csv"), 
+  write.csv(df, paste0(cheminOut, "/stacked/", nomIndic, "_choro_stacked.csv"), 
               row.names = FALSE)
   
   
@@ -792,7 +792,7 @@ createStacked <- function(nomIndic, nomEnq, ctry, data, cheminOut){
   
   ## Export
   write.csv(df, 
-             paste0(cheminOut, nomEnq, "/stacked/", nomIndic, "_prop_stacked.csv"), 
+             paste0(cheminOut, "/stacked/", nomIndic, "_prop_stacked.csv"), 
              row.names = FALSE)
   
   
@@ -816,7 +816,7 @@ createStacked <- function(nomIndic, nomEnq, ctry, data, cheminOut){
     
     ## Export
     write.csv(df, 
-               paste0(cheminOut, nomEnq, "/stacked/", nomIndic, "_flow_stacked.csv"), 
+               paste0(cheminOut, "/stacked/", nomIndic, "_flow_stacked.csv"), 
                 row.names = FALSE)
   }
   
@@ -831,9 +831,9 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
 
 
   # Création des répertoires de sortie 
-  dir.create(paste0(cheminOut, nomEnq))
-  dir.create(paste0(cheminOut, nomEnq, "/stacked"))
-  dir.create(paste0(cheminOut, nomEnq, "/indice_segreg"))
+  dir.create(paste0(cheminOut))
+  dir.create(paste0(cheminOut, "/stacked"))
+  dir.create(paste0(cheminOut, "/indice_segreg"))
 
   
   #~ 0. FILTRES : Enquête, périmètre et sous-population ----

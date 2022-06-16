@@ -31,7 +31,7 @@ object App {
 
     val studiesUI = RequestForm.studyUI
     val currentIndicatorsUI: Var[Seq[RequestForm.IndicatorUI]] = Var(Seq())
-    val nbRequestedRecords: Var[data.RequestStatus] = Var(data.Off)
+    val requestStatus: Var[data.RequestStatus] = Var(data.Off)
 
     def indicatorsUIToRequest(indicatorsUI: Seq[IndicatorUI]) = {
       val (perim, all) = indicatorsUI.partition(x => x.indicatorAndModalities._1 == data.Indicators.perimetre)
@@ -53,28 +53,26 @@ object App {
           )
         },
         button("Run", btn_primary_outline, onClick --> { _ =>
-          nbRequestedRecords.set(data.Running)
+          requestStatus.set(data.Running)
           val (all, perimModalities) = indicatorsUIToRequest(currentIndicatorsUI.now())
           val request = data.Request(RequestForm.currentStudy.now(), perimModalities, all)
           Post[shared.Api].run(request).call().foreach { x =>
-            nbRequestedRecords.set(data.Done(x))
+            requestStatus.set(data.Done(x))
           }
         },
-          disabled <-- nbRequestedRecords.signal.map {
+          disabled <-- requestStatus.signal.map {
             _ match {
               case Running => true
               case _ => false
             }
           }
         ),
-        child <-- nbRequestedRecords.signal.map { x =>
-          div(
-            x match {
-              case data.Done(r) => r.toString
-              case _ => ""
-            },
-            marginLeft := "10"
-          )
+        child <-- requestStatus.signal.map { x =>
+          x match {
+            case data.Done(r) =>
+              div(span(r.nbRecords.getOrElse(0).toString, marginRight := "10px"), r.resultURL.map{url=> a("filters.json", href := url, target := "_blank" )}.getOrElse(emptyNode), marginLeft := "10")
+            case _ => emptyNode
+          }
         })
 
     val containerNode = dom.document.querySelector("#mobiliquest-content")

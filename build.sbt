@@ -13,6 +13,7 @@ val scalajsDomVersion = "2.0.0"
 val scalatagsVersion = "0.9.4"
 val json4sVersion = "4.0.5"
 val betterFilesVersion = "3.9.1"
+val minioVersion = "8.4.2"
 
 lazy val shared = project.in(file("shared")) settings (
   scalaVersion := ScalaVersion
@@ -55,6 +56,7 @@ lazy val server = project.in(file("server")) settings(
     "org.eclipse.jetty" % "jetty-server" % jettyVersion,
     "org.json4s" %% "json4s-jackson" % json4sVersion,
     "com.github.pathikrit" %% "better-files-akka" % betterFilesVersion,
+    "io.minio" % "minio" % minioVersion,
   )
 ) dependsOn (shared) enablePlugins (ScalatraPlugin)
 

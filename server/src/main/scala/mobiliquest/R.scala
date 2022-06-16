@@ -1,25 +1,17 @@
 package mobiliquest
 
-import java.io.File
 import shared.data._
 
 object R {
   val R = org.ddahl.rscala.RClient()
 
-  //FIXME: should be given in args
-  val inputDir = "/home/mathieu/Documents/Geocite/Mobiliscope/data/BD_presence_utile"
-  val outputDir = "/tmp/mobiliquest/out/"
-
-  new File(inputDir).mkdirs()
-  new File(outputDir).mkdirs()
-
-  val api = io.Source.fromResource("routines/p2m_fct_mobiQuest.R").getLines().mkString("\n")
+  val api = scala.io.Source.fromResource("routines/p2m_fct_mobiQuest.R").getLines().mkString("\n")
 
   def filterFullModalities(study: Study, indicator: Indicator, flattenModalities: Seq[Modality]) =
     if (flattenModalities.length == Utils.flatten(Indicators.availableIndicatorsAndModalities(study)(indicator)).length) Seq()
     else flattenModalities
 
-  def computeAll(request: Request)(implicit inputDirectory: Directory, outputDirectory: Directory) = {
+  def computeAll(request: Request, inputDir: Directory, outputDir: Directory) = {
 
     val Rfilters = request.filters.map {
       case (indicator, modalities) =>

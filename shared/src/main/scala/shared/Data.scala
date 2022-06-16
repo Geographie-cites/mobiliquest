@@ -24,13 +24,16 @@ object data {
 
   case class Request(study: Study, perimModalities: Modalities, filters: IndicatorAndModalities)
 
+  case class RequestResponse(nbRecords: Option[Int], resultURL: Option[String])
+  val emptyResponse = RequestResponse(None, None)
+
   sealed trait RequestStatus
 
   case object Off extends RequestStatus
 
   case object Running extends RequestStatus
 
-  case class Done(nbRecords: Int) extends RequestStatus
+  case class Done(requestResponse: RequestResponse) extends RequestStatus
 
   object Indicators {
 
