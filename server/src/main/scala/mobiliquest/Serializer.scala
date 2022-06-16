@@ -18,7 +18,9 @@ object Serializer {
           ("filters" -> request.filters.map { case (ind, mod) => ind.RName -> Utils.flatten(mod) })
         )
 
-    target.overwrite(pretty(render(json)))
+    val jsonText = pretty(render(json))
+    target.overwrite(jsonText)
+    Utils.hash(jsonText)
   }
 
 }

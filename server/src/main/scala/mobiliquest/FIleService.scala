@@ -28,7 +28,6 @@ object FileService {
 
   def withTmpDir[T](f: File ⇒ T) = {
     val file = java.nio.file.Files.createTempDirectory("MBQ").toFile.getAbsolutePath.toFile
-    println("TMP : " + file.pathAsString)
     try {
       f(file)
     }
@@ -38,7 +37,6 @@ object FileService {
   }
 
   def getURL(bucketName: String, fileName: String) = {
-    println("get URL")
     minioClient.getPresignedObjectUrl(
       GetPresignedObjectUrlArgs.builder()
         .method(Method.GET)
