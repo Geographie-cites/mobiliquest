@@ -1,6 +1,5 @@
 package mobiliquest
 
-import mobiliquest.R.filterFullModalities
 import shared.data
 import shared.data.{Indicators, RequestResponse, emptyResponse}
 import better.files._
@@ -15,15 +14,16 @@ object ApiImpl extends shared.Api {
 
   def run(request: data.Request): RequestResponse = {
     val cleanRequest = request.copy(
-      filters = request.filters.map { case (i, m) => i -> Seq(Right(filterFullModalities(request.study, i, Utils.flatten(m)))) },
-      perimModalities = Seq(Right(filterFullModalities(request.study, Indicators.perimetre, Utils.flatten(request.perimModalities))))
+      filters = request.filters.map { case (i, m) => i -> Seq(Right(R.filterFullModalities(request.study, i, Utils.flatten(m)))) }
     )
 
     FileService.withPresenceUtile[RequestResponse] { inputDir =>
       FileService.withTmpDir[RequestResponse] { outputDir =>
         val hash = Serializer.toJson(cleanRequest, (s"$outputDir/filters.json").toFile)
 
-        if (FileService.exists(hash)) RequestResponse(None, Some(FileService.getURL(hash, "filters.json")))
+        if (FileService.exists(hash)) {
+          RequestResponse(None, Some(FileService.getURL(hash, "filters.json")))
+        }
         else {
           val rFuture = ThreadService.submit(() => R.computeAll(cleanRequest, inputDir.pathAsString, outputDir.pathAsString))
           val nbRecords = Await.result(rFuture, 1 hour)

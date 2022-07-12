@@ -10,7 +10,20 @@ object data {
   type Modality = Int
   type RequestID = String
   type Modalities = Seq[Either[Modality, Seq[Modality]]]
-  case class Indicator(RName: String, description: String, modalityDescriptions: Seq[(Modality, String)])
+
+  sealed trait RequestType {
+    def name: String
+  }
+
+  case class SubPop() extends RequestType {
+    def name = "subpop"
+  }
+
+  case class Perimeter() extends RequestType {
+    def name = "perimeter"
+  }
+
+  case class Indicator(RName: String, description: String, modalityDescriptions: Seq[(Modality, String)], requestType: RequestType)
 
   type IndicatorAndModalities = Map[Indicator, Modalities]
 
@@ -18,13 +31,14 @@ object data {
 
   implicit def seqOfIntToLeftModality(ms: Seq[Int]): Right[Modality, Seq[Modality]] = Right(ms)
 
- // implicit def ModalityToLeftModality(m: Seq[Modality]): Seq[Left[Modality, Seq[Modality]]] = m.map{Left(_)}
+  // implicit def ModalityToLeftModality(m: Seq[Modality]): Seq[Left[Modality, Seq[Modality]]] = m.map{Left(_)}
 
   implicit def ModalityToRightModality(m: Seq[Seq[Modality]]): Seq[Right[Modality, Seq[Modality]]] = m.map{Right(_)}
 
-  case class Request(study: Study, perimModalities: Modalities, filters: IndicatorAndModalities)
+  case class Request(study: Study, filters: IndicatorAndModalities, requestType: RequestType)
 
   case class RequestResponse(nbRecords: Option[Int], resultURL: Option[String])
+
   val emptyResponse = RequestResponse(None, None)
 
   sealed trait RequestStatus
@@ -48,7 +62,8 @@ object data {
         5 -> "Périphérie proche",
         6 -> "Péricentre",
         7 -> "Centre"
-      )
+      ),
+      Perimeter()
     )
 
     val kAge = Indicator(
@@ -60,7 +75,8 @@ object data {
         2 -> "25-34 ans",
         3 -> "35-64 ans",
         4 -> "65 ans et plus"
-      )
+      ),
+      SubPop()
     )
 
     val sex = Indicator(
@@ -69,7 +85,8 @@ object data {
       Seq(
         1 -> "Homme",
         2 -> "Femme"
-      )
+      ),
+      SubPop()
     )
 
     val strM_fr = Indicator(
@@ -80,7 +97,8 @@ object data {
         2 -> "Couple sans enfant",
         3 -> "Ménage (hors couple) sans enfant",
         4 -> "Ménage avec enfant"
-      )
+      ),
+      SubPop()
     )
 
     val strM_ca = Indicator(
@@ -90,7 +108,8 @@ object data {
         1 -> "Ménage d'une personne",
         2 -> "Ménage sans enfant",
         3 -> "Ménage avec enfant"
-      )
+      ),
+      SubPop()
     )
 
     val strM_al = Indicator(
@@ -102,7 +121,8 @@ object data {
         3 -> "Ménage complexe sans enfant",
         4 -> "Famille avec enfant",
         5 -> "Ménage complexe avec enfant"
-      )
+      ),
+      SubPop()
     )
 
     val educ = Indicator(
@@ -113,7 +133,8 @@ object data {
         2 -> "Niveau intermédiaire",
         3 -> "Niveau élevé",
         4 -> "Niveau très élevé"
-      )
+      ),
+      SubPop()
     )
 
     val educMen = Indicator(
@@ -124,7 +145,8 @@ object data {
         2 -> "Niveau intermédiaire",
         3 -> "Niveau élevé",
         4 -> "Niveau très élevé"
-      )
+      ),
+      SubPop()
     )
 
     val rev = Indicator(
@@ -136,7 +158,8 @@ object data {
         3 -> "Intermédiaire - Tranche supérieure",
         4 -> "Élevé",
         5 -> "Inconnu"
-      )
+      ),
+      SubPop()
     )
 
     val rev_al = Indicator(
@@ -148,7 +171,8 @@ object data {
         3 -> "Intermédiaire",
         4 -> "Élevé",
         5 -> "Très élevé"
-      )
+      ),
+      SubPop()
     )
 
     val cso = Indicator(
@@ -159,7 +183,8 @@ object data {
         2 -> "Travailleurs qualifiés",
         3 -> "Indépendants",
         4 -> "Cadres et professions intellectuelles"
-      )
+      ),
+      SubPop()
     )
 
     val inf = Indicator(
@@ -168,7 +193,8 @@ object data {
       Seq(
         1 -> "Actifs avec emploi formel",
         2 -> "Actifs avec emploi informel",
-      )
+      ),
+      SubPop()
     )
 
     val sse = Indicator(
@@ -179,7 +205,8 @@ object data {
         2 -> "Strate 2",
         3 -> "Strate 3",
         4 -> "Strate 4, 5 ou 6"
-      )
+      ),
+      SubPop()
     )
 
     val log = Indicator(
@@ -189,7 +216,8 @@ object data {
         1 -> "Personnes hébergées",
         2 -> "Locataires",
         3 -> "Propriétaires"
-      )
+      ),
+      SubPop()
     )
 
     val csp = Indicator(
@@ -201,7 +229,8 @@ object data {
         3 -> "Employés",
         4 -> "Intermédiaire",
         5 -> "Cadres et professions intellectuelles"
-      )
+      ),
+      SubPop()
     )
 
     val cspMen = Indicator(
@@ -213,7 +242,8 @@ object data {
         3 -> "Employés",
         4 -> "Intermédiaire",
         5 -> "Cadres et professions intellectuelles"
-      )
+      ),
+      SubPop()
     )
 
     val occ = Indicator(
@@ -225,7 +255,8 @@ object data {
         3 -> "Sans emploi",
         4 -> "Retraités",
         5 -> "Inactifs"
-      )
+      ),
+      SubPop()
     )
 
     val dep = Indicator(
@@ -237,7 +268,8 @@ object data {
         3 -> "Val-de-Marne",
         4 -> "Haut-de-Seine",
         5 -> "Grande couronne"
-      )
+      ),
+      SubPop()
     )
 
     val zonage_fr = Indicator(
@@ -247,7 +279,8 @@ object data {
         1 -> "Zone périphérique",
         2 -> "Zone urbaine",
         3 -> "Ville-centre"
-      )
+      ),
+      SubPop()
     )
 
     val zonage_cabe = Indicator(
@@ -256,7 +289,8 @@ object data {
       Seq(
         1 -> "Zone périphérique",
         2 -> "Ville-centre"
-      )
+      ),
+      SubPop()
     )
 
     val zonage_al = Indicator(
@@ -267,7 +301,8 @@ object data {
         2 -> "Périphérie proche",
         3 -> "Péricentre",
         4 -> "Centre"
-      )
+      ),
+      SubPop()
     )
 
     val qpv = Indicator(
@@ -276,7 +311,8 @@ object data {
       Seq(
         1 -> "Hors QPV",
         2 -> "Dans QPV"
-      )
+      ),
+      SubPop()
     )
 
     val basic: IndicatorAndModalities = Map(

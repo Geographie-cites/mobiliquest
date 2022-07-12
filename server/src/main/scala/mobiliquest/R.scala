@@ -13,14 +13,17 @@ object R {
 
   def computeAll(request: Request, inputDir: Directory, outputDir: Directory) = {
 
-    val Rfilters = request.filters.map {
+    val Rfilters = "list(" + request.filters.map {
       case (indicator, modalities) =>
         // An indicator with all modalities should not be consider as a filter
         s""" "${indicator.RName}" = c(${Utils.flatten(modalities).mkString(", ")}) """
-    }.mkString(",")
+    }.mkString(",") + ")"
 
-    val call = s"""\np2m("${request.study}", c(${Utils.flatten(request.perimModalities).mkString(",")}), list($Rfilters), "$inputDir", "$outputDir")"""
-    println("R call :: " + call)
-    R.evalI0(api + call)
+    def indicatorList(rType: RequestType) =
+      if(rType == request.requestType) Rfilters
+      else "list()"
+
+    val call = s"""\np2m("${request.study}", ${indicatorList(Perimeter())}, ${indicatorList(SubPop())}, "$inputDir", "$outputDir")"""
+   R.evalI0(api + call)
   }
 }

@@ -15,9 +15,9 @@ import com.raquo.laminar.api.L._
 import scala.concurrent.ExecutionContext.Implicits.global
 import autowire._
 import boopickle.Default._
-import client.RequestForm.{IndicatorUI, rowFlex}
+import client.RequestForm._
 import shared.data
-import shared.data.{Running, Study}
+import shared.data._
 
 @JSExportTopLevel(name = "mobiliquest")
 @JSExportAll
@@ -27,54 +27,62 @@ object App {
 
   def gui() = {
 
-    def indicatorsUI(study: Study) = RequestForm.indicatorUIs(study)
+    def indicatorsUI(study: Study, requestType: RequestType) = RequestForm.indicatorUIs(study, requestType)
 
     val studiesUI = RequestForm.studyUI
+    val requestType: Var[RequestType] = Var(SubPop())
     val currentIndicatorsUI: Var[Seq[RequestForm.IndicatorUI]] = Var(Seq())
     val requestStatus: Var[data.RequestStatus] = Var(data.Off)
 
     def indicatorsUIToRequest(indicatorsUI: Seq[IndicatorUI]) = {
-      val (perim, all) = indicatorsUI.partition(x => x.indicatorAndModalities._1 == data.Indicators.perimetre)
-      (all.map { iUI =>
-        iUI.indicatorAndModalities
-      }.toMap, perim.head.indicatorAndModalities._2)
+        indicatorsUI.map{_.indicatorAndModalities}.toMap
     }
+
+    val subPopState = ToggleState("Sup population", btn_primary_string, () => requestType.set(SubPop()))
+    val perimeterState = ToggleState("Perimeter", btn_primary_string, () => requestType.set(Perimeter()))
+    val requestSelector = exclusiveRadio(Seq(subPopState, perimeterState), btn_secondary_string, subPopState)
 
     val content =
       div(
-        margin := "10",
         h1("Mobiliquest !"),
-        studiesUI.selector,
-        child <-- RequestForm.currentStudy.signal.map { cs =>
-          val newIndUI = indicatorsUI(cs)
+        div(display.flex, flexDirection.row, justifyContent.spaceAround, width := "500",
+          margin := "10",
+          studiesUI.selector,
+          requestSelector,
+          div(
+            button("Run", btn_primary_outline, onClick --> { _ =>
+              requestStatus.set(data.Running)
+              val request = data.Request(RequestForm.currentStudy.now(), indicatorsUIToRequest(currentIndicatorsUI.now()), requestType.now())
+              Post[shared.Api].run(request).call().foreach { x =>
+                requestStatus.set(data.Done(x))
+              }
+            },
+              disabled <-- requestStatus.signal.map {
+                _ match {
+                  case Running => true
+                  case _ => false
+                }
+              }
+            ),
+            child <-- requestStatus.signal.map { x =>
+              x match {
+                case data.Done(r) =>
+                  val nbRec = r.nbRecords.map {
+                    _.toString
+                  }.getOrElse("?")
+                  div(span(nbRec, marginRight := "10px"), r.resultURL.map { url => a("filters.json", href := url, target := "_blank") }.getOrElse(emptyNode), marginLeft := "10")
+                case _ => emptyNode
+              }
+            })
+        ),
+        child <-- RequestForm.currentStudy.signal.combineWith(requestType.signal).map { case(cs,rt) =>
+          val newIndUI = indicatorsUI(cs, rt)
           currentIndicatorsUI.set(newIndUI)
-          div(rowFlex, marginTop := "30px",
+          div(rowFlex, margin := "30px",
             newIndUI.map { iui => iui.content }
           )
-        },
-        button("Run", btn_primary_outline, onClick --> { _ =>
-          requestStatus.set(data.Running)
-          val (all, perimModalities) = indicatorsUIToRequest(currentIndicatorsUI.now())
-          val request = data.Request(RequestForm.currentStudy.now(), perimModalities, all)
-          Post[shared.Api].run(request).call().foreach { x =>
-            requestStatus.set(data.Done(x))
-          }
-        },
-          disabled <-- requestStatus.signal.map {
-            _ match {
-              case Running => true
-              case _ => false
-            }
-          }
-        ),
-        child <-- requestStatus.signal.map { x =>
-          x match {
-            case data.Done(r) =>
-              val nbRec = r.nbRecords.map{_.toString}.getOrElse("?")
-              div(span(nbRec, marginRight := "10px"), r.resultURL.map{url=> a("filters.json", href := url, target := "_blank" )}.getOrElse(emptyNode), marginLeft := "10")
-            case _ => emptyNode
-          }
-        })
+        }
+      )
 
     val containerNode = dom.document.querySelector("#mobiliquest-content")
 

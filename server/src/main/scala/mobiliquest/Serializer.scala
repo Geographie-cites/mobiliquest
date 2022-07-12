@@ -14,8 +14,7 @@ object Serializer {
     val json =
       ("request" ->
         ("study" -> request.study) ~
-          ("perimeter" -> Utils.flatten(request.perimModalities)) ~
-          ("filters" -> request.filters.map { case (ind, mod) => ind.RName -> Utils.flatten(mod) })
+          (request.requestType.name -> request.filters.map { case (ind, mod) => ind.RName -> Utils.flatten(mod) })
         )
 
     val jsonText = pretty(render(json))

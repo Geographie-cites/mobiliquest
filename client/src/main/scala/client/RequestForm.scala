@@ -1,7 +1,7 @@
 package client
 
 import shared.data
-import shared.data.{Indicator, IndicatorAndModalities, Modalities, Modality, Study}
+import shared.data._
 import scaladget.bootstrapnative.bsn._
 import com.raquo.laminar.api.L._
 import scaladget.bootstrapnative.Selector.Options
@@ -28,7 +28,9 @@ object RequestForm {
     private val toggleButtonStates = availableModalities.map {
       _ match {
         case Left(m: Modality) => modalityButton(modMap(m))
-        case Right(sOfM: Seq[Modality]) => modalityButton(sOfM.map{modMap(_)}.mkString(" et "))
+        case Right(sOfM: Seq[Modality]) => modalityButton(sOfM.map {
+          modMap(_)
+        }.mkString(" et "))
       }
     }
 
@@ -52,10 +54,11 @@ object RequestForm {
     }
   }
 
-  def indicatorUIs(study: Study) = {
-    val indicatorAndModalities = data.Indicators.availableIndicatorsAndModalities(study)
-    val (perim, all) = indicatorAndModalities.toSeq.partition(x => x._1 == data.Indicators.perimetre)
-    (all ++ perim).map { iam => new IndicatorUI(study, iam._1, iam._2) }.toSeq
+  def indicatorUIs(study: Study, requestType: RequestType) = {
+    val indicatorAndModalities = data.Indicators.availableIndicatorsAndModalities(study).filter { ii =>
+      ii._1.requestType == requestType
+    }
+    indicatorAndModalities.map { iam => new IndicatorUI(study, iam._1, iam._2) }.toSeq
   }
 
   lazy val studyUI: Options[Study] = studies.options(
