@@ -4,10 +4,7 @@
 
 setwd("~/00_MobiQuest/git/mobiliquest/server/src/main/resources/routines")
 
-# dossier d'entrée
-cheminIn <- "../../../../../../../data/BD_presence_utile"
-# dossier de sortie
-cheminOut <- "../../../../../../../data_web/data/"
+
 
 # choix des params
 
@@ -21,6 +18,11 @@ perim <- c()
 ## requête : sous-population avec n filtre, exemple :
 subpop <- list( "ZONAGE" = c() , "QPV" = c(2) , "SEX" = c() , "EDUCMEN" = c() , "CSP" = c() , "EDUC" = c() , "CSPMEN" = c() , "STRM" = c() , "OCC" = c() , "KAGE" = c() )
 subpop <- list( "ZONAGE" = c() , "QPV" = c() , "SEX" = c() , "EDUCMEN" = c(2, 3, 4) , "CSP" = c() , "EDUC" = c() , "CSPMEN" = c() , "STRM" = c() , "OCC" = c() , "KAGE" = c() )
+
+# dossier d'entrée
+cheminIn <- "../../../../../../../data/BD_presence_utile"
+# dossier de sortie
+cheminOut <- paste0("../../../../../../../data_web/data/", nomEnq, "/")
 
 
 # load p2m functions
