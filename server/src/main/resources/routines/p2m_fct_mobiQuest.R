@@ -844,12 +844,16 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
     mutate(ENQUETE = case_when(LIB_ED=="Valenciennes, 2011" ~ "VALENCIENNES2011",
                                TRUE ~ ENQUETE)) %>% 
     filter(ENQUETE == nomEnq) %>% 
-    rename(Secteur_EM = CODE_SEC, CENTROID_X = X_W84, CENTROID_Y = Y_W84) 
+    rename(Secteur_EM = CODE_SEC, 
+           CENTROID_X = X_W84, 
+           CENTROID_Y = Y_W84,
+           PERIM = ZONAGE_SEC)
   
   ### périmètre
   if(length(perim)!=0){
-    sfSec <- sfSec %>% 
-      filter(ZONAGE_SEC %in% perim)
+    fns <- imap(perim, ~ call(if (length(.x) == 1) "==" else "%in%", sym(.y), .x))
+    sfSec <- sfSec %>%
+      filter(!!!unname(fns))
   }
   
   ## données de présence
