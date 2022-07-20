@@ -20,10 +20,10 @@ object R {
     }.mkString(",") + ")"
 
     def indicatorList(rType: RequestType) =
-      if(rType == request.requestType) Rfilters
+      if (rType == request.requestType) Rfilters
       else "list()"
 
     val call = s"""\np2m("${request.study}", ${indicatorList(Perimeter())}, ${indicatorList(SubPop())}, "$inputDir", "$outputDir")"""
-   R.evalI0(api + call)
+    R.evalI0(api + call)
   }
 }

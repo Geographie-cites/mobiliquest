@@ -31,7 +31,6 @@ object App {
 
     val studiesUI = RequestForm.studyUI
     val requestType: Var[RequestType] = Var(SubPop())
-    val currentIndicatorsUI: Var[Seq[RequestForm.IndicatorUI]] = Var(Seq())
     val requestStatus: Var[data.RequestStatus] = Var(data.Off)
 
     def indicatorsUIToRequest(indicatorsUI: Seq[IndicatorUI]) = {
