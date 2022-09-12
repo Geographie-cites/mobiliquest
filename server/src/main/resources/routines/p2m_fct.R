@@ -1085,8 +1085,9 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut, seuil){
                   file = paste0(cheminOut, "geo/secteurs.geojson"))
     
     # création du json pour le menu accordéon + appel dico des variables
+    cat("avant dico")
     dico <- menuJson(cheminIn, nomEnq, ctry, subpop, cheminOut)
-    
+    cat("après dico")
     
     #~ 1. INDICATEUR "WHOLE POPULATION" ----
     createPopFiles(nomEnq, prez_long, sfSec, seuil, cheminOut)
