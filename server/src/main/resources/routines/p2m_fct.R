@@ -958,9 +958,16 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut, seuil){
   
   if(eff_end==0){
     cat("STOP PROCESS: zero population after filtering")
+    # stat <- c('{', 
+    #           '"respondents":', eff_end, 
+    #           '}')  
     mess <- FALSE
   } else if(eff_end < (5*eff_start)/100){ 
     cat(paste0("STOP PROCESS: insufficient population, ", eff_end, " respondents remain after filtering, i.e. ", round(P_eff_end), "% of the starting population"))
+    # stat <- c('{', 
+    #           '"respondents":', eff_end, ',',
+    #           '"respondents_pct":', round(P_eff_end),
+    #           '}')  
     mess <- FALSE
   } else {
     
@@ -999,14 +1006,37 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut, seuil){
         "Calculations made with ", eff_end, " respondents, i.e. ", round(P_eff_end), "% of the starting population, ",
         "with at least one hourly presence in one the ", nSec, " districts (of ", nSec0, ") selected.")
         )
-      mess <- c(eff_end, round(P_eff_end), nSec, nSec0)
+      # stat <- c('{', 
+      #           '"respondents":', eff_end, ',',
+      #           '"respondents_pct":', round(P_eff_end), ',',
+      #           '"nDistrict0":', nSec0, ',',
+      #           '"nDistrict":', nSec,
+      #           '}') 
+      mess <- TRUE
     } else {
       cat(paste0("Calculations made with ", eff_end, " respondents, i.e. ", round(P_eff_end), "% of the starting population"))
+      # stat <- c('{', 
+      #           '"respondents":', eff_end, ',',
+      #           '"respondents_pct":', round(P_eff_end),
+      #           '}') 
       mess <- TRUE
     }
   
     
   }
+  
+  stat <- c('{', 
+            '"respondents":', eff_end, ',',
+            '"respondents_pct":', round(P_eff_end), ',',
+            '"nDistrict0":', nSec0, ',',
+            '"nDistrict":', nSec,
+            '}')
+  # Indentation pour des yeux humains
+  stat <- as.character(prettify(stat, indent = 4))
+  write.table(stat,
+              paste0(cheminOut, "/stat.json"),
+              row.names = FALSE, col.names = FALSE, quote = FALSE,
+              fileEncoding = "UTF-8")
   
   return(mess)
   
