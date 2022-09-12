@@ -10,7 +10,7 @@ object RequestForm {
 
   val studies = data.Indicators.availableIndicatorsAndModalities.keys.toSeq.sorted
   val currentStudy: Var[Study] = Var(studies.head)
-  val currentIndicatorsAndModalities: Var[IndicatorAndModalities] = Var(Map())
+  val currentIndicatorsUI: Var[Seq[RequestForm.IndicatorUI]] = Var(Seq())
   val rowFlex = Seq(display.flex, flexDirection.row)
   val columnFlex = Seq(display.flex, flexDirection.column)
 
@@ -19,18 +19,35 @@ object RequestForm {
 
   def toggleOn(modalityName: String, onColor: String) = ToggleState(modalityName, onColor)
 
-  def modalityButton(modalityName: String): ToggleButtonState = toggle(toggleOn(modalityName, btn_primary_string), true, unactivateState(modalityName), withCaret = false)
+  def updateModalitiyButtonState(indicatorUI: IndicatorUI) = {
+    currentIndicatorsUI.now().filterNot(_.indicator == indicatorUI.indicator).foreach{iui=>
+      iui.selectButtonsWith(iui.indicator)
+    }
+  }
 
-  class IndicatorUI(study: Study, indicator: Indicator, availableModalities: Modalities) {
+  def modalityButton(modalityName: String, indicatorUI: IndicatorUI): ToggleButtonState = toggle(toggleOn(modalityName, btn_primary_string), true, unactivateState(modalityName), withCaret = false,
+    onToggled = () => {
+      updateModalitiyButtonState(indicatorUI)
+    })
+
+  class IndicatorUI(study: Study, val indicator: Indicator, availableModalities: Modalities) {
 
     private val modMap = indicator.modalityDescriptions.toMap
 
     private val toggleButtonStates = availableModalities.map {
       _ match {
-        case Left(m: Modality) => modalityButton(modMap(m))
+        case Left(m: Modality) => modalityButton(modMap(m), this)
         case Right(sOfM: Seq[Modality]) => modalityButton(sOfM.map {
           modMap(_)
-        }.mkString(" et "))
+        }.mkString(" et "), this)
+      }
+    }
+
+    def selectButtonsWith(selectedIndicator: Indicator) = {
+      if (selectedIndicator == indicator) {
+        toggleButtonStates.foreach { b =>
+          b.toggled.set(true)
+        }
       }
     }
 
