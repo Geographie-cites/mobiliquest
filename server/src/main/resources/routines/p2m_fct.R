@@ -7,15 +7,15 @@
 library(tidylog)
 library(stringr)
 library(dplyr)
-require(tidyr)
+library(tidyr)
 library(purrr)
 library(sf)
 library(geojsonio)
 library(geojsonsf)
-require(jsonlite)
+library(jsonlite)
 library(OasisR) # Duncan
 library(spdep) # Moran
-require(readxl)
+library(readxl)
 
 
 #==== GLOBAL FUNCTIONS ====
@@ -1011,7 +1011,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut, seuil){
   #~ 1. LOAD DATA et FILTRAGES ----
   
   # couche secteur
-  sfSec <- st_read(paste0(cheminIn, "BDgeo/SEC_59ED_W84.shp"))
+  sfSec <- st_read(paste0(cheminIn, "/BDgeo/SEC_59ED_W84.shp"))
   sfSec <- sfSec %>% 
     mutate(ENQUETE = case_when(LIB_ED=="Valenciennes, 2011" ~ "VALENCIENNES2011",
                                TRUE ~ ENQUETE)) %>% 
@@ -1037,7 +1037,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut, seuil){
   
   # données de présence
   # prez_long <- prepPrezLong(data = prezTable %>% filter(ENQUETE == as.name(nomEnq)))
-  prez_long <- readRDS(paste0(cheminIn, "BD_presence_utile/presence_utile_", nomEnq, ".RDS"))
+  prez_long <- readRDS(paste0(cheminIn, "/BD_presence_utile/presence_utile_", nomEnq, ".RDS"))
   
   
   ## effectif de départ avant filtrage 
