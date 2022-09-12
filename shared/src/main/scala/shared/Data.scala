@@ -53,98 +53,98 @@ object data {
 
     val perimetre = Indicator(
       "PERIM",
-      "Périmètre selon le zonage en aire urbaine",
+      "Perimeter according to urban area zoning",
       Seq(
-        1 -> "périphérique",
-        2 -> "Zone urbaine",
-        3 -> "Ville-centre",
-        4 -> "lointaine",
-        5 -> "Périphérie proche",
-        6 -> "Péricentre",
-        7 -> "Centre"
+        1 -> "Peripheral areas",
+        2 -> "Urban areas",
+        3 -> "Inner city",
+        4 -> "Distant periphery",
+        5 -> "Close periphery",
+        6 -> "Pericenter",
+        7 -> "Center"
       ),
       Perimeter()
     )
 
     val kAge = Indicator(
       "KAGE",
-      "Classe d'âge",
+      "Age groups",
       Seq(
-        0 -> "moins de 16 ans",
-        1 -> "16-24 ans",
-        2 -> "25-34 ans",
-        3 -> "35-64 ans",
-        4 -> "65 ans et plus"
+        0 -> "15 and less",
+        1 -> "16-24",
+        2 -> "25-34",
+        3 -> "35-64",
+        4 -> "65 and more"
       ),
       SubPop()
     )
 
     val sex = Indicator(
       "SEX",
-      "Sexe",
+      "Sex",
       Seq(
-        1 -> "Homme",
-        2 -> "Femme"
+        1 -> "Male",
+        2 -> "Female"
       ),
       SubPop()
     )
 
     val strM_fr = Indicator(
       "STRM",
-      "Composition du ménage",
+      "Household composition",
       Seq(
-        1 -> "Ménage d'une personne",
-        2 -> "Couple sans enfant",
-        3 -> "Ménage (hors couple) sans enfant",
-        4 -> "Ménage avec enfant"
+        1 -> "Single-person household",
+        2 -> "Couple without children",
+        3 -> "Household (excluding couple) without children",
+        4 -> "Household with children"
       ),
       SubPop()
     )
 
     val strM_ca = Indicator(
       "STRM",
-      "Composition du ménage",
+      "Household composition",
       Seq(
-        1 -> "Ménage d'une personne",
-        2 -> "Ménage sans enfant",
-        3 -> "Ménage avec enfant"
+        1 -> "Single-person household",
+        2 -> "Household without children",
+        3 -> "Household with children"
       ),
       SubPop()
     )
 
     val strM_al = Indicator(
       "STRM",
-      "Composition du ménage",
+      "Household composition",
       Seq(
-        1 -> "Ménage d'une personne",
-        2 -> "Famille sans enfant",
-        3 -> "Ménage complexe sans enfant",
-        4 -> "Famille avec enfant",
-        5 -> "Ménage complexe avec enfant"
+        1 -> "Single-person household",
+        2 -> "Family without children",
+        3 -> "Complex household without children",
+        4 -> "Family with children",
+        5 -> "Complex household with children"
       ),
       SubPop()
     )
 
     val educ = Indicator(
       "EDUC",
-      "Niveau d'éducation (individuel)",
+      "Educational level (individual)",
       Seq(
-        1 -> "Faible niveau",
-        2 -> "Niveau intermédiaire",
-        3 -> "Niveau élevé",
-        4 -> "Niveau très élevé"
+        1 -> "Low",
+        2 -> "Intermediate",
+        3 -> "High",
+        4 -> "Very high"
       ),
       SubPop()
     )
 
     val educMen = Indicator(
       "EDUCMEN",
-      "Niveau d'éducation du ménage",
+      "Educational level (household)",
       Seq(
-        1 -> "Faible niveau",
-        2 -> "Niveau intermédiaire",
-        3 -> "Niveau élevé",
-        4 -> "Niveau très élevé"
+        1 -> "Low",
+        2 -> "Intermediate",
+        3 -> "High",
+        4 -> "Very high"
       ),
       SubPop()
     )
@@ -164,97 +164,97 @@ object data {
 
     val rev_al = Indicator(
       "REV",
-      "Revenu du ménage",
+      "Household income",
       Seq(
-        1 -> "Très faible",
-        2 -> "Faible",
-        3 -> "Intermédiaire",
-        4 -> "Élevé",
-        5 -> "Très élevé"
+        1 -> "Very low",
+        2 -> "Low",
+        3 -> "Intermediate",
+        4 -> "High",
+        5 -> "Very high"
       ),
       SubPop()
     )
 
     val cso = Indicator(
       "CSO",
-      "Catégorie socioprofessionnelle",
+      "Socioprofessional status",
       Seq(
-        1 -> "Travailleurs non qualifiés",
-        2 -> "Travailleurs qualifiés",
-        3 -> "Indépendants",
-        4 -> "Cadres et professions intellectuelles"
+        1 -> "Unskilled workers",
+        2 -> "Skilled workers",
+        3 -> "Self-employed",
+        4 -> "Executives and professionals"
       ),
       SubPop()
     )
 
     val inf = Indicator(
       "INFORMAL",
-      "Informalité professionnelle des actifs",
+      "Professional informality",
       Seq(
-        1 -> "Actifs avec emploi formel",
-        2 -> "Actifs avec emploi informel",
+        1 -> "Formal workers",
+        2 -> "Informal workers",
       ),
       SubPop()
     )
 
     val sse = Indicator(
       "SSE",
-      "Strate socio-économique de résidence",
+      "Socio-economic stratum of residence",
       Seq(
-        1 -> "Strate 1 ou non stratifié",
-        2 -> "Strate 2",
-        3 -> "Strate 3",
-        4 -> "Strate 4, 5 ou 6"
+        1 -> "Stratum 1 or not stratified",
+        2 -> "Stratum 2",
+        3 -> "Stratum 3",
+        4 -> "Stratum 4, 5 or 6"
       ),
       SubPop()
     )
 
     val log = Indicator(
       "LOG",
-      "Statut d'occupation du logement",
+      "Housing tenure",
       Seq(
-        1 -> "Personnes hébergées",
-        2 -> "Locataires",
-        3 -> "Propriétaires"
+        1 -> "Rent-free",
+        2 -> "Tenants",
+        3 -> "Owners"
       ),
       SubPop()
     )
 
     val csp = Indicator(
       "CSP",
-      "Catégorie socioprofessionnelle (individuelle)",
+      "Socioprofessional status (individual)",
       Seq(
-        1 -> "Inactifs",
-        2 -> "Ouvriers",
-        3 -> "Employés",
-        4 -> "Intermédiaire",
-        5 -> "Cadres et professions intellectuelles"
+        1 -> "Inactive",
+        2 -> "Workers",
+        3 -> "Employees",
+        4 -> "Intermediate occupants",
+        5 -> "Managers and intellectual professionals"
       ),
       SubPop()
     )
 
     val cspMen = Indicator(
       "CSPMEN",
-      "Catégorie socioprofessionnelle du ménage",
+      "Socioprofessional status (household)",
       Seq(
-        1 -> "Inactifs",
-        2 -> "Ouvriers",
-        3 -> "Employés",
-        4 -> "Intermédiaire",
-        5 -> "Cadres et professions intellectuelles"
+        1 -> "Inactive",
+        2 -> "Workers",
+        3 -> "Employees",
+        4 -> "Intermediate occupants",
+        5 -> "Managers and intellectual professionals"
       ),
       SubPop()
     )
 
     val occ = Indicator(
       "OCC",
-      "Occupation principale",
+      "Occupational status",
       Seq(
-        1 -> "Actifs",
-        2 -> "Étudiants",
-        3 -> "Sans emploi",
-        4 -> "Retraités",
-        5 -> "Inactifs"
+        1 -> "Active",
+        2 -> "Student",
+        3 -> "Unemployed",
+        4 -> "Retired",
+        5 -> "Inactive"
       ),
       SubPop()
     )
@@ -267,50 +267,32 @@ object data {
         2 -> "Seine-Saint-Denis",
         3 -> "Val-de-Marne",
         4 -> "Haut-de-Seine",
-        5 -> "Grande couronne"
+        5 -> "Greater Paris"
       ),
       SubPop()
     )
 
-    val zonage_fr = Indicator(
+    val zonage = Indicator(
       "ZONAGE",
-      "Résidence selon le zonage en aire urbaine",
+      "Residential location in the urban/peripheral rings",
       Seq(
-        1 -> "Zone périphérique",
-        2 -> "Zone urbaine",
-        3 -> "Ville-centre"
-      ),
-      SubPop()
-    )
-
-    val zonage_cabe = Indicator(
-      "ZONAGE",
-      "Résidence selon le zonage en aire urbaine",
-      Seq(
-        1 -> "Zone périphérique",
-        2 -> "Ville-centre"
-      ),
-      SubPop()
-    )
-
-    val zonage_al = Indicator(
-      "ZONAGE",
-      "Couronne de résidence",
-      Seq(
-        1 -> "Périphérie lointaine",
-        2 -> "Périphérie proche",
-        3 -> "Péricentre",
-        4 -> "Centre"
+        1 -> "Peripheral areas",
+        2 -> "Urban areas",
+        3 -> "Inner city",
+        4 -> "Distant periphery",
+        5 -> "Close periphery",
+        6 -> "Pericenter",
+        7 -> "Center"
       ),
       SubPop()
     )
 
     val qpv = Indicator(
       "QPV",
-      "Résidence dans/hors Quartier Prioritaire (QPV)",
+      "Residential location in/outside 'Poverty Areas' (QPV)",
       Seq(
-        1 -> "Hors QPV",
-        2 -> "Dans QPV"
+        1 -> "Inside QPV",
+        2 -> "Outside QPV"
       ),
       SubPop()
     )
@@ -324,7 +306,7 @@ object data {
       csp -> Seq(1, 2, 3, 4, 5),
       cspMen -> Seq(1, 2, 3, 4, 5),
       occ -> Seq(1, 2, 3, 4, 5),
-      zonage_fr -> Seq(1, 2, 3),
+      zonage -> Seq(1, 2, 3),
       qpv -> Seq(1, 2)
     )
 
@@ -337,7 +319,7 @@ object data {
       csp -> Seq(1, 2, 3, 4, 5),
       cspMen -> Seq(1, 2, 3, 4, 5),
       occ -> Seq(1, 2, 3, 4, 5),
-      zonage_fr -> Seq(1, 2, 3)
+      zonage -> Seq(1, 2, 3)
     )
 
     val besCarc: IndicatorAndModalities = Map(
@@ -349,7 +331,7 @@ object data {
       csp -> Seq(1, 2, 3, 4, 5),
       cspMen -> Seq(1, 2, 3, 4, 5),
       occ -> Seq(1, 2, 3, 4, 5),
-      zonage_cabe -> Seq(1, 2),
+      zonage -> Seq(1, 3),
       qpv -> Seq(1, 2)
     )
 
@@ -364,7 +346,7 @@ object data {
       cspMen -> Seq(1, 2, 3, 4, 5),
       occ -> Seq(1, 2, 3, 4, 5),
       dep -> Seq(1, 2, 3, 4, 5),
-      zonage_fr -> Seq(1, 2, 3),
+      zonage -> Seq(1, 2, 3),
       qpv -> Seq(1, 2)
     )
 
@@ -378,7 +360,7 @@ object data {
       cso -> Seq(1, 2, 3, 4),
       inf -> Seq(1, 2),
       occ -> Seq(1, 2, 3, 4, 5),
-      zonage_al -> Seq(1, 2, 3, 4),
+      zonage -> Seq(4, 5, 6, 7),
       sse -> Seq(1, 2, 3, 4),
       log -> Seq(1, 2, 3)
     )
@@ -392,7 +374,7 @@ object data {
       rev_al -> Seq(1, 2, 3, 4, 5),
       cso -> Seq(1, 2, 3, 4),
       occ -> Seq(1, 2, 3, 4, 5),
-      zonage_al -> Seq(1, 2, 3, 4),
+      zonage -> Seq(4, 5, 6, 7),
       log -> Seq(1, 2, 3)
     )
 
@@ -406,7 +388,7 @@ object data {
       cso -> Seq(1, 2, 3, 4),
       inf -> Seq(1, 2),
       occ -> Seq(1, 2, 3, 4, 5),
-      zonage_al -> Seq(1, 2, 3, 4),
+      zonage -> Seq(4, 5, 6, 7),
       log -> Seq(1, 2, 3)
     )
 
