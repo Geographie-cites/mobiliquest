@@ -883,9 +883,8 @@ createISeg <- function(nomIndic, nomVar, nomEnq, ctry, data, sfSec, seuil, chemi
 
 ##---- Fonction p2m : de la table de présence aux indicateurs du Mobiliscope ----
 p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut, seuil){
-  
   # Création des répertoires de sortie 
-  dir.create(paste0(cheminOut))
+  dir.create(paste0(cheminOut, "/"))
   dir.create(paste0(cheminOut, "/geo"))
   dir.create(paste0(cheminOut, "/flowData"))
   dir.create(paste0(cheminOut, "/stacked"))
@@ -922,7 +921,6 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut, seuil){
   # données de présence
   # prez_long <- prepPrezLong(data = prezTable %>% filter(ENQUETE == as.name(nomEnq)))
   prez_long <- readRDS(paste0(cheminIn, "/presence_utile_", nomEnq, ".RDS"))
-  
   
   ## effectif de départ avant filtrage 
   # eff_start <- prez_long %>% filter(HOUR=="h4") %>% nrow(.) # n présence à h4
