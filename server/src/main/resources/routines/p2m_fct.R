@@ -52,7 +52,7 @@ menuJson <- function(cheminIn, nomEnq, ctry, subpop, cheminOut){
 
 
   # ouverture du fichier
-  dico <- read_excel(paste0(cheminIn, "/dictionnaire_menu.xlsx"), sheet = sheet)
+  dico <- read_excel(paste0(cheminIn, "/menujson/dictionnaire_menu.xlsx"), sheet = sheet)
   
   ## filtre VARIABLE in dico
   if(length(subpop)!=0){
@@ -920,7 +920,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut, seuil){
   
   # données de présence
   # prez_long <- prepPrezLong(data = prezTable %>% filter(ENQUETE == as.name(nomEnq)))
-  prez_long <- readRDS(paste0(cheminIn, "/presence_utile_", nomEnq, ".RDS"))
+  prez_long <- readRDS(paste0(cheminIn, "/BD_presence_utile/presence_utile_", nomEnq, ".RDS"))
   
   ## effectif de départ avant filtrage 
   # eff_start <- prez_long %>% filter(HOUR=="h4") %>% nrow(.) # n présence à h4
@@ -956,10 +956,10 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut, seuil){
   
   if(eff_end==0){
     cat("STOP PROCESS: zero population after filtering")
-    mess <- eff_end
+    mess <- FALSE
   } else if(eff_end < (5*eff_start)/100){ 
     cat(paste0("STOP PROCESS: insufficient population, ", eff_end, " respondents remain after filtering, i.e. ", round(P_eff_end), "% of the starting population"))
-    mess <- c(eff_end, round(P_eff_end))
+    mess <- FALSE
   } else {
     
     ## geojson vierge pour le téléchargement
@@ -1000,7 +1000,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut, seuil){
       mess <- c(eff_end, round(P_eff_end), nSec, nSec0)
     } else {
       cat(paste0("Calculations made with ", eff_end, " respondents, i.e. ", round(P_eff_end), "% of the starting population"))
-      mess <- c(eff_end, round(P_eff_end))
+      mess <- TRUE
     }
   
     
