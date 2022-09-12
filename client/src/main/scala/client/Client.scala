@@ -34,7 +34,9 @@ object App {
     val requestStatus: Var[data.RequestStatus] = Var(data.Off)
 
     def indicatorsUIToRequest(indicatorsUI: Seq[IndicatorUI]) = {
-        indicatorsUI.map{_.indicatorAndModalities}.toMap
+      indicatorsUI.map {
+        _.indicatorAndModalities
+      }.toMap
     }
 
     val subPopState = ToggleState("Sup population", btn_primary_string, () => requestType.set(SubPop()))
@@ -48,33 +50,32 @@ object App {
           margin := "10",
           studiesUI.selector,
           requestSelector,
-          div(
-            button("Run", btn_primary_outline, onClick --> { _ =>
-              requestStatus.set(data.Running)
-              val request = data.Request(RequestForm.currentStudy.now(), indicatorsUIToRequest(currentIndicatorsUI.now()), requestType.now())
-              Post[shared.Api].run(request).call().foreach { x =>
-                requestStatus.set(data.Done(x))
+          button("Run", btn_primary_outline, onClick --> { _ =>
+            requestStatus.set(data.Running)
+            val request = data.Request(RequestForm.currentStudy.now(), indicatorsUIToRequest(currentIndicatorsUI.now()), requestType.now())
+            Post[shared.Api].run(request).call().foreach { x =>
+              requestStatus.set(data.Done(x))
+            }
+          },
+            disabled <-- requestStatus.signal.map {
+              _ match {
+                case Running => true
+                case _ => false
               }
-            },
-              disabled <-- requestStatus.signal.map {
-                _ match {
-                  case Running => true
-                  case _ => false
-                }
-              }
-            ),
-            child <-- requestStatus.signal.map { x =>
-              x match {
-                case data.Done(r) =>
-                  val nbRec = r.nbRecords.map {
-                    _.toString
-                  }.getOrElse("?")
-                  div(span(nbRec, marginRight := "10px"), r.resultURL.map { url => a("filters.json", href := url, target := "_blank") }.getOrElse(emptyNode), marginLeft := "10")
-                case _ => emptyNode
-              }
-            })
+            }
+          ),
+          child <-- requestStatus.signal.map { x =>
+            x match {
+              case data.Done(r) =>
+                val nbRec = r.nbRecords.map {
+                  _.toString
+                }.getOrElse("?")
+                div(span(nbRec, marginRight := "10px"), r.resultURL.map { url => a("filters.json", href := url, target := "_blank") }.getOrElse(emptyNode), marginLeft := "10")
+              case _ => emptyNode
+            }
+          }
         ),
-        child <-- RequestForm.currentStudy.signal.combineWith(requestType.signal).map { case(cs,rt) =>
+        child <-- RequestForm.currentStudy.signal.combineWith(requestType.signal).map { case (cs, rt) =>
           val newIndUI = indicatorsUI(cs, rt)
           currentIndicatorsUI.set(newIndUI)
           div(rowFlex, margin := "30px",
