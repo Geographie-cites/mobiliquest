@@ -921,7 +921,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut, seuil){
   
   # données de présence
   # prez_long <- prepPrezLong(data = prezTable %>% filter(ENQUETE == as.name(nomEnq)))
-  prez_long <- readRDS(paste0(cheminIn, "/BD_presence_utile/presence_utile_", nomEnq, ".RDS"))
+  prez_long <- readRDS(paste0(cheminIn, "/presence_utile_", nomEnq, ".RDS"))
   
   
   ## effectif de départ avant filtrage 
@@ -957,11 +957,11 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut, seuil){
   
   
   if(eff_end==0){
-    # cat("STOP PROCESS: ", "zero population after filtering")
-    mess <- "STOP PROCESS: zero population after filtering"
+    cat("STOP PROCESS: zero population after filtering")
+    mess <- eff_end
   } else if(eff_end < (5*eff_start)/100){ 
-    # cat("STOP PROCESS: ", "insufficient population: ", eff_end, " respondents remain after filtering)")
-    mess <- paste0("STOP PROCESS: insufficient population, ", eff_end, " respondents remain after filtering, i.e. ", round(P_eff_end), "% of the starting population")
+    cat(paste0("STOP PROCESS: insufficient population, ", eff_end, " respondents remain after filtering, i.e. ", round(P_eff_end), "% of the starting population"))
+    mess <- c(eff_end, round(P_eff_end))
   } else {
     
     ## geojson vierge pour le téléchargement
@@ -969,10 +969,8 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut, seuil){
                   file = paste0(cheminOut, "/geo/secteurs.geojson"))
     
     # création du json pour le menu accordéon + appel dico des variables
-    cat("avant dico")
     dico <- menuJson(cheminIn, nomEnq, ctry, subpop, cheminOut)
-    cat("après dico")
-    
+
     #~ 1. INDICATEUR "WHOLE POPULATION" ----
     createPopFiles(nomEnq, prez_long, sfSec, seuil, cheminOut)
     
@@ -997,13 +995,14 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut, seuil){
     
     # cat("calculations made with ", eff_end, " respondents, i.e. ", round(P_eff_end), "% of the starting population")
     if(length(perim)!=0){
-      mess <- paste0(
+      cat(paste0(
         "Calculations made with ", eff_end, " respondents, i.e. ", round(P_eff_end), "% of the starting population, ",
-        "with at least one hourly presence in one the ", nSec, " districts (of ", nSec0, ") selected."
+        "with at least one hourly presence in one the ", nSec, " districts (of ", nSec0, ") selected.")
         )
+      mess <- c(eff_end, round(P_eff_end), nSec, nSec0)
     } else {
-      mess <- paste0("Calculations made with ", eff_end, " respondents, i.e. ", round(P_eff_end), "% of the starting population")
-      
+      cat(paste0("Calculations made with ", eff_end, " respondents, i.e. ", round(P_eff_end), "% of the starting population"))
+      mess <- c(eff_end, round(P_eff_end))
     }
   
     
