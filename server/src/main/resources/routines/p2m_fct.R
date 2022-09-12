@@ -52,7 +52,7 @@ menuJson <- function(cheminIn, nomEnq, ctry, subpop, cheminOut){
 
 
   # ouverture du fichier
-  dico <- read_excel(paste0(cheminIn, "/dictionnaire_menu.xlsx"), sheet = sheet)
+  dico <- read_excel(paste0(cheminIn, "/menujson/dictionnaire_menu.xlsx"), sheet = sheet)
   
   ## filtre VARIABLE in dico
   if(length(subpop)!=0){
@@ -921,7 +921,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut, seuil){
   
   # données de présence
   # prez_long <- prepPrezLong(data = prezTable %>% filter(ENQUETE == as.name(nomEnq)))
-  prez_long <- readRDS(paste0(cheminIn, "/presence_utile_", nomEnq, ".RDS"))
+  prez_long <- readRDS(paste0(cheminIn, "/BD_presence_utile/presence_utile_", nomEnq, ".RDS"))
   
   
   ## effectif de départ avant filtrage 
