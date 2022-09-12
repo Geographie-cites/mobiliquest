@@ -52,7 +52,7 @@ menuJson <- function(cheminIn, nomEnq, ctry, subpop, cheminOut){
 
 
   # ouverture du fichier
-  dico <- read_excel(paste0("dictionnaire_menu.xlsx"), sheet = sheet)
+  dico <- read_excel(paste0(cheminIn, "/dictionnaire_menu.xlsx"), sheet = sheet)
   
   ## filtre VARIABLE in dico
   if(length(subpop)!=0){
