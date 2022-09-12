@@ -21,7 +21,7 @@ library(readxl)
 #==== GLOBAL FUNCTIONS ====
 
 
-## fonction création menu json ----
+## 0. fonction création menu json ----
 menuJson <- function(cheminIn, nomEnq, ctry, subpop, cheminOut){
 
   # choix de l'onglet selon l'enquête
@@ -125,122 +125,6 @@ menuJson <- function(cheminIn, nomEnq, ctry, subpop, cheminOut){
   
   return(dico)
   
-}
-
-# 0. Transformation de la table des présences au format long ----
-# (présences autonomes et "immobiles" en un lieu)
-prepPrezLong <- function(data){
-
-
-  ctry <- unique(data$PAYS)
-  if (ctry == "FR") {
-    # Recoder les modalités de 'QPV'
-    data <- data %>%
-      mutate(QPV = QPV+1,
-             MOTIF = case_when(MOTIF == "06" ~ "00",
-                               TRUE ~ MOTIF))
-
-    # data <- data %>%
-    #   mutate(ZONAGE = case_when(ENQUETE %in% c("BESANCON", "CARCASSONNE") & ZONAGE == 3 ~ 2,
-    #                             TRUE ~ ZONAGE))
-    # Sélection des mobilités autonomes
-    data <- filter(data, AGE > 15)
-
-  }
-  if (ctry == "CA") {
-    # filtrer code_sec = NA
-    data <- data %>% filter(!is.na(CODE_SEC))
-    # Sélection des mobilités autonomes
-    data <- data %>% filter(KAGE != "0")
-    # recoder revenu inconnu avec 5
-    data <- data %>% mutate(REV = case_when(REV=="0" ~ "5",
-                                            TRUE ~ REV),
-                            MOTIF = case_when(MOTIF == "06" ~ "00",
-                                              TRUE ~ MOTIF))
-  }
-  if (ctry == "AS") {
-    # filter code_sec = NA
-    data <- data %>% filter(!is.na(CODE_SEC))
-    # Sélection des mobilités autonomes
-    data <- data %>% filter(KAGE != "0")
-    # Recoder les modalités de 'INFORMAL'
-    data <- data %>%
-      mutate(INFORMAL = INFORMAL+1)
-    # Recoder les modalités de ZONAGE
-    data <- data %>%
-      mutate(ZONAGE = as.numeric(ZONAGE)+3)
-    # prendre le niveau d'éduc le plus haut du ménage (EDUCMEN2)
-    data <- data %>%
-      select(-EDUCMEN) %>%
-      rename(EDUCMEN = EDUCMEN2)
-    # recoder RES_SSE
-    data <- data %>%
-      mutate(RES_SSE = case_when(RES_SSE=="5" ~ "4",
-                                 TRUE ~ RES_SSE))
-  }
-
-  # Suppression des présences hors zone d'enquête (codées '999')
-  # et des présences mobiles/en déplacement (codées '888')
-  data <- filter(data, CODE_SEC != "999" & CODE_SEC != "888")
-
-  # Suppression des artefacts de construction avec des durées = 0
-  data <- filter(data, DUREE != 0)
-
-  # Format long
-  prez_long <- data %>%
-    pivot_longer(-c(!starts_with("h", ignore.case = FALSE)), names_to = "HOUR", values_to = "value")
-
-  # On conserve uniquement les heures où les personnes stationnent dans un lieu
-  prez_long <- filter(prez_long, value == TRUE)
-
-  # Supprimer les "doublons" de la variable temporelle
-  # (respect du principe selon lequel un individu ne peut être présent dans 2 lieux distincts à la même heure)
-  doublon <- prez_long %>%
-    group_by(LIB_ED, HOUR, ID_IND) %>%
-    mutate(nID = n(),
-           nSEC = length(unique(CODE_SEC)),
-           durMax = max(DUREE)) %>%
-    ungroup()
-
-  doublon <- doublon %>%
-    filter(nID > 1 & nSEC > 1) %>%
-    select(ID_IND, CODE_SEC, CODE_COM, CODE_ZF, DUREE, HOUR, value, nSEC, durMax) %>%
-    mutate(toRemove = case_when(DUREE == durMax ~ "oui",
-                                TRUE ~ "non"))
-
-  doublon <- doublon %>%
-    filter(toRemove == "oui") %>%
-    mutate(ID = paste(ID_IND, CODE_SEC, HOUR, sep = "_"))
-
-  prez_long <- prez_long %>%
-    mutate(ID = paste(ID_IND, CODE_SEC, HOUR, sep = "_")) %>%
-    filter(!ID %in% doublon$ID)
-
-  prez_long$ID <- NULL
-
-  # Hour in factor
-  prez_long <- prez_long %>%
-    mutate(HOUR = factor(HOUR,
-                         levels = c("h4", "h5", "h6", "h7",
-                                    "h8", "h9", "h10", "h11",
-                                    "h12", "h13", "h14", "h15",
-                                    "h16", "h17", "h18", "h19",
-                                    "h20", "h21", "h22", "h23",
-                                    "h24", "h25", "h26", "h27")))
-
-  # création de la variable RES (résident/non-résident)
-  prez_long <- prez_long %>%
-    mutate(RES = case_when(CODE_SEC==RES_SEC ~ 2,
-                           CODE_SEC!=RES_SEC ~ 1))
-
-  # rectifier le typage de MODE_ARR et MODE_DEP
-  prez_long <- prez_long %>%
-    mutate(MODE_ARR = as.numeric(MODE_ARR),
-           MODE_DEP = as.numeric(MODE_DEP))
-
-
-  return(prez_long)
-
 }
 
 # 1. Indicateur POPULATION GLOBALE ----
@@ -349,7 +233,7 @@ createPopFiles <- function(nomEnq, prez_long, sfSec, seuil, cheminOut){
   
   ### Export
   write.csv(dfChoro, 
-            paste0(cheminOut, "stacked/pop_choro_stacked.csv"), 
+            paste0(cheminOut, "/stacked/pop_choro_stacked.csv"), 
             row.names = FALSE)
   
   
