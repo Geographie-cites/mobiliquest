@@ -37,7 +37,7 @@ object data {
 
   case class Request(study: Study, filters: IndicatorAndModalities, requestType: RequestType)
 
-  case class RequestResponse(nbRecords: Option[Int], resultURL: Option[String])
+  case class RequestResponse(filterURL: Option[String], statURL: Option[String])
 
   val emptyResponse = RequestResponse(None, None)
 

@@ -5,7 +5,7 @@ import shared.data._
 object R {
   val R = org.ddahl.rscala.RClient()
 
-  val api = scala.io.Source.fromResource("routines/p2m_fct_mobiQuest.R").getLines().mkString("\n")
+  val api = scala.io.Source.fromResource("routines/p2m_fct.R").getLines().mkString("\n")
 
   def filterFullModalities(study: Study, indicator: Indicator, flattenModalities: Seq[Modality]) =
     if (flattenModalities.length == Utils.flatten(Indicators.availableIndicatorsAndModalities(study)(indicator)).length) Seq()
@@ -23,7 +23,10 @@ object R {
       if (rType == request.requestType) Rfilters
       else "list()"
 
-    val call = s"""\np2m("${request.study}", ${indicatorList(Perimeter())}, ${indicatorList(SubPop())}, "$inputDir", "$outputDir")"""
-    R.evalI0(api + call)
+    val iD = new java.io.File(inputDir)
+
+    iD.listFiles().toSeq.foreach(println)
+    val call = s"""\np2m("${request.study}", ${indicatorList(Perimeter())}, ${indicatorList(SubPop())}, "$inputDir", "$outputDir", "seuil")"""
+    R.evalL0(api + call)
   }
 }

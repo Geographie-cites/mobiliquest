@@ -17,12 +17,15 @@ object FileService {
     .credentials("mathieu", "mathieu-password")
     .build()
 
-  val presenceUtileName = "bd-presence-utile"
+  val sourceData = "source-data"
+  val outData = "out-data"
 
+  createBucket(sourceData)
+  createBucket(outData)
 
-  def withPresenceUtile[T](op: File => T) =
+  def withSourceData[T](op: File => T) =
     withTmpDir[T] { file =>
-      downloadBucketContent(presenceUtileName, file)
+      downloadBucketContent(sourceData, file)
       op(file)
     }
 
@@ -50,6 +53,18 @@ object FileService {
   def exists(bucketName: String) = {
     minioClient.bucketExists(BucketExistsArgs.builder.bucket(bucketName).build)
   }
+
+  def existsDir(bucket: String, dirName: String) = {
+    bucketContent(bucket).flatMap { f =>
+      f.get().objectName().split("/").dropRight(1)
+    }.distinct.find { f =>
+      f == dirName
+    } match {
+      case Some(_) => true
+      case _ => false
+    }
+  }
+
 
   def createBucket(name: String) = {
     if (!exists(name)) {
@@ -82,7 +97,6 @@ object FileService {
   }
 
   def createDirectory(bucket: String, directoryName: String) = {
-    (println("Create " + directoryName))
     minioClient.listObjects(
       ListObjectsArgs.builder
         .bucket(bucket)
@@ -90,11 +104,11 @@ object FileService {
         .build())
   }
 
-  def uploadFiles(files: Seq[File], skipPath: String, bucket: String) = {
+  def uploadFiles(files: Seq[File], skipPath: String, bucket: String, hash: String) = {
     createBucket(bucket)
 
     files.foreach { f =>
-      val targetPath = f.pathAsString.replace(skipPath, "")
+      val targetPath = s"$hash/${f.pathAsString.replace(skipPath, "")}"
       if (f.isDirectory) createDirectory(bucket, targetPath)
       else {
         minioClient.uploadObject(
@@ -106,6 +120,7 @@ object FileService {
     }
   }
 
+  def uploadOutData(files: Seq[File], skipPath: String, hash: String) = uploadFiles(files, skipPath, outData, hash)
 
   def downloadBucketContent(bucketName: String, target: File) = {
     tryTo(() =>

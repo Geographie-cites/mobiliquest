@@ -9,7 +9,7 @@ import better.files._
 
 object Serializer {
 
-  def toJson(request: Request, target: File) = {
+  def toJson(request: Request, target: File, fileName: String) = {
 
     val json =
       ("request" ->
@@ -18,8 +18,12 @@ object Serializer {
         )
 
     val jsonText = pretty(render(json))
-    target.overwrite(jsonText)
-    Utils.hash(jsonText)
+    val hash = Utils.hash(jsonText)
+    val outPath = s"$target/$hash".toFile
+
+    outPath.toJava.mkdir
+    s"$outPath/$fileName".toFile.overwrite(jsonText)
+    hash
   }
 
 }

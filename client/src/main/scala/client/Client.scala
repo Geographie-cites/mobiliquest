@@ -46,7 +46,7 @@ object App {
     val content =
       div(
         h1("Mobiliquest !"),
-        div(display.flex, flexDirection.row, justifyContent.spaceAround, width := "500",
+        div(display.flex, flexDirection.row, justifyContent.spaceAround, width := "1000",
           margin := "10",
           studiesUI.selector,
           requestSelector,
@@ -64,14 +64,12 @@ object App {
               }
             }
           ),
-          child <-- requestStatus.signal.map { x =>
+          children <-- requestStatus.signal.map { x =>
             x match {
               case data.Done(r) =>
-                val nbRec = r.nbRecords.map {
-                  _.toString
-                }.getOrElse("?")
-                div(span(nbRec, marginRight := "10px"), r.resultURL.map { url => a("filters.json", href := url, target := "_blank") }.getOrElse(emptyNode), marginLeft := "10")
-              case _ => emptyNode
+                val filterURL = r.filterURL.getOrElse("?")
+                Seq(span("FIXME: nbRec", margin := "0 10 0 10"), a("filters.json", href := filterURL, target := "_blank"))
+              case _ => Seq()
             }
           }
         ),
