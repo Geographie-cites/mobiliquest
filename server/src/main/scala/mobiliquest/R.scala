@@ -23,11 +23,7 @@ object R {
       if (rType == request.requestType) Rfilters
       else "list()"
 
-    val iD = new java.io.File(inputDir)
-
-    iD.listFiles().toSeq.foreach(println)
     val call = s"""\np2m("${request.study}", ${indicatorList(Perimeter())}, ${indicatorList(SubPop())}, "$inputDir", "$outputDir")"""
-    println("call " + call)
     R.evalL0(api + call)
   }
 }
