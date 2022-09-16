@@ -882,7 +882,7 @@ createISeg <- function(nomIndic, nomVar, nomEnq, ctry, data, sfSec, seuil, chemi
 #==== ALGO FUNCTION ====
 
 ##---- Fonction p2m : de la table de présence aux indicateurs du Mobiliscope ----
-p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut, seuil){
+p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
   # Création des répertoires de sortie 
   dir.create(paste0(cheminOut, "/"))
   dir.create(paste0(cheminOut, "/geo"))
@@ -935,11 +935,6 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut, seuil){
       filter(CODE_SEC %in% sfSec$Secteur_EM)
   }
   
-  # ## on recode les modalités de ZONAGE
-  # prez_long <- prez_long %>% 
-  #   mutate(ZONAGE = case_when(PAYS=="AS" ~ ZONAGE+3,
-  #                             TRUE ~ ZONAGE))
-  
   ## filtre sous-population
   subpop <- subpop %>% compact()
   
@@ -947,6 +942,13 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut, seuil){
     fns <- imap(subpop, ~ call(if (length(.x) == 1) "==" else "%in%", sym(.y), .x))
     prez_long <- prez_long %>%
       filter(!!!unname(fns))
+  }
+  
+  ## Si filtre subpop, seuil = 6
+  if(length(subpop)!=0){
+    seuil <- 6
+  }else{
+    seuil <- NA
   }
   
   # eff_end <- nrow(prez_long)
