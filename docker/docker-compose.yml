@@ -1,0 +1,60 @@
+version: "3"
+
+services:
+  nginx:
+    build:
+      context: .
+      dockerfile: nginx/Dockerfile
+    ports:
+      - "8080:80"
+    networks:
+      - internal
+    volumes:
+        - ./data/:/var/www/html/
+        - ./logs/nginx:/var/log/nginx/
+  php:
+    image: php:fpm-alpine
+    networks:
+      - internal
+    volumes:
+      - ./data/:/var/www/html/
+      - ./logs/php.log:/var/log/fpm-php.www.log
+  minio:
+   image: docker.io/bitnami/minio:2022
+   ports:
+      - '9000:9000'
+      - '9001:9001'
+       #environment:
+        #- MINIO_ROOT_USER=mathieu
+        #- MINIO_ROOT_PASSWORD=mathieu-password
+   volumes:
+      - 'minio_data:/data'
+        #  jetty: 
+        # image: 11.0.12-amazoncorretto
+        # ports:
+        # - "8080:8080"
+        #volumes:
+        #  - /target/example.war:/var/lib/jetty/webapps/root.war
+  mobiliquest:
+    build:
+      context: ./mobiliquest
+      #environment:
+      #- VIRTUAL_HOST=simplu.openmole.org,plu.trempoline.io
+      #- LETSENCRYPT_HOST=simplu.openmole.org,plu.trempoline.io
+      #- LETSENCRYPT_EMAIL=mathieu.leclaire@trempoline.io
+    restart: always
+    volumes:
+      - 'minio_data/:/data'
+    ports:
+      - "9500:9500"
+        #networks:
+        #default:
+        #external:
+        #name: nginx-proxy
+volumes:
+  minio_data:
+    driver: local
+networks:
+  internal:
+    driver: bridge
+
