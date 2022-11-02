@@ -12,4 +12,4 @@ RUN cd /var/mobiliquest && \
     cd mobiliquest && \
     git checkout master
 RUN cd /var/mobiliquest/mobiliquest/ && sbt buildUI
-
+#RUN sbt jetty:start
