@@ -23,7 +23,7 @@ library(readxl)
 
 ## 0. fonction création menu json ----
 menuJson <- function(cheminIn, nomEnq, ctry, subpop, cheminOut){
-
+  
   # choix de l'onglet selon l'enquête
   if(ctry=="FR" & !nomEnq %in% c("IDF", "BESANCON", "CARCASSONNE", "ANNECY")){
     sheet <- "FR"
@@ -49,10 +49,10 @@ menuJson <- function(cheminIn, nomEnq, ctry, subpop, cheminOut){
   if(nomEnq=="SAO PAULO"){
     sheet <- "SP"
   }
-
-
+  
+  
   # ouverture du fichier
-  dico <- read_excel(paste0(cheminIn, "/menujson/dictionnaire_menu.xlsx"), sheet = sheet)
+  dico <- read_excel(paste0(cheminIn, "/ressources/dictionnaire_menu.xlsx"), sheet = sheet)
   
   ## filtre VARIABLE in dico
   if(length(subpop)!=0){
@@ -62,14 +62,14 @@ menuJson <- function(cheminIn, nomEnq, ctry, subpop, cheminOut){
   
   # ordre voulu des niveaux 1 :
   dico <- dico %>% 
-    mutate(LIB_GROUPINDIC = factor(LIB_GROUPINDIC,
-                                   levels = c("\"GLOBAL\"", "\"PROFIL DÉMOGRAPHIQUE\"",
-                                              "\"PROFIL SOCIAL\"", "\"PROFIL RÉSIDENTIEL\"",
-                                              "\"ACTIVITÉ / TRANSPORT\"")))
+    mutate(GROUPINDIC = factor(GROUPINDIC,
+                               levels = c("global", "profilDemo",
+                                          "profilSocial", "profilResid",
+                                          "activiteTransport")))
   
   # construction des imbrications de niveaux
   j <- dico %>% 
-    group_by(LIB_GROUPINDIC, LIB_INDIC, INDICATEUR) %>% 
+    group_by(GROUPINDIC, LIB_INDIC, INDICATEUR) %>% 
     nest() %>% 
     tibble(
       json3 = map(data, 
@@ -91,8 +91,8 @@ menuJson <- function(cheminIn, nomEnq, ctry, subpop, cheminOut){
       
     ) %>% 
     select(-data, -LIB_INDIC, -INDICATEUR, -json3) %>% 
-    unnest(cols = c(LIB_GROUPINDIC, json2)) %>% 
-    group_by(LIB_GROUPINDIC) %>% 
+    unnest(cols = c(GROUPINDIC, json2)) %>% 
+    group_by(GROUPINDIC) %>% 
     mutate(
       jsonN2 = paste0('"niv2" : [',
                       '{', 
@@ -100,7 +100,7 @@ menuJson <- function(cheminIn, nomEnq, ctry, subpop, cheminOut){
                       '}',
                       ']')
     ) %>% 
-    summarise(json1 = paste0('"label":', LIB_GROUPINDIC, ', ', jsonN2)) %>% 
+    summarise(json1 = paste0('"label":"', GROUPINDIC, '", ', jsonN2)) %>% 
     mutate(a = "a") %>% 
     group_by(a) %>% 
     summarise(json = paste0('{', json1, '}'))
@@ -127,9 +127,105 @@ menuJson <- function(cheminIn, nomEnq, ctry, subpop, cheminOut){
   
 }
 
+# 0. Création paramgeom.js
+paramgeom <- function(nomEnq, cheminIn, cheminOut){
+  
+  # Paramètres géométriques et cartographiques (dernière mis à jour : v4.1)
+  data <- read.csv2(paste0(cheminIn,"/ressources/paramgeom.csv"), fileEncoding = "UTF-8")
+  data <- data %>% filter(cityKey == nomEnq)
+  
+  if(!is.na(data$myBounds)){
+    
+    varjs <- c("// Déclaration des variables propres à l'enquête observée",
+               "",
+               "// Nom de la ville centre",
+               paste0("var nomVC = '", data$enqueteMin, "';"),
+               "// Année de fin d'enquête",
+               paste0("var anneeED = '", data$year, "';"),
+               "// Pays de l'enquête",
+               paste0("var ctry = '", data$ctry, "';"),
+               "// Complément du titre de la géoviz",
+               paste0("var cityNameHR2 = '", data$cityNameHR2, "';"),
+               "// Source des données",
+               paste0('var dataSource = "', data$dataSource, '";'),
+               "",
+               "// Centrer la projection leaflet sur la ville centre (load.js)",
+               paste0("var setview = ", data$setview, ";"),
+               "// Paramétrer les niveaux de zoom leaflet (load.js)",
+               paste0("var zoom = ", data$zoom, ";"),
+               paste0("var minZoom = ", data$minZoom, ";"),
+               "",
+               "// stocker max bounds",
+               paste0("var myBounds = ", data$myBounds, ";"),
+               "",
+               "// Stockage du nom de la 1ere colonne dans le csv dataSect (sert à pointer vers les valeurs min et max pour l'affichage du graph simple)",
+               paste0("var nomCol = '", data$codeSec, "';"),
+               paste0('var nameSec = "', data$nameSec, '";'),
+               "",
+               "// Adapter la taille min/max des cercles proportionnels en fonction des ordres de grandeur des données (load.js)",
+               paste0("var radiusRange = ", data$radiusRange, ";"),
+               "",
+               "// Déclaration des valeurs des cercles proportionnels des légendes uniques (load.js)",
+               paste0("var datasetProp = ", data$datasetProp, ","),
+               paste0("datasetFlow = ", data$datasetFlow, ";"),
+               "",
+               "// Seuils des liens (carte et légende flow)",
+               paste0("var sLink = ", data$sLink, ";"),
+               "")
+    
+  }else{
+    
+    varjs <- c("// Déclaration des variables propres à l'enquête observée",
+               "",
+               "// Nom de la ville centre",
+               paste0("var nomVC = '", data$enqueteMin, "';"),
+               "// Année de fin d'enquête",
+               paste0("var anneeED = '", data$year, "';"),
+               "// Pays de l'enquête",
+               paste0("var ctry = '", data$ctry, "';"),
+               "// Complément du titre de la géoviz",
+               paste0("var cityNameHR2 = '", data$cityNameHR2, "';"),
+               "// Source des données",
+               paste0('var dataSource = "', data$dataSource, '";'),
+               "",
+               "// Centrer la projection leaflet sur la ville centre (load.js)",
+               paste0("var setview = ", data$setview, ";"),
+               "// Paramétrer les niveaux de zoom leaflet (load.js)",
+               paste0("var zoom = ", data$zoom, ";"),
+               paste0("var minZoom = ", data$minZoom, ";"),
+               "",
+               "// stocker max bounds",
+               paste0("var myBounds ;"),
+               "",
+               "// Stockage du nom de la 1ere colonne dans le csv dataSect (sert à pointer vers les valeurs min et max pour l'affichage du graph simple)",
+               paste0("var nomCol = '", data$codeSec, "';"),
+               paste0('var nameSec = "', data$nameSec, '";'),
+               "",
+               "// Adapter la taille min/max des cercles proportionnels en fonction des ordres de grandeur des données (load.js)",
+               paste0("var radiusRange = ", data$radiusRange, ";"),
+               "",
+               "// Déclaration des valeurs des cercles proportionnels des légendes uniques (load.js)",
+               paste0("var datasetProp = ", data$datasetProp, ","),
+               paste0("datasetFlow = ", data$datasetFlow, ";"),
+               "",
+               "// Seuils des liens (carte et légende flow)",
+               paste0("var sLink = ", data$sLink, ";"),
+               "")
+    
+  }
+  
+  write.table(varjs, 
+              paste0(cheminOut, "/paramgeom.js"),
+              sep="\t", row.names = FALSE, col.names = FALSE, quote = FALSE,
+              fileEncoding = "UTF-8")
+  
+  return(varjs)
+  
+}
+
 # 1. Indicateur POPULATION GLOBALE ----
 createPopFiles <- function(nomEnq, prez_long, sfSec, seuil, cheminOut){
-
+  
   # 1a. CONSTRUCTION DES DONNEES POUR la carte en cercle proportionnelle - pop0_prop : 
   # nombre estimé de personnes présentes par secteur et par heure
   
@@ -221,7 +317,7 @@ createPopFiles <- function(nomEnq, prez_long, sfSec, seuil, cheminOut){
   geojson_write(shpChoro,
                 file = paste0(cheminOut,"/geo/pop0_choro.geojson"),
                 layer_options = "ENCODING=UTF-8")
-
+  
   # ===> mise en forme façon stacked
   ## sortie pour dossier stacked
   dfChoro <- pvs2 %>% 
@@ -259,7 +355,7 @@ createPopFiles <- function(nomEnq, prez_long, sfSec, seuil, cheminOut){
                paste0(cheminOut, "/flowData/pop0_flow.csv"), 
                row.names = FALSE) 
   }
-   
+  
   
   ## data stock NR
   pvs3 <- prez_long %>% 
@@ -278,7 +374,7 @@ createPopFiles <- function(nomEnq, prez_long, sfSec, seuil, cheminOut){
                                 TRUE ~ popSec))
   }
   
-      
+  
   ## Préparation de la table à joindre au geojson  
   dataShpChoroNR <- pvs3 %>% 
     select(-popSecB) %>% 
@@ -293,7 +389,7 @@ createPopFiles <- function(nomEnq, prez_long, sfSec, seuil, cheminOut){
     dataShpChoroNR <- dataShpChoroNR %>% 
       mutate_if(is.numeric, ~replace(., is.na(.), 0))
   }
-    
+  
   
   ## Jointure avec le geojson
   shpChoroNR <- left_join(sfSec, dataShpChoroNR, by = "Secteur_EM")
@@ -498,7 +594,7 @@ prepPVS <- function(nomEnq, prez_long, nomIndic, nomVar, seuil){
 
 #~ création des geojson et des csv pour le graphique stacked ----
 createFiles <- function(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, seuil, ctry, cheminOut){
-
+  
   pvs <- data[["pvs"]]
   pvs2 <- data[["pvs2"]]
   if(nomIndic != "res"){
@@ -558,14 +654,14 @@ createFiles <- function(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, seuil,
     }
     
   }  
-    
+  
   ## Création des données pour les cartes en oursins
   if(!nomIndic %in% c("res")){
     
     for(m in mod3){
       
       indic <- paste0(nomIndic, m)
-
+      
       # Si modalité is not NA
       if (!indic %in% c("act1") && sum(pvs3 %>% select(all_of(indic)), na.rm = TRUE)>0){
         
@@ -613,7 +709,7 @@ createFiles <- function(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, seuil,
         }
         
       }
-
+      
     }
     
   }  
@@ -701,7 +797,7 @@ createISeg <- function(nomIndic, nomVar, nomEnq, ctry, data, sfSec, seuil, chemi
   pvs2 <- data[["pvs2"]]
   # valeur des modalités
   mod <- data[["mod"]]
-
+  
   
   ## replace NaN by 0
   pvs <- pvs %>% mutate_if(is.numeric, ~replace(., is.na(.), 0))
@@ -723,7 +819,7 @@ createISeg <- function(nomIndic, nomVar, nomEnq, ctry, data, sfSec, seuil, chemi
             "8pm", "9pm", "10pm", "11pm", 
             "12pm", "1am", "2am", "3am")
   
-
+  
   # DUNCAN
   
   ## Init table
@@ -749,7 +845,7 @@ createISeg <- function(nomIndic, nomVar, nomEnq, ctry, data, sfSec, seuil, chemi
   }
   ## Compilation des résultats
   duncan <- bind_rows(duncan, .id = "hour")
-
+  
   ## Mise en forme
   colnames(duncan)[2:length(duncan)] <- colnames(pvs[ , 4:length(pvs)])
   
@@ -766,7 +862,7 @@ createISeg <- function(nomIndic, nomVar, nomEnq, ctry, data, sfSec, seuil, chemi
               row.names = FALSE)
   }
   
-
+  
   
   # MORAN
   
@@ -847,16 +943,16 @@ createISeg <- function(nomIndic, nomVar, nomEnq, ctry, data, sfSec, seuil, chemi
                                        "var" = n,
                                        "moran" = result$statistic))
     }
-
+    
   }
   
-
+  
   # Pour chaque heure, si un indice NA, remplace tous les indices par NA
   moran <- moran %>% 
     group_by(hour) %>% 
     mutate(moran = case_when(sum(as.numeric(is.na(moran)))==1 ~ NaN,
-                          TRUE ~ moran
-                          )) %>% 
+                             TRUE ~ moran
+    )) %>% 
     ungroup()
   
   ## Mise en forme
@@ -873,7 +969,7 @@ createISeg <- function(nomIndic, nomVar, nomEnq, ctry, data, sfSec, seuil, chemi
               paste0(cheminOut, "/segreg/", nomIndic,"_Moran.csv"), 
               row.names = FALSE)
   }
- 
+  
 }  
 
 
@@ -883,6 +979,7 @@ createISeg <- function(nomIndic, nomVar, nomEnq, ctry, data, sfSec, seuil, chemi
 
 ##---- Fonction p2m : de la table de présence aux indicateurs du Mobiliscope ----
 p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
+  
   # Création des répertoires de sortie 
   dir.create(paste0(cheminOut, "/"))
   dir.create(paste0(cheminOut, "/geo"))
@@ -898,12 +995,14 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
   sfSec <- sfSec %>% 
     mutate(ENQUETE = case_when(LIB_ED=="Valenciennes, 2011" ~ "VALENCIENNES2011",
                                TRUE ~ ENQUETE)) %>% 
+    mutate(cityKey = case_when(str_detect(ENQUETE, " ") ~ str_replace(tolower(ENQUETE), " ", "-"),
+                               TRUE ~ tolower(ENQUETE))) %>% 
     filter(ENQUETE == nomEnq) %>% 
     rename(Secteur_EM = CODE_SEC, 
            CENTROID_X = X_W84, 
            CENTROID_Y = Y_W84,
            PERIM = ZONAGE_SEC) %>% 
-  #recode perimètre
+    #recode perimètre
     mutate(PERIM = case_when(PAYS=="AS" ~ PERIM+3,
                              TRUE ~ as.numeric(PERIM)))
   
@@ -919,7 +1018,6 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
   nSec <- nrow(sfSec)
   
   # données de présence
-  # prez_long <- prepPrezLong(data = prezTable %>% filter(ENQUETE == as.name(nomEnq)))
   prez_long <- readRDS(paste0(cheminIn, "/BD_presence_utile/presence_utile_", nomEnq, ".RDS"))
   
   ## effectif de départ avant filtrage 
@@ -972,7 +1070,10 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
     
     # création du json pour le menu accordéon + appel dico des variables
     dico <- menuJson(cheminIn, nomEnq, ctry, subpop, cheminOut)
-
+    
+    # création du js stockant les variables globales
+    paramgeom(nomEnq, cheminIn, cheminOut)
+    
     #~ 1. INDICATEUR "WHOLE POPULATION" ----
     createPopFiles(nomEnq, prez_long, sfSec, seuil, cheminOut)
     
@@ -1002,16 +1103,16 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
       mess <- paste0(
         "Calculations made with ", eff_end, " respondents, i.e. ", round(P_eff_end), "% of the starting population, ",
         "with at least one hourly presence in one the ", nSec, " districts (of ", nSec0, ") selected."
-        )
+      )
       cat(mess)
-
+      
     } else {
       boo <- TRUE
       mess <- paste0("Calculations made with ", eff_end, " respondents, i.e. ", round(P_eff_end), "% of the starting population",
-                    collapse = "'")
+                     collapse = "'")
       cat(mess)
     }
-  
+    
     
   }
   
