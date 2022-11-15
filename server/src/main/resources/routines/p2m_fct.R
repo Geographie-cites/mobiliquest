@@ -1,6 +1,7 @@
 # ================================================================================#
 #             Préparation des indicateurs à intégrer au Mobiliscope
 #                                      fonctions 
+#                                     MOBILIQUEST
 # ================================================================================#
 
 # library
@@ -916,33 +917,53 @@ createISeg <- function(nomIndic, nomVar, nomEnq, ctry, data, sfSec, seuil, chemi
     
     # Filtrage heure 
     dataMoran <- pvs2 %>% 
-      select(-popSec) %>% 
+      # select(-popSec) %>% 
       filter(HOUR == h) %>%
       rename(Secteur_EM = CODE_SEC)
     
     # Joindre avec le shp
     dataMoran <- left_join(shpSectMoran, dataMoran, by = "Secteur_EM")
     
-    # Calcul des paramètres
-    nbSecteurs <- poly2nb(pl = dataMoran,
-                          row.names = dataMoran$Secteur_EM,
-                          snap = 50,
-                          queen = TRUE)
+    # filter heure manquante
+    dataMoran <- dataMoran %>% 
+      filter(!is.na(HOUR)) %>% 
+      filter(popSec != 0) %>%
+      # mutate_if(is.numeric, ~replace(., is.na(.), 0)) %>% 
+      select(-popSec)
     
-    dataMoran <- dataMoran %>%
-      st_drop_geometry()
-    
-    # Calcul de l'indice de Moran et stockage des résultats dans la table
-    for (n in colnames(pvs2[4:length(pvs2)])){
+    # on lance le calcul uniquement si tous les secteurs sont présents
+    if (length(unique(dataMoran$Secteur_EM))==length(unique(shpSectMoran$Secteur_EM))){
       
-      result <- moran.mc(x = dataMoran[[n]],
-                         listw = nb2listw(nbSecteurs), nsim=1000)
+      # Calcul des paramètres
+      nbSecteurs <- poly2nb(pl = dataMoran,
+                            row.names = dataMoran$Secteur_EM,
+                            snap = 50,
+                            queen = TRUE)
       
-      moran <- rbind(moran, data.frame("hour" = h,
-                                       "var" = n,
-                                       "moran" = result$statistic))
+      dataMoran <- dataMoran %>%
+        st_drop_geometry()
+      
+      # Calcul de l'indice de Moran et stockage des résultats dans la table
+      for (n in colnames(pvs2[4:length(pvs2)])){
+        
+        result <- moran.mc(x = dataMoran[[n]],
+                           listw = nb2listw(nbSecteurs), nsim=1000)
+        
+        moran <- rbind(moran, data.frame("hour" = h,
+                                         "var" = n,
+                                         "moran" = result$statistic))
+      }
+      
+    } else {
+      
+      for (n in colnames(pvs2[4:length(pvs2)])){
+        
+        moran <- rbind(moran, data.frame("hour" = h,
+                                         "var" = n,
+                                         "moran" = NaN))
+      }
     }
-    
+
   }
   
   
