@@ -4,7 +4,6 @@
 # ================================================================================#
 
 # library
-library(tidylog)
 library(stringr)
 library(dplyr)
 library(tidyr)
@@ -997,7 +996,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
                                TRUE ~ ENQUETE)) %>% 
     mutate(cityKey = case_when(str_detect(ENQUETE, " ") ~ str_replace(tolower(ENQUETE), " ", "-"),
                                TRUE ~ tolower(ENQUETE))) %>% 
-    filter(ENQUETE == nomEnq) %>% 
+    filter(cityKey == nomEnq) %>%
     rename(Secteur_EM = CODE_SEC, 
            CENTROID_X = X_W84, 
            CENTROID_Y = Y_W84,

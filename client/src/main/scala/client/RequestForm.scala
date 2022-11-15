@@ -80,7 +80,7 @@ object RequestForm {
 
   lazy val studyUI: Options[Study] = studies.options(
     key = btn_danger,
-    naming = (s: Study) => s,
+    naming = (s: Study) => s.split("-").map{_.capitalize}.mkString(" "),
     onclose = () => currentStudy.set(studyUI.content.now().getOrElse(studies.head))
   )
 
