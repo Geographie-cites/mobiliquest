@@ -1,19 +1,11 @@
 package mobiliquest
 
 import mobiliquest.ThreadService.pool
-import shared.data.{Modalities, Modality}
+import shared.data.Modality
 
 object Utils {
 
-  def flatten(modalities: Modalities): Seq[Modality] =
-    modalities.map {
-      _ match {
-        case Left(m: Modality) => Seq(m)
-        case Right(sm: Seq[Modality]) => sm
-      }
-    }.flatten.distinct
-
-  def hash(aString: String): String = {
+   def hash(aString: String): String = {
     import java.math.BigInteger
     import java.security.MessageDigest
     val md = MessageDigest.getInstance("MD5")

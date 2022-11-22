@@ -8,7 +8,7 @@ object R {
   val api = scala.io.Source.fromResource("routines/p2m_fct.R").getLines().mkString("\n")
 
   def filterFullModalities(study: Study, indicator: Indicator, flattenModalities: Seq[Modality]) =
-    if (flattenModalities.length == Utils.flatten(Indicators.availableIndicatorsAndModalities(study)(indicator)).length) Seq()
+    if (flattenModalities.length == shared.Utils.flatten(Indicators.availableIndicatorsAndModalities(study)(indicator)).length) Seq()
     else flattenModalities
 
   def computeAll(request: Request, inputDir: Directory, outputDir: Directory) = {
@@ -16,7 +16,7 @@ object R {
     val Rfilters = "list(" + request.filters.map {
       case (indicator, modalities) =>
         // An indicator with all modalities should not be consider as a filter
-        s""" "${indicator.RName}" = c(${Utils.flatten(modalities).mkString(", ")}) """
+        s""" "${indicator.RName}" = c(${modalities.mkString(", ")}) """
     }.mkString(",") + ")"
 
     def indicatorList(rType: RequestType) =

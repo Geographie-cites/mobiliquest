@@ -15,9 +15,9 @@ object RequestForm {
   val columnFlex = Seq(display.flex, flexDirection.column)
 
 
-  def unactivateState(modalityName: String) = ToggleState(modalityName, btn_outline_secondary_string)
+  def unactivateState(modalityName: String) = scaladget.bootstrapnative.bsn.ToggleState(modalityName, btn_outline_secondary_string)
 
-  def toggleOn(modalityName: String, onColor: String) = ToggleState(modalityName, onColor)
+  def toggleOn(modalityName: String, onColor: String) = scaladget.bootstrapnative.bsn.ToggleState(modalityName, onColor)
 
   def updateModalitiyButtonState(indicatorUI: IndicatorUI) = {
     currentIndicatorsUI.now().filterNot(_.indicator == indicatorUI.indicator).foreach{iui=>
@@ -75,12 +75,14 @@ object RequestForm {
     val indicatorAndModalities = data.Indicators.availableIndicatorsAndModalities(study).filter { ii =>
       ii._1.requestType == requestType
     }
-    indicatorAndModalities.map { iam => new IndicatorUI(study, iam._1, iam._2) }.toSeq
+    indicatorAndModalities.map { iam => new IndicatorUI(study, iam._1, iam._2) }
   }
 
   lazy val studyUI: Options[Study] = studies.options(
     key = btn_danger,
-    naming = (s: Study) => s.split("-").map{_.capitalize}.mkString(" "),
+    naming = (s: Study) => s.split("-").map {
+      _.capitalize
+    }.mkString(" "),
     onclose = () => currentStudy.set(studyUI.content.now().getOrElse(studies.head))
   )
 

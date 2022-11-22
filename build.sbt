@@ -1,23 +1,26 @@
 
-val ScalaVersion = "2.13.7"
+val ScalaVersion = "3.2.0"
 val Version = "0.1-SNAPSHOT"
 
-val scalatraVersion = "2.7.1"
-val jettyVersion = "11.0.2"
-//val json4sVersion = "3.6.11"
-val autowireVersion = "0.3.3"
-val boopickleVersion = "1.3.3"
-val laminarVersion = "0.12.2"
+val laminarVersion = "0.14.5"
 val scaladgetVersion = "1.9.2"
 val scalajsDomVersion = "2.0.0"
-val scalatagsVersion = "0.9.4"
-val json4sVersion = "4.0.5"
+val scalatagsVersion = "0.11.1"
 val betterFilesVersion = "3.9.1"
 val minioVersion = "8.4.2"
+val json4sVersion = "4.0.6"
 
-lazy val shared = project.in(file("shared")) settings (
-  scalaVersion := ScalaVersion
-  ) enablePlugins (ScalaJSPlugin)
+val endpoints4SVersion = "1.8.0+n"
+val endpointCirceVersion = "2.2.0+n"
+
+lazy val shared = project.in(file("shared")) settings(
+  scalaVersion := ScalaVersion,
+  libraryDependencies ++= Seq(
+    "org.openmole.endpoints4s" %%% "algebra" % endpoints4SVersion,
+    "org.openmole.endpoints4s" %%% "json-schema-circe" % endpointCirceVersion,
+    "io.circe" %% "circe-generic" % "0.14.3"
+  )
+) enablePlugins (ScalaJSPlugin)
 
 lazy val buildUI = taskKey[Unit]("builUI")
 
@@ -26,16 +29,15 @@ lazy val client = project.in(file("client")) enablePlugins(ScalaJSPlugin, ScalaJ
   scalaVersion := ScalaVersion,
   scalaJSUseMainModuleInitializer := false,
   webpackBundlingMode := BundlingMode.LibraryAndApplication(),
+  scalaJSLinkerConfig := scalaJSLinkerConfig.value.withSourceMap(false),
   //skip in packageJSDependencies := false,
   libraryDependencies ++= Seq(
-    "com.lihaoyi" %%% "autowire" % autowireVersion,
-    "io.suzaku" %%% "boopickle" % boopickleVersion,
     "com.raquo" %%% "laminar" % laminarVersion,
     "org.openmole.scaladget" %%% "tools" % scaladgetVersion,
     "org.openmole.scaladget" %%% "svg" % scaladgetVersion,
     "org.openmole.scaladget" %%% "bootstrapnative" % scaladgetVersion,
     "org.scala-js" %%% "scalajs-dom" % scalajsDomVersion,
-    // "org.json4s" %% "json4s-jackson" % json4sVersion
+    "org.openmole.endpoints4s" %%% "xhr-client" % "5.1.0+n"
   )
 ) dependsOn (shared)
 
@@ -44,31 +46,36 @@ lazy val server = project.in(file("server")) settings(
   version := Version,
   scalaVersion := ScalaVersion,
   libraryDependencies ++= Seq(
-    "org.ddahl" %% "rscala" % "3.2.19",
-    "com.lihaoyi" %% "upickle" % "2.0.0",
-    "com.lihaoyi" %% "autowire" % autowireVersion,
-    "io.suzaku" %% "boopickle" % boopickleVersion,
+    "org.ddahl" % "rscala_2.13" % "3.2.19",
     "com.lihaoyi" %% "scalatags" % scalatagsVersion,
-    "org.scalatra" %% "scalatra" % scalatraVersion,
-    "ch.qos.logback" % "logback-classic" % "1.2.3" % "runtime",
-    "javax.servlet" % "javax.servlet-api" % "4.0.1" % "provided",
-    "org.eclipse.jetty" % "jetty-webapp" % jettyVersion,
-    "org.eclipse.jetty" % "jetty-server" % jettyVersion,
+    "org.openmole.endpoints4s" %% "http4s-server" % "10.0.0+n",
+    "org.http4s" %% "http4s-blaze-server" % "0.23.12",
     "org.json4s" %% "json4s-jackson" % json4sVersion,
-    "com.github.pathikrit" %% "better-files-akka" % betterFilesVersion,
+    "io.circe" %% "circe-parser" % "0.14.3",
+    "com.github.pathikrit" % "better-files-akka_2.13" % betterFilesVersion,
     "io.minio" % "minio" % minioVersion,
-  )
-) dependsOn (shared) enablePlugins (ScalatraPlugin)
-
-lazy val bootstrap = project.in(file("target/bootstrap")) enablePlugins(ScalaJSPlugin, ScalaJSBundlerPlugin) settings(
-  version := Version,
-  scalaVersion := ScalaVersion,
-  buildUI := {
+  ),
+  Compile / compile := {
     val jsBuild = (client / Compile / fastOptJS / webpack).value.head.data
 
-    val demoTarget = (server / Compile / target).value
+    val demoTarget = (Compile / target).value
     val demoResource = (client / Compile / resourceDirectory).value
 
     IO.copyFile(jsBuild, demoTarget / "webapp/js/demo.js")
     IO.copyDirectory(demoResource, demoTarget)
-  }) dependsOn(client, server)
+    (Compile / compile).value
+  }
+) dependsOn (shared)
+
+//lazy val bootstrap = project.in(file("target/bootstrap")) enablePlugins(ScalaJSPlugin, ScalaJSBundlerPlugin) settings(
+//  version := Version,
+//  scalaVersion := ScalaVersion,
+//  buildUI := {
+//    val jsBuild = (client / Compile / fastOptJS / webpack).value.head.data
+//
+//    val demoTarget = (server / Compile / target).value
+//    val demoResource = (client / Compile / resourceDirectory).value
+//
+//    IO.copyFile(jsBuild, demoTarget / "webapp/js/demo.js")
+//    IO.copyDirectory(demoResource, demoTarget)
+//  }) dependsOn(client, server)

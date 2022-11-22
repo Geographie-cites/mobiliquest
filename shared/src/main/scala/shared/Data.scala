@@ -35,7 +35,7 @@ object data {
 
   implicit def ModalityToRightModality(m: Seq[Seq[Modality]]): Seq[Right[Modality, Seq[Modality]]] = m.map{Right(_)}
 
-  case class Request(study: Study, filters: IndicatorAndModalities, requestType: RequestType)
+  case class Request(study: Study, filters: Seq[(Indicator, Seq[Modality])], requestType: RequestType)
 
   case class RequestResponse(filterURL: Option[String], statURL: Option[String])
 

@@ -1,23 +1,16 @@
 package client
 
-import java.nio.ByteBuffer
 import org.scalajs.dom
+import shared.Utils
+import shared.data.*
 
-import scala.concurrent.Future
-import boopickle.Default._
-
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.scalajs.js.typedarray.{ArrayBuffer, TypedArrayBuffer}
+//import scala.concurrent.ExecutionContext.Implicits.global
 import scala.scalajs.js.annotation.{JSExportAll, JSExportTopLevel}
 import scaladget.bootstrapnative.bsn._
-import com.raquo.laminar.api.L._
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import autowire._
-import boopickle.Default._
+import com.raquo.laminar.api.L._
 import client.RequestForm._
-import shared.data
-import shared.data._
+//import shared.data
 
 @JSExportTopLevel(name = "mobiliquest")
 @JSExportAll
@@ -31,16 +24,15 @@ object App {
 
     val studiesUI = RequestForm.studyUI
     val requestType: Var[RequestType] = Var(SubPop())
-    val requestStatus: Var[data.RequestStatus] = Var(data.Off)
+    val requestStatus: Var[RequestStatus] = Var(shared.data.Off)
 
-    def indicatorsUIToRequest(indicatorsUI: Seq[IndicatorUI]) = {
-      indicatorsUI.map {
-        _.indicatorAndModalities
-      }.toMap
-    }
+    def indicatorsUIToRequest(indicatorsUI: Seq[IndicatorUI]) =
+      indicatorsUI.map { i =>
+        i.indicatorAndModalities._1 -> Utils.flatten(i.indicatorAndModalities._2)
+      }
 
     val subPopState = ToggleState("Sup population", btn_primary_string, () => requestType.set(SubPop()))
-    val perimeterState = ToggleState("Perimeter", btn_primary_string, () => requestType.set(Perimeter()))
+    val perimeterState = ToggleState("Perimter", btn_primary_string, () => requestType.set(Perimeter()))
     val requestSelector = exclusiveRadio(Seq(subPopState, perimeterState), btn_secondary_string, subPopState)
 
     val content =
@@ -51,10 +43,13 @@ object App {
           studiesUI.selector,
           requestSelector,
           button("Run", btn_primary_outline, onClick --> { _ =>
-            requestStatus.set(data.Running)
-            val request = data.Request(RequestForm.currentStudy.now(), indicatorsUIToRequest(currentIndicatorsUI.now()), requestType.now())
-            Post[shared.Api].run(request).call().foreach { x =>
-              requestStatus.set(data.Done(x))
+            import scala.concurrent.ExecutionContext.Implicits.global
+
+            requestStatus.set(shared.data.Running)
+            val request = shared.data.Request(RequestForm.currentStudy.now(), indicatorsUIToRequest(currentIndicatorsUI.now()), requestType.now())
+
+            APIClient.rExecution(request).future.onComplete {
+              _.foreach(rr => requestStatus.set(Done(rr)))
             }
           },
             disabled <-- requestStatus.signal.map {
@@ -66,7 +61,7 @@ object App {
           ),
           children <-- requestStatus.signal.map { x =>
             x match {
-              case data.Done(r) =>
+              case shared.data.Done(r) =>
                 val filterURL = r.filterURL.getOrElse("?")
                 Seq(span("FIXME: nbRec", margin := "0 10 0 10"), a("filters.json", href := filterURL, target := "_blank"))
               case _ => Seq()
@@ -74,7 +69,7 @@ object App {
           }
         ),
         child <-- RequestForm.currentStudy.signal.combineWith(requestType.signal).map { case (cs, rt) =>
-          val newIndUI = indicatorsUI(cs, rt)
+          val newIndUI = indicatorsUI(cs, rt).toSeq
           currentIndicatorsUI.set(newIndUI)
           div(rowFlex, margin := "30px",
             newIndUI.map { iui => iui.content }
@@ -83,26 +78,6 @@ object App {
       )
 
     val containerNode = dom.document.querySelector("#mobiliquest-content")
-
-
-    RequestForm
     render(containerNode, content)
   }
-}
-
-object Post extends autowire.Client[ByteBuffer, Pickler, Pickler] {
-
-  override def doCall(req: Request): Future[ByteBuffer] = {
-    dom.ext.Ajax.post(
-      url = req.path.mkString("/"),
-      data = Pickle.intoBytes(req.args),
-      responseType = "arraybuffer",
-      headers = Map("Content-Type" -> "application/octet-stream")
-    ).map(r => TypedArrayBuffer.wrap(r.response.asInstanceOf[ArrayBuffer]))
-  }
-
-  override def read[Result: Pickler](p: ByteBuffer) = Unpickle[Result].fromBytes(p)
-
-  override def write[Result: Pickler](r: Result) = Pickle.intoBytes(r)
-
 }

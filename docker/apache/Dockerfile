@@ -9,8 +9,7 @@ USER mobiliscope
 RUN mkdir -p /var/mobiliscope
 
 RUN cd /var/mobiliscope && git config --global http.sslVerify "false" && \
-    git clone https://github.com/Geographie-cites/mobiliscope.git
-
+    git clone git@github.com:Geographie-cites/mobiliquest.git
 
 FROM php:8.0-apache
 
