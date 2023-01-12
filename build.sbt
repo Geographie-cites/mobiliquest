@@ -30,6 +30,7 @@ lazy val client = project.in(file("client")) enablePlugins(ScalaJSPlugin, ScalaJ
   scalaJSUseMainModuleInitializer := false,
   webpackBundlingMode := BundlingMode.LibraryAndApplication(),
   scalaJSLinkerConfig := scalaJSLinkerConfig.value.withSourceMap(false),
+  webpackNodeArgs := Seq("--openssl-legacy-provider"),
   //skip in packageJSDependencies := false,
   libraryDependencies ++= Seq(
     "com.raquo" %%% "laminar" % laminarVersion,
@@ -53,7 +54,7 @@ lazy val server = project.in(file("server")) settings(
     "org.json4s" %% "json4s-jackson" % json4sVersion,
     "io.circe" %% "circe-parser" % "0.14.3",
     "com.github.pathikrit" % "better-files-akka_2.13" % betterFilesVersion,
-    "io.minio" % "minio" % minioVersion,
+    "io.minio" % "minio" % minioVersion
   ),
   Compile / compile := {
     val jsBuild = (client / Compile / fastOptJS / webpack).value.head.data
