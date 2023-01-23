@@ -14,9 +14,9 @@ object APIServer
     with shared.APIEndPoint
     with server.JsonEntitiesFromCodecs {
 
-  val rExecutionRoute = rExecution.implementedBy(request => ApiImpl.run(request))
+  lazy val rExecutionRoute = rExecution.implementedBy(request => ApiImpl.run(request))
 
-  val routes: HttpRoutes[IO] = HttpRoutes.of(
+  lazy val routes: HttpRoutes[IO] = HttpRoutes.of(
     routesFromEndpoints(rExecutionRoute)
   )
 

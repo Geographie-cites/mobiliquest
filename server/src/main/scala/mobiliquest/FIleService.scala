@@ -13,15 +13,18 @@ import scala.util.{Failure, Success, Try}
 object FileService {
 
   private lazy val minioClient = MinioClient.builder
-    .endpoint(Settings.endpoint)
+    .endpoint(Settings.minioEndpoint)
     .credentials("mathieu", "mathieu-password")
     .build()
 
+  println("XXX0")
   val sourceData = "source-data"
   val outData = "out-data"
 
   createBucket(sourceData)
   createBucket(outData)
+
+  println("XXX01")
 
   def withSourceData[T](op: File => T) =
     withTmpDir[T] { file =>

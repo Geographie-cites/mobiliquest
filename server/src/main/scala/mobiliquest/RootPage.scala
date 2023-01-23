@@ -10,7 +10,7 @@ import org.http4s.headers.`Content-Type`
 
 object RootPage {
 
-  val routes: HttpRoutes[IO] = HttpRoutes.of {
+  lazy val routes: HttpRoutes[IO] = HttpRoutes.of {
     case GET -> Root =>
       val ht =
         tags.html(
