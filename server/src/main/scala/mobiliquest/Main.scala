@@ -18,6 +18,7 @@ object Main extends IOApp {
     BlazeServerBuilder[IO](scala.concurrent.ExecutionContext.global)
       .bindHttp(8080, "localhost")
       .withHttpApp(httpApp)
+      .withIdleTimeout(Duration.Inf)
       .resource
       .useForever
       .as(ExitCode.Success)
