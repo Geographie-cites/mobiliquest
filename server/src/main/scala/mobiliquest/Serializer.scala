@@ -4,7 +4,6 @@ package mobiliquest
 import org.json4s.JsonDSL._
 import org.json4s.jackson.JsonMethods._
 import shared.data._
-
 import better.files._
 
 object Serializer {
@@ -14,7 +13,7 @@ object Serializer {
     val json =
       ("request" ->
         ("study" -> request.study) ~
-          (request.requestType.name -> request.filters.map { case (ind, mod) => ind.RName -> Utils.flatten(mod) })
+          (request.requestType.name -> request.filters.map { case (ind, mod) => ind.RName -> mod })
         )
 
     val jsonText = pretty(render(json))

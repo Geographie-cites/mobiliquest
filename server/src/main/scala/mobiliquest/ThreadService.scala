@@ -13,7 +13,7 @@ object ThreadService {
     }
   }
 
-  implicit lazy val pool = Executors.newFixedThreadPool(5)
+  implicit lazy val pool: ExecutorService = Executors.newFixedThreadPool(5)
 
   implicit lazy val executionContext: scala.concurrent.ExecutionContext = scala.concurrent.ExecutionContext.fromExecutor(pool)
 
