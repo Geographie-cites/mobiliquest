@@ -25,29 +25,29 @@ library(readxl)
 menuJson <- function(cheminIn, nomEnq, ctry, subpop, cheminOut){
   
   # choix de l'onglet selon l'enquête
-  if(ctry=="FR" & !nomEnq %in% c("IDF", "BESANCON", "CARCASSONNE", "ANNECY")){
+  if(ctry=="FR" & !nomEnq %in% c("idf", "besancon", "carcassonne", "annecy")){
     sheet <- "FR"
   }
-  if(nomEnq=="IDF"){
+  if(nomEnq=="idf"){
     sheet <- "IDF"
   }
-  if(nomEnq %in% c("BESANCON", "CARCASSONNE")){
+  if(nomEnq %in% c("besancon", "carcassonne")){
     sheet <- "BECA"
   }
-  if(nomEnq=="ANNECY"){
+  if(nomEnq=="annecy"){
     sheet <- "ANNECY"
   }
   if(ctry=="CA"){
     sheet <- "CA"
   }
-  if(nomEnq=="BOGOTA"){
-    sheet <- "BO"
+  if(nomEnq=="bogota"){
+    sheet <- "CO"
   }
-  if(nomEnq=="SANTIAGO"){
-    sheet <- "STG"
+  if(nomEnq=="santiago"){
+    sheet <- "CL"
   }
-  if(nomEnq=="SAO PAULO"){
-    sheet <- "SP"
+  if(nomEnq=="sao-paulo"){
+    sheet <- "BR"
   }
   
   
@@ -868,15 +868,15 @@ createISeg <- function(nomIndic, nomVar, nomEnq, ctry, data, sfSec, seuil, chemi
   
   ## projection 
   if (ctry == "FR") {
-    if (!nomEnq %in% c("LA REUNION", "MARTINIQUE")) {
+    if (!nomEnq %in% c("la-reunion", "martinique")) {
       shpSectMoran <- sfSec %>% 
         st_transform(crs = 2154)
     }
-    if (nomEnq == "LA REUNION") {
+    if (nomEnq == "la-reunion") {
       shpSectMoran <- sfSec %>% 
         st_transform(crs = 2975)
     }
-    if (nomEnq == "MARTINIQUE") {
+    if (nomEnq == "martinique") {
       shpSectMoran <- sfSec %>% 
         st_transform(crs = 5490)
     }
@@ -887,7 +887,7 @@ createISeg <- function(nomIndic, nomVar, nomEnq, ctry, data, sfSec, seuil, chemi
       st_transform(crs = 3978)
   }
   
-  if (nomEnq == "BOGOTA") {
+  if (nomEnq == "bogota") {
     shpSectMoran <- sfSec %>% 
       st_transform(crs = 21897) %>% 
       # supression des secteurs non contigüs
@@ -899,12 +899,12 @@ createISeg <- function(nomIndic, nomVar, nomEnq, ctry, data, sfSec, seuil, chemi
                                 "UTAM630", "UTAM610", "UTAM89"))
   }
   
-  if (nomEnq == "SAO PAULO") {
+  if (nomEnq == "sao-paulo") {
     shpSectMoran <- sfSec %>% 
       st_transform(crs = 22523)
   }
   
-  if (nomEnq == "SANTIAGO") {
+  if (nomEnq == "santiago") {
     shpSectMoran <- sfSec %>% 
       st_transform(crs = 32719)
   }
@@ -1013,7 +1013,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
   # couche secteur
   sfSec <- st_read(paste0(cheminIn, "/BDgeo/SEC_59ED_W84.shp"))
   sfSec <- sfSec %>% 
-    mutate(ENQUETE = case_when(LIB_ED=="Valenciennes, 2011" ~ "VALENCIENNES2011",
+    mutate(ENQUETE = case_when(LIB_ED=="Valenciennes, 2011" ~ "valenciennes2011",
                                TRUE ~ ENQUETE)) %>% 
     mutate(cityKey = case_when(str_detect(ENQUETE, " ") ~ str_replace(tolower(ENQUETE), " ", "-"),
                                TRUE ~ tolower(ENQUETE))) %>% 
@@ -1024,7 +1024,11 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
            PERIM = ZONAGE_SEC) %>% 
     #recode perimètre
     mutate(PERIM = case_when(PAYS=="AS" ~ PERIM+3,
-                             TRUE ~ as.numeric(PERIM)))
+                             TRUE ~ as.numeric(PERIM))) %>% 
+    mutate(PAYS = case_when(nomEnq=="bogota" ~ "CO",
+                            nomEnq=="sao-paulo" ~ "BR",
+                            nomEnq=="santiago" ~ "CL",
+                            TRUE ~ PAYS))
   
   nSec0 <- nrow(sfSec)
   
@@ -1045,6 +1049,11 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
   eff_start <- prez_long %>% filter(!duplicated(ID_IND)) %>% nrow(.) # n enquêtés
   
   ### code pays de l'enquête
+  prez_long <- prez_long %>% 
+    mutate(PAYS = case_when(nomEnq=="bogota" ~ "CO",
+                            nomEnq=="sao-paulo" ~ "BR",
+                            nomEnq=="santiago" ~ "CL",
+                            TRUE ~ PAYS))
   ctry <- unique(prez_long$PAYS)
   
   ## filtre périmètre
