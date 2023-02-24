@@ -79,6 +79,19 @@ object data {
       SubPop()
     )
 
+    val kAge_ca = Indicator(
+      "KAGE",
+      "Age groups",
+      Seq(
+        0 -> "14 and less",
+        1 -> "15-24",
+        2 -> "25-34",
+        3 -> "35-64",
+        4 -> "65 and more"
+      ),
+      SubPop()
+    )
+
     val sex = Indicator(
       "SEX",
       "Sex",
@@ -151,13 +164,13 @@ object data {
 
     val rev = Indicator(
       "REV",
-      "Revenu du ménage",
+      "Household income",
       Seq(
-        1 -> "Faible",
-        2 -> "Intermédiaire - Tranche inférieure",
-        3 -> "Intermédiaire - Tranche supérieure",
-        4 -> "Élevé",
-        5 -> "Inconnu"
+        1 -> "Low",
+        2 -> "Middle-low",
+        3 -> "Middle-high",
+        4 -> "High",
+        5 -> "Unknown"
       ),
       SubPop()
     )
@@ -261,7 +274,7 @@ object data {
 
     val dep = Indicator(
       "DEP",
-      "Département de résidence",
+      "Departement de residence",
       Seq(
         1 -> "Paris",
         2 -> "Seine-Saint-Denis",
@@ -366,7 +379,7 @@ object data {
     )
 
     val santiago: IndicatorAndModalities = Map(
-      kAge -> Seq(1, 2, 3, 4),
+      kAge_ca -> Seq(1, 2, 3, 4),
       sex -> Seq(1, 2),
       strM_al -> Seq(1, 2, 3, 4, 5),
       educ -> Seq(1, 2, 3, 4),
