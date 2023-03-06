@@ -1,7 +1,6 @@
 # ================================================================================#
 #             Préparation des indicateurs à intégrer au Mobiliscope
 #                                      fonctions 
-#                                     MOBILIQUEST
 # ================================================================================#
 
 # library
@@ -788,16 +787,19 @@ createFiles <- function(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, seuil,
           write.csv(flowdata, 
                     paste0(cheminOut, "/flowData/", indic ,"_flow.csv"), 
                     row.names = FALSE)
-          ### nombre de cases masquées
-          casesna3 <- c('{', 
-                        '"casesNA":', nOD-nrow(flowdata), ',',
-                        '"n_OD":', nOD, 
-                        '}')
-          casesna3 <- as.character(prettify(casesna3, indent = 4))
-          write.table(casesna3,
-                      paste0(cheminOut, "/xna/",indic, "_subpop3_casesna.json"),
-                      row.names = FALSE, col.names = FALSE, quote = FALSE,
-                      fileEncoding = "UTF-8")
+          
+          if(!is.na(seuil)){
+            ### nombre de cases masquées
+            casesna3 <- c('{', 
+                          '"casesNA":', nOD-nrow(flowdata), ',',
+                          '"n_OD":', nOD, 
+                          '}')
+            casesna3 <- as.character(prettify(casesna3, indent = 4))
+            write.table(casesna3,
+                        paste0(cheminOut, "/xna/",indic, "_subpop3_casesna.json"),
+                        row.names = FALSE, col.names = FALSE, quote = FALSE,
+                        fileEncoding = "UTF-8")
+          }
         }
         
       }
@@ -1113,30 +1115,22 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
   dir.create(paste0(cheminOut, "/flowData"))
   dir.create(paste0(cheminOut, "/stacked"))
   dir.create(paste0(cheminOut, "/segreg"))
-  dir.create(paste0(cheminOut, "/xna"))
   
-  
+
   #~ 1. LOAD DATA et FILTRAGES ----
   
   # couche secteur
   sfSec <- st_read(paste0(cheminIn, "/BDgeo/SEC_59ED_W84.shp"))
   sfSec <- sfSec %>% 
-    mutate(ENQUETE = case_when(LIB_ED=="Valenciennes, 2011" ~ "valenciennes2011",
-                               TRUE ~ ENQUETE)) %>% 
-    mutate(cityKey = case_when(str_detect(ENQUETE, " ") ~ str_replace(tolower(ENQUETE), " ", "-"),
-                               TRUE ~ tolower(ENQUETE))) %>% 
-    filter(cityKey == nomEnq) %>%
-    rename(Secteur_EM = CODE_SEC, 
-           CENTROID_X = X_W84, 
-           CENTROID_Y = Y_W84,
-           PERIM = ZONAGE_SEC) %>% 
-    #recode perimètre
-    mutate(PERIM = case_when(PAYS=="AS" ~ PERIM+3,
-                             TRUE ~ as.numeric(PERIM))) %>% 
-    mutate(PAYS = case_when(nomEnq=="bogota" ~ "CO",
-                            nomEnq=="sao-paulo" ~ "BR",
-                            nomEnq=="santiago" ~ "CL",
-                            TRUE ~ PAYS))
+    filter(CITYKEY == nomEnq) %>%
+    transmute(CITYKEY,
+              ENQUETE, ANNEE,
+              Secteur_EM = CODE_SEC, 
+              AREA,
+              CENTROID_X = X_W84, 
+              CENTROID_Y = Y_W84,
+              PERIM = ZONAGE_SEC,
+              LIB) 
   
   nSec0 <- nrow(sfSec)
   
@@ -1159,7 +1153,8 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
   ## Couple secteur/heure avant filtrage
   coupleSH <- prez_long %>% 
     select(HOUR, CODE_SEC) %>% 
-    distinct()
+    distinct() %>% 
+    arrange(CODE_SEC, HOUR)
   
   ### code pays de l'enquête
   prez_long <- prez_long %>% 
@@ -1189,9 +1184,11 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
   ## Si filtre subpop, seuil = 6
   if(length(subpop)!=0){
     seuil <- 6
+    dir.create(paste0(cheminOut, "/xna"))
   }else{
     seuil <- NA
   }
+  
   
   # eff_end <- nrow(prez_long)
   eff_end <- prez_long %>% filter(!duplicated(ID_IND)) %>% nrow(.)
@@ -1290,18 +1287,23 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
     
   }
   
-  stat <- c('{', 
-            '"respondents":', eff_end, ',',
-            '"respondents_pct":', round(P_eff_end), ',',
-            '"nDistrict0":', nSec0, ',',
-            '"nDistrict":', nSec, 
-            '}')
-  # Indentation pour des yeux humains
-  stat <- as.character(prettify(stat, indent = 4))
-  write.table(stat,
-              paste0(cheminOut, "/stat.json"),
-              row.names = FALSE, col.names = FALSE, quote = FALSE,
-              fileEncoding = "UTF-8")
+  # return stat if Mobiquest
+  if(length(perim)!=0 | length(subpop)!=0){
+    
+    stat <- c('{', 
+              '"respondents":', eff_end, ',',
+              '"respondents_pct":', round(P_eff_end), ',',
+              '"nDistrict0":', nSec0, ',',
+              '"nDistrict":', nSec, 
+              '}')
+    # Indentation pour des yeux humains
+    stat <- as.character(prettify(stat, indent = 4))
+    write.table(stat,
+                paste0(cheminOut, "/stat.json"),
+                row.names = FALSE, col.names = FALSE, quote = FALSE,
+                fileEncoding = "UTF-8")
+    
+  }
   
   return(boo)
   
