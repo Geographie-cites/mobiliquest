@@ -1,7 +1,6 @@
 # ================================================================================#
 #             Préparation des indicateurs à intégrer au Mobiliscope
 #                                      fonctions 
-#                                     MOBILIQUEST
 # ================================================================================#
 
 # library
@@ -21,33 +20,33 @@ library(readxl)
 #==== GLOBAL FUNCTIONS ====
 
 
-## 0. fonction création menu json ----
+## 0. Création menu.json ----
 menuJson <- function(cheminIn, nomEnq, ctry, subpop, cheminOut){
   
   # choix de l'onglet selon l'enquête
-  if(ctry=="FR" & !nomEnq %in% c("IDF", "BESANCON", "CARCASSONNE", "ANNECY")){
+  if(ctry=="FR" & !nomEnq %in% c("idf", "besancon", "carcassonne", "annecy")){
     sheet <- "FR"
   }
-  if(nomEnq=="IDF"){
+  if(nomEnq=="idf"){
     sheet <- "IDF"
   }
-  if(nomEnq %in% c("BESANCON", "CARCASSONNE")){
+  if(nomEnq %in% c("besancon", "carcassonne")){
     sheet <- "BECA"
   }
-  if(nomEnq=="ANNECY"){
+  if(nomEnq=="annecy"){
     sheet <- "ANNECY"
   }
   if(ctry=="CA"){
     sheet <- "CA"
   }
-  if(nomEnq=="BOGOTA"){
-    sheet <- "BO"
+  if(nomEnq=="bogota"){
+    sheet <- "CO"
   }
-  if(nomEnq=="SANTIAGO"){
-    sheet <- "STG"
+  if(nomEnq=="santiago"){
+    sheet <- "CL"
   }
-  if(nomEnq=="SAO PAULO"){
-    sheet <- "SP"
+  if(nomEnq=="sao-paulo"){
+    sheet <- "BR"
   }
   
   
@@ -75,18 +74,19 @@ menuJson <- function(cheminIn, nomEnq, ctry, subpop, cheminOut){
       json3 = map(data, 
                   ~paste0('{',
                           paste0('"label":', .x$LIB_MOD, ','),
-                          paste0('"modalite":', .x$MODALITE, ','),
+                          paste0('"modalite":"', .x$MODALITE, '",'),
                           paste0('"color":', .x$COL, ','),
                           paste0('"mode_de_representation":', .x$mode_R),
                           '}'
                   )
       ),
-      json2 = paste0(
-        paste0('"label":', LIB_INDIC, ','),
-        paste0('"indicateur":"', INDICATEUR, '",'), 
-        '"niv3" : [',
-        map_chr(json3, ~paste(., collapse = ", ")),
-        ']'
+      json2 = paste0('{',
+                     paste0('"label":', LIB_INDIC, ','),
+                     paste0('"indicateur":"', INDICATEUR, '",'), 
+                     '"niv3" : [',
+                     map_chr(json3, ~paste(., collapse = ", ")),
+                     ']',
+                     '}'
       )
       
     ) %>% 
@@ -95,9 +95,7 @@ menuJson <- function(cheminIn, nomEnq, ctry, subpop, cheminOut){
     group_by(GROUPINDIC) %>% 
     mutate(
       jsonN2 = paste0('"niv2" : [',
-                      '{', 
                       map_chr(list(json2), ~paste(., collapse = ", ")),
-                      '}',
                       ']')
     ) %>% 
     summarise(json1 = paste0('"label":"', GROUPINDIC, '", ', jsonN2)) %>% 
@@ -123,6 +121,7 @@ menuJson <- function(cheminIn, nomEnq, ctry, subpop, cheminOut){
               row.names = FALSE, col.names = FALSE, quote = FALSE,
               fileEncoding = "UTF-8")
   
+  
   return(dico)
   
 }
@@ -131,21 +130,13 @@ menuJson <- function(cheminIn, nomEnq, ctry, subpop, cheminOut){
 paramgeom <- function(nomEnq, cheminIn, cheminOut){
   
   # Paramètres géométriques et cartographiques (dernière mis à jour : v4.1)
-  data <- read.csv2(paste0(cheminIn,"/ressources/paramgeom.csv"), fileEncoding = "UTF-8")
+  data <- read_excel(paste0(cheminIn,"/ressources/paramgeom.xlsx"))
   data <- data %>% filter(cityKey == nomEnq)
   
   if(!is.na(data$myBounds)){
     
-    varjs <- c("// Déclaration des variables propres à l'enquête observée",
+    varjs <- c("// Déclaration des variables géométriques propres à l'enquête observée",
                "",
-               "// Nom de la ville centre",
-               paste0("var nomVC = '", data$enqueteMin, "';"),
-               "// Année de fin d'enquête",
-               paste0("var anneeED = '", data$year, "';"),
-               "// Pays de l'enquête",
-               paste0("var ctry = '", data$ctry, "';"),
-               "// Complément du titre de la géoviz",
-               paste0("var cityNameHR2 = '", data$cityNameHR2, "';"),
                "// Source des données",
                paste0('var dataSource = "', data$dataSource, '";'),
                "",
@@ -175,16 +166,8 @@ paramgeom <- function(nomEnq, cheminIn, cheminOut){
     
   }else{
     
-    varjs <- c("// Déclaration des variables propres à l'enquête observée",
+    varjs <- c("// Déclaration des variables géométriques propres à l'enquête observée",
                "",
-               "// Nom de la ville centre",
-               paste0("var nomVC = '", data$enqueteMin, "';"),
-               "// Année de fin d'enquête",
-               paste0("var anneeED = '", data$year, "';"),
-               "// Pays de l'enquête",
-               paste0("var ctry = '", data$ctry, "';"),
-               "// Complément du titre de la géoviz",
-               paste0("var cityNameHR2 = '", data$cityNameHR2, "';"),
                "// Source des données",
                paste0('var dataSource = "', data$dataSource, '";'),
                "",
@@ -224,7 +207,7 @@ paramgeom <- function(nomEnq, cheminIn, cheminOut){
 }
 
 # 1. Indicateur POPULATION GLOBALE ----
-createPopFiles <- function(nomEnq, prez_long, sfSec, seuil, cheminOut){
+createPopFiles <- function(nomEnq, prez_long, sfSec, seuil, cheminOut, coupleSH){
   
   # 1a. CONSTRUCTION DES DONNEES POUR la carte en cercle proportionnelle - pop0_prop : 
   # nombre estimé de personnes présentes par secteur et par heure
@@ -252,7 +235,8 @@ createPopFiles <- function(nomEnq, prez_long, sfSec, seuil, cheminOut){
     pivot_wider(names_from = HOUR, 
                 values_from = popSec, 
                 names_prefix = "pop0_") %>% 
-    rename(Secteur_EM = CODE_SEC)
+    rename(Secteur_EM = CODE_SEC) %>% 
+    mutate_if(is.numeric, ~replace(., is.na(.) & !is.nan(.), 0))
   
   ## Jointure 
   shpProp <- left_join(sfSec, dataShpProp, by = "Secteur_EM")
@@ -276,6 +260,10 @@ createPopFiles <- function(nomEnq, prez_long, sfSec, seuil, cheminOut){
   
   
   # ===> mise en forme façon stacked
+  ## ajout des secteur/heure sans pop
+  pvs <- coupleSH %>%
+    left_join(., pvs, by = c("HOUR", "CODE_SEC")) %>%
+    mutate_if(is.numeric, ~replace(., is.na(.) & !is.nan(.), 0))
   ## sortie pour dossier stacked
   dfProp <- pvs %>% 
     select(-popSecB) %>% 
@@ -283,6 +271,8 @@ createPopFiles <- function(nomEnq, prez_long, sfSec, seuil, cheminOut){
     rename(district = CODE_SEC, pop0 = popSec) %>% 
     relocate(district, hour) %>% 
     select(-HOUR)
+  
+  
   
   ### Export
   write.csv(dfProp, 
@@ -387,7 +377,7 @@ createPopFiles <- function(nomEnq, prez_long, sfSec, seuil, cheminOut){
   
   if(!is.na(seuil)){
     dataShpChoroNR <- dataShpChoroNR %>% 
-      mutate_if(is.numeric, ~replace(., is.na(.), 0))
+      mutate_if(is.numeric, ~replace(., is.na(.) & !is.nan(.), 0))
   }
   
   
@@ -403,20 +393,16 @@ createPopFiles <- function(nomEnq, prez_long, sfSec, seuil, cheminOut){
   
   # ===> mise en forme façon stacked
   ## sortie pour dossier stacked
-  uniqueHS <- pvs %>% select(HOUR, CODE_SEC)
   dfChoroNR <- pvs3 %>% 
     select(-popSecB) %>%
-    right_join(uniqueHS, by = c("HOUR", "CODE_SEC")) %>%
+    right_join(coupleSH, by = c("HOUR", "CODE_SEC")) %>%
     mutate(hour = recode(HOUR, !!!setNames(newH, oldH))) %>% 
     rename(district = CODE_SEC, pop0 = popSec) %>% 
     relocate(district, hour) %>% 
     select(-HOUR) %>% 
-    arrange(district, hour)
+    arrange(district, hour) %>% 
+    mutate_if(is.numeric, ~replace(., is.na(.) & !is.nan(.), 0))
   
-  if(is.na(seuil)){
-    dfChoroNR <- dfChoroNR %>% 
-      mutate_if(is.numeric, ~replace(., is.na(.), 0))
-  }
   
   ### Export
   write.csv(dfChoroNR, 
@@ -433,7 +419,7 @@ calculPart <- function(dataStock){
 }
 
 #~ comptage des présences par heure/secteur et par modalités d'indicateur ----
-prepPVS <- function(nomEnq, prez_long, nomIndic, nomVar, seuil){
+prepPVS <- function(nomEnq, prez_long, nomIndic, nomVar, seuil, coupleSH){
   
   result <- list()
   
@@ -463,6 +449,8 @@ prepPVS <- function(nomEnq, prez_long, nomIndic, nomVar, seuil){
   
   ### Calcul avec application d'un seuil de répondants bruts
   if(!is.na(seuil)){
+    
+    # Comptage
     pvs <- prez_long %>% 
       select(HOUR, CODE_SEC, W_IND, all_of(nomVar)) %>%
       mutate(nomVar = as.numeric(get(nomVar))) %>%
@@ -476,28 +464,84 @@ prepPVS <- function(nomEnq, prez_long, nomIndic, nomVar, seuil){
                   names_sort = TRUE,
                   values_from = c(W_IND, N_IND),
                   values_fn = sum) %>% 
-      mutate_if(is.numeric, ~replace(., is.na(.), 0)) # => secteur sans enquêtés = valeur mise à 0
+      # secteur sans enquêtés = valeur mise à 0
+      mutate_if(is.numeric, ~replace(., is.na(.), 0)) %>%  
+      # Population totale pondérée secteur/heure (somme des modalités observées)
+      group_by(HOUR, CODE_SEC) %>% 
+      mutate(popSec = sum(across(all_of(starts_with("W"))), na.rm = TRUE)) %>% 
+      ungroup() %>% 
+      relocate(popSec, .after = CODE_SEC)
+    
+    # Ajout des couples secteur/heure manquant avec absence d'enquêtés
+    pvs <- coupleSH %>% 
+      left_join(., pvs, by = c("HOUR", "CODE_SEC")) %>% 
+      mutate_if(is.numeric, ~replace(., is.na(.), 0))
+      
     
     # Application du filtre
     pvs <- pvs %>% 
+      # masquer l'info quand valeur brute comprise entre 0 et 6 (exclus) - secret primaire
       mutate(across(all_of(starts_with("W")), 
-                    ~ case_when(get(str_replace(cur_column(), "W_IND", "N_IND")) < seuil &    # entre 0 et seuil (exclus) => secteur NA
+                    ~ case_when(get(str_replace(cur_column(), "W_IND", "N_IND")) < seuil &    
                                   get(str_replace(cur_column(), "W_IND", "N_IND")) > 0 ~ NaN,
                                 TRUE ~ .))) %>% 
-      select(-c(starts_with("N_IND"))) %>% 
+      # Pour le calcul des valeurs min plus bas, trafiquer les zéros 
+      pivot_longer(-c(HOUR, CODE_SEC)) %>% 
+      mutate(name2 = word(name, 1, 2, "_")) %>% 
+      group_by(HOUR, CODE_SEC, name2) %>% 
+      mutate(value = case_when(value == 0 & str_detect(name, "W_IND") ~ row_number()/10,
+                               TRUE ~ value)) %>% 
+      pivot_wider(id_cols = c(HOUR, CODE_SEC)) %>% 
+      # Pour les colonnes pondérées, nombre de NA et valeur minimum par ligne
+      rowwise() %>% 
+      mutate(nNA = sum(is.na(across(starts_with("W")))),
+             minRow = min(across(all_of(starts_with("W"))), na.rm = TRUE)) %>% 
+      # Si une case NA, masquer une deuxième case (celle avec la plus petite valeur ou 1ère occurrence de zéro) - secret secondaire
+      mutate(across(all_of(starts_with("W")),
+                    ~ case_when(nNA == 1 &
+                                  get(cur_column()) == minRow ~ NaN,
+                                TRUE ~ .))) %>% 
+      # Les zéros redeviennent zéro
+      mutate(across(all_of(starts_with("W")),
+                    ~ case_when(get(cur_column()) < 1 ~ 0,
+                                TRUE ~ .))) %>% 
+      # n case masquée par ligne au final
+      mutate(caseNA = sum(is.na(across(starts_with("W"))))) %>% 
+      # Arrangement du tableau pour la suite
+      select(-c(starts_with("N_IND"), nNA, minRow)) %>% 
       rename_with(., ~ str_replace(., "W_IND_", ""), starts_with("W")) %>% 
-      group_by(HOUR, CODE_SEC) %>%
-      mutate(popSec = sum(c_across(where(is.numeric)), na.rm = TRUE)) %>%
-      relocate(popSec, .after = CODE_SEC) %>%
       ungroup() %>%
       arrange(CODE_SEC, HOUR) %>% 
       mutate_if(is.numeric, ~replace(., is.na(.), NaN)) %>% 
       mutate_if(is.numeric, ~round(.,2))
+    
+    # Stockage des cases na
+    casesna <- c('{', 
+              '"casesNA":', sum(pvs$caseNA), ',',
+              '"casesTot":', dim(pvs)[1]*(dim(pvs)[2]-4), 
+              '}')
+    
+    # Indentation pour des yeux humains et sauvegarde
+    casesna <- as.character(prettify(casesna, indent = 4))
+    write.table(casesna,
+                paste0(cheminOut, "/xna/",nomIndic, "_subpop1_casesna.json"),
+                row.names = FALSE, col.names = FALSE, quote = FALSE,
+                fileEncoding = "UTF-8")
+    
+    # Retrait de l'info case NA de pvs
+    pvs <- pvs %>% 
+      select(-caseNA)
   }
   
   
   ## Construction de la table de présence par secteur et par heure : PARTS
   pvs2 <- calculPart(dataStock = pvs)
+  
+  # si popSec = 0, modalités = 0
+  pvs2 <- pvs2 %>% 
+    mutate(across(all_of(starts_with(nomIndic)),
+            ~ case_when(popSec==0 ~ 0,
+                        TRUE ~ .)))
   
   ## Construction de la table de présence par secteur et par heure : 
   ## POPULATION NON RESIDENTE (STOCKS)
@@ -522,12 +566,18 @@ prepPVS <- function(nomEnq, prez_long, nomIndic, nomVar, seuil){
       relocate(popSec, .after = CODE_SEC) %>% 
       ungroup() %>% 
       arrange(CODE_SEC, HOUR)
+    
+    if(nomVar=="MOTIF"){
+      pvs3 <- pvs3 %>% mutate(act1 = 0)
+    }
   }
   
   ### Calcul avec application d'un seuil de répondants bruts
   if(!is.na(seuil)){
     pvs3 <- prez_long %>% 
       filter(CODE_SEC != RES_SEC) %>%
+      # correction motif à la maison
+      mutate(MOTIF = recode(MOTIF, `1` = 0)) %>% 
       select(HOUR, CODE_SEC, W_IND, all_of(nomVar)) %>%
       mutate(nomVar = as.numeric(get(nomVar))) %>%
       filter(!is.na(nomVar)) %>% 
@@ -539,54 +589,78 @@ prepPVS <- function(nomEnq, prez_long, nomIndic, nomVar, seuil){
                   names_prefix = nomIndic,
                   names_sort = TRUE,
                   values_from = c(W_IND, N_IND),
-                  values_fn = sum)  
+                  values_fn = sum) %>% 
+      # secteur sans enquêtés = valeur mise à 0
+      mutate_if(is.numeric, ~replace(., is.na(.), 0)) %>%  
+      # Population non-résidente totale pondérée secteur/heure (somme des modalités observées)
+      group_by(HOUR, CODE_SEC) %>% 
+      mutate(popSec = sum(across(all_of(starts_with("W"))), na.rm = TRUE)) %>% 
+      ungroup() %>% 
+      relocate(popSec, .after = CODE_SEC)  
     
     # Application du filtre
     pvs3 <- pvs3 %>% 
+      # masquer l'info quand valeur brute comprise entre 0 et 6 (exclus)
       mutate(across(all_of(starts_with("W")), 
-                    ~ case_when(get(str_replace(cur_column(), "W_IND", "N_IND")) < seuil & 
+                    ~ case_when(get(str_replace(cur_column(), "W_IND", "N_IND")) < seuil &    
                                   get(str_replace(cur_column(), "W_IND", "N_IND")) > 0 ~ NaN,
                                 TRUE ~ .))) %>% 
-      select(-c(starts_with("N_IND"))) %>% 
+      # Pour le calcul des valeurs min plus bas, trafiquer les zéros 
+      pivot_longer(-c(HOUR, CODE_SEC)) %>% 
+      mutate(name2 = word(name, 1, 2, "_")) %>% 
+      group_by(HOUR, CODE_SEC, name2) %>% 
+      mutate(value = case_when(value == 0 & str_detect(name, "W_IND") ~ row_number()/10,
+                               TRUE ~ value)) %>% 
+      pivot_wider(id_cols = c(HOUR, CODE_SEC)) %>% 
+      # Pour les colonnes pondérées, nombre de NA et valeur minimum par ligne
+      rowwise() %>% 
+      mutate(nNA = sum(is.na(across(starts_with("W")))),
+             minRow = min(across(all_of(starts_with("W"))), na.rm = TRUE)) %>% 
+      # Si une case NA, masquer une deuxième case (celle avec la plus petite valeur ou 1ère occurrence de zéro)
+      mutate(across(all_of(starts_with("W")),
+                    ~ case_when(nNA == 1 &
+                                  get(cur_column()) == minRow ~ NaN,
+                                TRUE ~ .))) %>% 
+      # Les zéros redeviennent zéro
+      mutate(across(all_of(starts_with("W")),
+                    ~ case_when(get(cur_column()) < 1 ~ 0,
+                                TRUE ~ .))) %>% 
+      # n case masquée par ligne au final
+      mutate(caseNA = sum(is.na(across(starts_with("W"))))) %>% 
+      # Arrangement du tableau pour la suite
+      select(-c(starts_with("N_IND"), nNA, minRow)) %>% 
       rename_with(., ~ str_replace(., "W_IND_", ""), starts_with("W")) %>% 
-      group_by(HOUR, CODE_SEC) %>%
-      mutate(popSec = sum(c_across(where(is.numeric)), na.rm = TRUE)) %>%
-      relocate(popSec, .after = CODE_SEC) %>%
       ungroup() %>%
       arrange(CODE_SEC, HOUR) %>% 
       mutate_if(is.numeric, ~replace(., is.na(.), NaN)) %>% 
-      mutate_if(is.numeric, ~round(.,2)) 
+      mutate_if(is.numeric, ~round(.,2))
+    
+    # Stockage des cases na
+    casesna3 <- c('{', 
+                 '"casesNA":', sum(pvs3$caseNA), ',',
+                 '"casesTot":', dim(pvs3)[1]*(dim(pvs3)[2]-4), 
+                 '}')
+    
+    # Indentation pour des yeux humains et sauvegarde
+    casesna3 <- as.character(prettify(casesna3, indent = 4))
+    write.table(casesna3,
+                paste0(cheminOut, "/xna/",nomIndic, "_subpop2_casesna.json"),
+                row.names = FALSE, col.names = FALSE, quote = FALSE,
+                fileEncoding = "UTF-8")
+    
+    # Retrait de l'info case NA de pvs
+    pvs3 <- pvs3 %>% 
+      select(-caseNA) 
+    
+    
     
   }
-  
-  if(nomVar=="MOTIF"){
-    pvs3 <- pvs3 %>% mutate(act1 = 0)
-  }
-  
-  mod <- prez_long %>% 
-    select(HOUR, CODE_SEC, W_IND, all_of(nomVar)) %>%
-    mutate(nomVar = as.numeric(get(nomVar))) %>%
-    filter(!is.na(nomVar)) %>% 
-    filter(nomVar>0) %>% 
-    arrange(nomVar) %>% 
-    pull()
-  mod <- unique(mod)
-  mod3 <- prez_long %>% 
-    select(HOUR, CODE_SEC, RES_SEC, W_IND, all_of(nomVar)) %>%
-    mutate(nomVar = as.numeric(get(nomVar))) %>%
-    filter(CODE_SEC != RES_SEC) %>%
-    filter(!is.na(nomVar)) %>% 
-    filter(nomVar>0) %>% 
-    arrange(nomVar) %>% 
-    pull()
-  mod3 <- unique(mod3)
-  
   
   result[["pvs"]] <- pvs
   result[["pvs2"]] <- pvs2
   result[["pvs3"]] <- pvs3
-  result[["mod"]] <- mod
-  result[["mod3"]] <- mod3
+  result[["mod"]] <- as.numeric(str_sub(names(pvs)[4:length(pvs)], -1))
+  result[["mod3"]] <- as.numeric(str_sub(names(pvs3)[4:length(pvs3)], -1))
   return(result)
   
   
@@ -611,7 +685,7 @@ createFiles <- function(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, seuil,
     
     indic <- paste0(nomIndic, m)
     
-    # Si modalité is not NA
+    # Si la colonne contient au moins une valeur
     if(sum(pvs %>% select(all_of(indic)), na.rm = TRUE)>0){
       
       ## Préparation du tableau de données à joindre au geojson
@@ -662,7 +736,7 @@ createFiles <- function(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, seuil,
       
       indic <- paste0(nomIndic, m)
       
-      # Si modalité is not NA
+      # Si la colonne contient au moins une valeur
       if (!indic %in% c("act1") && sum(pvs3 %>% select(all_of(indic)), na.rm = TRUE)>0){
         
         ### Flowdata : csv des flux OD avec seuil à 6
@@ -674,10 +748,17 @@ createFiles <- function(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, seuil,
           summarise(W_IND = round(sum(W_IND, na.rm = TRUE),2),
                     n = length(ID_IND),
                     .groups = "keep") %>% 
-          ungroup() %>%
-          filter(CODE_SEC != RES_SEC & n  >= 6) %>% ## application du seuil
+          ungroup() 
+        ### stockage du nombre de couple OD 
+        nOD <- nrow(flowdata)
+        ### filtrage
+        flowdata <- flowdata %>% 
+          filter(CODE_SEC != RES_SEC & n >= 6) %>% 
           select(-n) %>% 
           arrange(CODE_SEC, HOUR)
+        
+        
+        
         
         ### data stock NR
         dataShpChoroNR <- pvs3 %>% 
@@ -689,11 +770,11 @@ createFiles <- function(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, seuil,
           rename(Secteur_EM = CODE_SEC) %>% 
           arrange(Secteur_EM) 
         
-        if(!is.na(seuil)){
-          dataShpChoroNR <- dataShpChoroNR %>% 
-            mutate_if(is.numeric, ~replace(., is.na(.), 0))
-        }
-        
+        # si NA, abs. de pop non-résidente ; si NaN, info masquée
+        dataShpChoroNR <- dataShpChoroNR %>% 
+          mutate_if(is.numeric, ~replace(., is.na(.) & !is.nan(.), 0))
+         
+  
         ### Jointure des données au fond de carte
         shpChoroNR <- left_join(sfSec, dataShpChoroNR, by = "Secteur_EM")
         
@@ -706,6 +787,19 @@ createFiles <- function(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, seuil,
           write.csv(flowdata, 
                     paste0(cheminOut, "/flowData/", indic ,"_flow.csv"), 
                     row.names = FALSE)
+          
+          if(!is.na(seuil)){
+            ### nombre de cases masquées
+            casesna3 <- c('{', 
+                          '"casesNA":', nOD-nrow(flowdata), ',',
+                          '"n_OD":', nOD, 
+                          '}')
+            casesna3 <- as.character(prettify(casesna3, indent = 4))
+            write.table(casesna3,
+                        paste0(cheminOut, "/xna/",indic, "_subpop3_casesna.json"),
+                        row.names = FALSE, col.names = FALSE, quote = FALSE,
+                        fileEncoding = "UTF-8")
+          }
         }
         
       }
@@ -772,11 +866,10 @@ createFiles <- function(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, seuil,
         select(-HOUR, -popSec) %>% 
         arrange(district, hour)
       
-      if(is.na(seuil)){
-        df <- df %>% 
-          mutate_if(is.numeric, ~replace(., is.na(.), 0))
-      }
-      
+      # si NA, abs. de pop non-résidente ; si NaN, info masquée
+      df <- df %>% 
+          mutate_if(is.numeric, ~replace(., is.na(.) & !is.nan(.), 0))
+
       
       ## Export
       write.csv(df, 
@@ -798,12 +891,6 @@ createISeg <- function(nomIndic, nomVar, nomEnq, ctry, data, sfSec, seuil, chemi
   # valeur des modalités
   mod <- data[["mod"]]
   
-  
-  ## replace NaN by 0
-  pvs <- pvs %>% mutate_if(is.numeric, ~replace(., is.na(.), 0))
-  pvs2 <- pvs2 %>% mutate_if(is.numeric, ~replace(., is.na(.), 0))
-  
-  
   ## formalisation des heures
   Hlevels <- c("h4", "h5", "h6", "h7",
                "h8", "h9", "h10", "h11", 
@@ -822,44 +909,66 @@ createISeg <- function(nomIndic, nomVar, nomEnq, ctry, data, sfSec, seuil, chemi
   
   # DUNCAN
   
-  ## Init table
-  duncan <- list()
-  
-  ## Calcul de l'indice pour chaque heure
-  for (h in unique(pvs$HOUR)){
+  ## On ne calcule que lorsqu'il y a au moins deux modalités
+  if (length(mod)>1){
     
-    # si un groupe manquant, on ne calcule pas l'indice
-    t <- colSums(pvs[pvs$HOUR==h, 4:length(pvs)])==0  #if TRUE, groupe manquant
-    t <- t[t!=FALSE]
+    ## On calcule uniquement pour les heures où tous les couples secteur/heure sont sans NaN
+    hourOK <- pvs %>% 
+      group_by(HOUR, CODE_SEC) %>%
+      rowwise() %>% 
+      mutate(masque = sum(across(all_of(starts_with(nomIndic))))) %>% 
+      group_by(HOUR) %>% 
+      summarise(masque = sum(masque)) %>% 
+      ungroup() %>% 
+      filter(!is.na(masque)) %>% 
+      select(-masque) %>% 
+      rename(hour = HOUR)
     
-    if(length(t)==0){
+    ## Init table
+    duncan <- list()
+    
+    ## !!!!prévenir en cas de pvs full na
+    if (nrow(hourOK)!=0){
+      ## Calcul de l'indice pour chaque heure
+      for (h in unique(hourOK$hour)){
+        
+        duncan[[h]] <- as.data.frame(t(ISDuncan(pvs[pvs$HOUR == h , 4:length(pvs)])))
+        
+      }
+      ## Compilation des résultats
+      duncan <- bind_rows(duncan, .id = "hour")
       
-      duncan[[h]] <- as.data.frame(t(ISDuncan(pvs[pvs$HOUR == h , 4:length(pvs)])))
+      ## Mise en forme
+      colnames(duncan)[2:length(duncan)] <- colnames(pvs[ , 4:length(pvs)])
       
-    } else if (t==TRUE){
+      ## Ajout des heures manquantes (dans l'ordre)
+      t <- data.frame(hour = Hlevels)
+      duncan <- t %>%
+        left_join(., duncan, by = "hour")
       
-      duncan[[h]] <- as.data.frame(t(rep(NA, length(mod))))
+      duncan <- duncan %>% 
+        mutate(hour = factor(hour, levels = Hlevels),
+               hour = newH) %>% 
+        mutate_if(is.numeric, ~replace(., is.na(.), NaN)) 
       
+      ## comptage cases masquées
+      if(!is.na(seuil)){
+        casesna <- c('{', 
+                     '"casesNA":', sum(is.na(duncan[,2:length(duncan)])==TRUE), ',',
+                     '"casesTot":', dim(duncan)[1]*(dim(duncan)[2]-1), 
+                     '}')
+        casesna <- as.character(prettify(casesna, indent = 4))
+        write.table(casesna,
+                    paste0(cheminOut, "/xna/",nomIndic, "_duncan_casesna.json"),
+                    row.names = FALSE, col.names = FALSE, quote = FALSE,
+                    fileEncoding = "UTF-8")
+      }
+      
+      ## EXPORT sauf si NA partout 
+      write.csv(duncan, 
+                paste0(cheminOut, "/segreg/", nomIndic,"_Duncan.csv"), 
+                row.names = FALSE)
     }
-    
-  }
-  ## Compilation des résultats
-  duncan <- bind_rows(duncan, .id = "hour")
-  
-  ## Mise en forme
-  colnames(duncan)[2:length(duncan)] <- colnames(pvs[ , 4:length(pvs)])
-  
-  duncan <- duncan %>% 
-    mutate(hour = factor(hour, levels = Hlevels),
-           hour = newH) %>% 
-    mutate_if(is.numeric, ~replace(., is.na(.), NaN)) 
-  
-  
-  ## EXPORT sauf si NA partout
-  if(!is.na(sum(duncan[,2]))){
-    write.csv(duncan, 
-              paste0(cheminOut, "/segreg/", nomIndic,"_Duncan.csv"), 
-              row.names = FALSE)
   }
   
   
@@ -868,15 +977,15 @@ createISeg <- function(nomIndic, nomVar, nomEnq, ctry, data, sfSec, seuil, chemi
   
   ## projection 
   if (ctry == "FR") {
-    if (!nomEnq %in% c("LA REUNION", "MARTINIQUE")) {
+    if (!nomEnq %in% c("la-reunion", "martinique")) {
       shpSectMoran <- sfSec %>% 
         st_transform(crs = 2154)
     }
-    if (nomEnq == "LA REUNION") {
+    if (nomEnq == "la-reunion") {
       shpSectMoran <- sfSec %>% 
         st_transform(crs = 2975)
     }
-    if (nomEnq == "MARTINIQUE") {
+    if (nomEnq == "martinique") {
       shpSectMoran <- sfSec %>% 
         st_transform(crs = 5490)
     }
@@ -887,24 +996,17 @@ createISeg <- function(nomIndic, nomVar, nomEnq, ctry, data, sfSec, seuil, chemi
       st_transform(crs = 3978)
   }
   
-  if (nomEnq == "BOGOTA") {
+  if (nomEnq == "bogota") {
     shpSectMoran <- sfSec %>% 
-      st_transform(crs = 21897) %>% 
-      # supression des secteurs non contigüs
-      filter(!Secteur_EM %in% c("UTAM700", "UTAM650", "UTAM680", 
-                                "UTAM563", "UTAM660", "UTAM690",
-                                "UTAM670", "UTAM640", "UTAM540",
-                                "UTAM500", "UTAM520", "UTAM580",
-                                "UTAM620", "UTAM600", "UTAM590",
-                                "UTAM630", "UTAM610", "UTAM89"))
+      st_transform(crs = 21897) 
   }
   
-  if (nomEnq == "SAO PAULO") {
+  if (nomEnq == "sao-paulo") {
     shpSectMoran <- sfSec %>% 
       st_transform(crs = 22523)
   }
   
-  if (nomEnq == "SANTIAGO") {
+  if (nomEnq == "santiago") {
     shpSectMoran <- sfSec %>% 
       st_transform(crs = 32719)
   }
@@ -924,17 +1026,18 @@ createISeg <- function(nomIndic, nomVar, nomEnq, ctry, data, sfSec, seuil, chemi
     # Joindre avec le shp
     dataMoran <- left_join(shpSectMoran, dataMoran, by = "Secteur_EM")
     
-    # filter heure manquante
-    dataMoran <- dataMoran %>% 
-      filter(!is.na(HOUR)) %>% 
+    # filter heure manquante 
+    dataMoran <- dataMoran %>%
+      filter(!is.na(HOUR)) %>%
       filter(popSec != 0) %>%
-      # mutate_if(is.numeric, ~replace(., is.na(.), 0)) %>% 
+      #mutate_if(is.numeric, ~replace(., is.na(.), 0)) %>%
       select(-popSec)
     
     # on lance le calcul uniquement si tous les secteurs sont présents
     if (length(unique(dataMoran$Secteur_EM))==length(unique(shpSectMoran$Secteur_EM))){
       
       # Calcul des paramètres
+      # ! pour bcp d'enquête, la requête perim => secteurs non contigus - fix avec zero.policy
       nbSecteurs <- poly2nb(pl = dataMoran,
                             row.names = dataMoran$Secteur_EM,
                             snap = 50,
@@ -943,52 +1046,58 @@ createISeg <- function(nomIndic, nomVar, nomEnq, ctry, data, sfSec, seuil, chemi
       dataMoran <- dataMoran %>%
         st_drop_geometry()
       
-      # Calcul de l'indice de Moran et stockage des résultats dans la table
+      # Calcul de l'indice de Moran pour chaque modalité sans NA
       for (n in colnames(pvs2[4:length(pvs2)])){
         
-        result <- moran.mc(x = dataMoran[[n]],
-                           listw = nb2listw(nbSecteurs), nsim=1000)
-        
-        moran <- rbind(moran, data.frame("hour" = h,
-                                         "var" = n,
-                                         "moran" = result$statistic))
+        if(!is.na(sum(dataMoran[[n]]))){ # si aucun couple secteur/heure avec NA
+          result <- moran.mc(x = dataMoran[[n]],
+                             listw = nb2listw(nbSecteurs, zero.policy=TRUE), 
+                             zero.policy=TRUE, # if TRUE assign zero to the lagged value of zones without neighbours
+                             nsim=1000)
+          
+          moran <- rbind(moran, data.frame("hour" = h,
+                                           "var" = n,
+                                           "moran" = result$statistic))
+        } else { # si modalité manquante pour au moins un couple secteur/heure
+          moran <- rbind(moran, data.frame("hour" = h,
+                                           "var" = n,
+                                           "moran" = NaN))
+        }
       }
-      
-    } else {
-      
-      for (n in colnames(pvs2[4:length(pvs2)])){
-        
-        moran <- rbind(moran, data.frame("hour" = h,
-                                         "var" = n,
-                                         "moran" = NaN))
-      }
-    }
+
+    } 
 
   }
   
   
-  # Pour chaque heure, si un indice NA, remplace tous les indices par NA
-  moran <- moran %>% 
-    group_by(hour) %>% 
-    mutate(moran = case_when(sum(as.numeric(is.na(moran)))==1 ~ NaN,
-                             TRUE ~ moran
-    )) %>% 
-    ungroup()
-  
-  ## Mise en forme
-  moran <- moran %>% 
-    mutate_if(is.numeric, ~round(., 4)) %>% 
-    pivot_wider(names_from = var, values_from = moran) %>% 
-    mutate(hour = factor(hour, levels = Hlevels)) %>% 
-    mutate(hour = newH) 
-  
-  
   ## EXPORT sauf si NA partout
-  if(!is.na(sum(moran[,2]))){
+  if(nrow(moran)!=0){
+    
+    ## Mise en forme
+    moran <- moran %>% 
+      mutate_if(is.numeric, ~round(., 4)) %>% 
+      pivot_wider(names_from = var, values_from = moran) %>% 
+      mutate(hour = factor(hour, levels = Hlevels)) %>% 
+      mutate(hour = newH) 
+    
+    ## Compteur case masquée
+    if(!is.na(seuil)){
+      casesna <- c('{', 
+                   '"casesNA":', sum(is.na(moran[,2:length(moran)])==TRUE), ',',
+                   '"casesTot":', dim(moran)[1]*(dim(moran)[2]-1), 
+                   '}')
+      casesna <- as.character(prettify(casesna, indent = 4))
+      write.table(casesna,
+                  paste0(cheminOut, "/xna/",nomIndic, "_moran_casesna.json"),
+                  row.names = FALSE, col.names = FALSE, quote = FALSE,
+                  fileEncoding = "UTF-8")
+    }
+    
+    ## écriture
     write.csv(moran, 
               paste0(cheminOut, "/segreg/", nomIndic,"_Moran.csv"), 
               row.names = FALSE)
-  }
+  } 
   
 }  
 
@@ -1007,32 +1116,29 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
   dir.create(paste0(cheminOut, "/stacked"))
   dir.create(paste0(cheminOut, "/segreg"))
   
-  
+
   #~ 1. LOAD DATA et FILTRAGES ----
   
   # couche secteur
   sfSec <- st_read(paste0(cheminIn, "/BDgeo/SEC_59ED_W84.shp"))
   sfSec <- sfSec %>% 
-    mutate(ENQUETE = case_when(LIB_ED=="Valenciennes, 2011" ~ "VALENCIENNES2011",
-                               TRUE ~ ENQUETE)) %>% 
-    mutate(cityKey = case_when(str_detect(ENQUETE, " ") ~ str_replace(tolower(ENQUETE), " ", "-"),
-                               TRUE ~ tolower(ENQUETE))) %>% 
-    filter(cityKey == nomEnq) %>%
-    rename(Secteur_EM = CODE_SEC, 
-           CENTROID_X = X_W84, 
-           CENTROID_Y = Y_W84,
-           PERIM = ZONAGE_SEC) %>% 
-    #recode perimètre
-    mutate(PERIM = case_when(PAYS=="AS" ~ PERIM+3,
-                             TRUE ~ as.numeric(PERIM)))
+    filter(CITYKEY == nomEnq) %>%
+    transmute(CITYKEY,
+              ENQUETE, ANNEE,
+              Secteur_EM = CODE_SEC, 
+              AREA,
+              CENTROID_X = X_W84, 
+              CENTROID_Y = Y_W84,
+              PERIM = ZONAGE_SEC,
+              LIB) 
   
   nSec0 <- nrow(sfSec)
   
   ## filtre périmètre
   if(length(perim)!=0){
-    perim <- unlist(perim)
+    # perim <- unlist(perim)
     sfSec <- sfSec %>%
-      filter(PERIM %in% perim)
+      filter(PERIM %in% unlist(perim))
   }
   
   nSec <- nrow(sfSec)
@@ -1044,12 +1150,25 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
   # eff_start <- prez_long %>% filter(HOUR=="h4") %>% nrow(.) # n présence à h4
   eff_start <- prez_long %>% filter(!duplicated(ID_IND)) %>% nrow(.) # n enquêtés
   
+  ## Couple secteur/heure avant filtrage
+  coupleSH <- prez_long %>% 
+    select(HOUR, CODE_SEC) %>% 
+    distinct() %>% 
+    arrange(CODE_SEC, HOUR)
+  
   ### code pays de l'enquête
+  prez_long <- prez_long %>% 
+    mutate(PAYS = case_when(nomEnq=="bogota" ~ "CO",
+                            nomEnq=="sao-paulo" ~ "BR",
+                            nomEnq=="santiago" ~ "CL",
+                            TRUE ~ PAYS))
   ctry <- unique(prez_long$PAYS)
   
   ## filtre périmètre
   if(length(perim)!=0){
     prez_long <- prez_long %>% 
+      filter(CODE_SEC %in% sfSec$Secteur_EM)
+    coupleSH <- coupleSH %>% 
       filter(CODE_SEC %in% sfSec$Secteur_EM)
   }
   
@@ -1065,9 +1184,11 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
   ## Si filtre subpop, seuil = 6
   if(length(subpop)!=0){
     seuil <- 6
+    dir.create(paste0(cheminOut, "/xna"))
   }else{
     seuil <- NA
   }
+  
   
   # eff_end <- nrow(prez_long)
   eff_end <- prez_long %>% filter(!duplicated(ID_IND)) %>% nrow(.)
@@ -1084,9 +1205,39 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
     cat(mess)
   } else {
     
-    ## geojson vierge pour le téléchargement
+    # geojson vierge pour le téléchargement
     geojson_write(sfSec %>% select(ENQUETE, ANNEE, CODE_SEC = Secteur_EM, LIB),
                   file = paste0(cheminOut, "/geo/secteurs.geojson"))
+    
+    # les couches d'habillage
+    ## qpv
+    if(ctry=="FR" & nomEnq != "annecy"){
+      qp <- st_read(paste0(cheminIn, "/BDgeo/layers/qpv.geojson"))
+      geojson_write(qp %>% filter(CITYKEY==nomEnq),
+                    file = paste0(cheminOut, "/geo/qpv.geojson"),
+                    layer_options = "ENCODING=UTF-8")
+    }
+
+    ## metalrings & municipes
+    if(ctry %in% c("CO", "BR", "CL")){
+      mr <- st_read(paste0(cheminIn, "/BDgeo/layers/metalrings.geojson"))
+      geojson_write(mr %>% filter(CITYKEY==nomEnq),
+                    file = paste0(cheminOut, "/geo/metalrings.geojson"),
+                    layer_options = "ENCODING=UTF-8")
+      mun <- st_read(paste0(cheminIn, "/BDgeo/layers/comunasAL.geojson"))
+      geojson_write(mun %>% filter(CITYKEY==nomEnq),
+                    file = paste0(cheminOut, "/geo/comunasAL.geojson"),
+                    layer_options = "ENCODING=UTF-8")
+    }
+
+    ## transMilenio
+    if(nomEnq=="bogota"){
+      tm <- st_read(paste0(cheminIn, "/BDgeo/layers/transmilenio.geojson"))
+      geojson_write(tm,
+                    file = paste0(cheminOut, "/geo/transmilenio.geojson"),
+                    layer_options = "ENCODING=UTF-8")
+    }
+    
     
     # création du json pour le menu accordéon + appel dico des variables
     dico <- menuJson(cheminIn, nomEnq, ctry, subpop, cheminOut)
@@ -1095,7 +1246,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
     paramgeom(nomEnq, cheminIn, cheminOut)
     
     #~ 1. INDICATEUR "WHOLE POPULATION" ----
-    createPopFiles(nomEnq, prez_long, sfSec, seuil, cheminOut)
+    createPopFiles(nomEnq, prez_long, sfSec, seuil, cheminOut, coupleSH)
     
     
     #~ 2. TOUS LES AUTRES INDICATEURS ----
@@ -1105,7 +1256,7 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
     for(i in variables) {
       
       j <- varind %>% filter(VARIABLE==i) %>% pull(INDICATEUR)
-      data <- prepPVS(nomEnq, prez_long, nomIndic = j, nomVar = i, seuil)
+      data <- prepPVS(nomEnq, prez_long, nomIndic = j, nomVar = i, seuil, coupleSH)
       createFiles(nomIndic = j, nomVar = i, nomEnq, data, prez_long, sfSec, seuil, ctry, cheminOut)
       
       if(!i %in% c("RES", "MOTIF", "MODE_ARR")){
@@ -1136,18 +1287,23 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
     
   }
   
-  stat <- c('{', 
-            '"respondents":', eff_end, ',',
-            '"respondents_pct":', round(P_eff_end), ',',
-            '"nDistrict0":', nSec0, ',',
-            '"nDistrict":', nSec, 
-            '}')
-  # Indentation pour des yeux humains
-  stat <- as.character(prettify(stat, indent = 4))
-  write.table(stat,
-              paste0(cheminOut, "/stat.json"),
-              row.names = FALSE, col.names = FALSE, quote = FALSE,
-              fileEncoding = "UTF-8")
+  # return stat if Mobiquest
+  if(length(perim)!=0 | length(subpop)!=0){
+    
+    stat <- c('{', 
+              '"respondents":', eff_end, ',',
+              '"respondents_pct":', round(P_eff_end), ',',
+              '"nDistrict0":', nSec0, ',',
+              '"nDistrict":', nSec, 
+              '}')
+    # Indentation pour des yeux humains
+    stat <- as.character(prettify(stat, indent = 4))
+    write.table(stat,
+                paste0(cheminOut, "/stat.json"),
+                row.names = FALSE, col.names = FALSE, quote = FALSE,
+                fileEncoding = "UTF-8")
+    
+  }
   
   return(boo)
   
