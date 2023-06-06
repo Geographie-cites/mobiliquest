@@ -16,7 +16,7 @@ object Main extends IOApp {
 
   override def run(args: List[String]): IO[ExitCode] =
     BlazeServerBuilder[IO](scala.concurrent.ExecutionContext.global)
-      .bindHttp(9002, "localhost")
+      .bindHttp(8080, "0.0.0.0")
       .withHttpApp(httpApp)
       .withIdleTimeout(Duration.Inf)
       .resource

@@ -44,10 +44,11 @@ lazy val client = project.in(file("client")) enablePlugins(ScalaJSPlugin, ScalaJ
 ) dependsOn (shared)
 
 
-lazy val server = project.in(file("server")) settings(
+lazy val server = project.in(file("server")) enablePlugins(DockerPlugin, JavaAppPackaging) settings(
   name := "Mobiliquest",
   version := Version,
   scalaVersion := ScalaVersion,
+  dockerExposedPorts ++= Seq(8080),
   libraryDependencies ++= Seq(
     "org.ddahl" % "rscala_2.13" % "3.2.19",
     "com.lihaoyi" %% "scalatags" % scalatagsVersion,
