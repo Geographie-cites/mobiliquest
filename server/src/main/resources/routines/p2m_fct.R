@@ -19,15 +19,15 @@ library(readxl)
 
 #==== GLOBAL FUNCTIONS ====
 
-
-## 0. Création menu.json ----
+# 0. Création des données complémentaires ----
+# menu.json 
 menuJson <- function(cheminIn, nomEnq, ctry, subpop, cheminOut){
   
   # choix de l'onglet selon l'enquête
-  if(ctry=="FR" & !nomEnq %in% c("idf", "besancon", "carcassonne", "annecy")){
+  if(ctry=="FR" & !nomEnq %in% c("idf", "idf2010", "besancon", "carcassonne", "annecy")){
     sheet <- "FR"
   }
-  if(nomEnq=="idf"){
+  if(nomEnq %in% c("idf", "idf2010")){
     sheet <- "IDF"
   }
   if(nomEnq %in% c("besancon", "carcassonne")){
@@ -126,7 +126,7 @@ menuJson <- function(cheminIn, nomEnq, ctry, subpop, cheminOut){
   
 }
 
-# 0. Création paramgeom.js
+# paramgeom.js
 paramgeom <- function(nomEnq, cheminIn, cheminOut){
   
   # Paramètres géométriques et cartographiques (dernière mis à jour : v4.1)
@@ -204,6 +204,88 @@ paramgeom <- function(nomEnq, cheminIn, cheminOut){
   
   return(varjs)
   
+}
+
+# Couches d'habillage et couche secteur vierge (i.e. sans données de présence)
+otherLayers <- function(cheminIn, nomEnq, ctry, cheminOut){
+  
+  # geojson vierge pour le téléchargement
+  sec <- st_read(paste0(cheminIn, "/BD_geo/bdgeo_v4-3.gpkg"), "secteur_60ed_w84") %>% 
+    filter(CITYKEY == nomEnq) %>% 
+    select(ENQUETE, ANNEE, CODE_SEC, LIB, ZONAGE_SEC)
+  
+  if(ctry!="CA"){
+    sec <- sec %>% 
+      mutate(ZONAGE_SEC = word(ZONAGE_SEC, 2, 2, "-"))
+  } else {
+    sec <- sec %>% 
+      select(-ZONAGE_SEC)
+  }
+    
+  geojson_write(sec,
+                file = paste0(cheminOut, "/layers/secteurs.geojson"))
+  
+  # les couches d'habillage
+  ## qpv
+  if(ctry=="FR" & nomEnq != "annecy"){
+    qp <- st_read(paste0(cheminIn, "/BD_geo/bdgeo_v4-3.gpkg"), "qpv")
+    geojson_write(qp %>% filter(CITYKEY==nomEnq),
+                  file = paste0(cheminOut, "/layers/qpv.geojson"),
+                  layer_options = "ENCODING=UTF-8")
+  }
+  ## zau et aav
+  if(ctry=="FR"){
+    zau <- st_read(paste0(cheminIn, "/BD_geo/bdgeo_v4-3.gpkg"), "zau") %>% 
+      filter(CITYKEY==nomEnq)
+    geojson_write(zau,
+                  file = paste0(cheminOut, "/layers/zau.geojson"),
+                  layer_options = "ENCODING=UTF-8")
+    aav <- st_read(paste0(cheminIn, "/BD_geo/bdgeo_v4-3.gpkg"), "aav")%>% 
+      filter(CITYKEY==nomEnq)
+    geojson_write(aav,
+                  file = paste0(cheminOut, "/layers/aav.geojson"),
+                  layer_options = "ENCODING=UTF-8")
+    
+  }
+  ## acv
+  citywoacv  <- c("amiens", "angers", "annemasse", "brest", "dijon", 
+                  "la-rochelle", "lille", "metz", "nimes", "toulouse")
+  if(ctry=="FR" & !nomEnq %in% citywoacv){
+    acv <- st_read(paste0(cheminIn, "/BD_geo/bdgeo_v4-3.gpkg"), "acv") %>% 
+      filter(CITYKEY==nomEnq)
+    geojson_write(acv,
+                  file = paste0(cheminOut, "/layers/acv.geojson"),
+                  layer_options = "ENCODING=UTF-8")
+  }
+  ## pvd
+  citywopvd <-  c("albi", "angers", "angouleme", "besancon", "dunkerque", 
+                  "la-rochelle", "lille", "saint-brieuc", "thionville")
+  if(ctry=="FR" & !nomEnq %in% citywopvd) {
+    pvd <- st_read(paste0(cheminIn, "/BD_geo/bdgeo_v4-3.gpkg"), "pvd") %>% 
+      filter(CITYKEY==nomEnq)
+    geojson_write(pvd,
+                  file = paste0(cheminOut, "/layers/pvd.geojson"),
+                  layer_options = "ENCODING=UTF-8")
+  }
+  ## metalrings & municipes
+  if(ctry %in% c("CO", "BR", "CL")){
+    mr <- st_read(paste0(cheminIn, "/BD_geo/bdgeo_v4-3.gpkg"), "metalrings")
+    geojson_write(mr %>% filter(CITYKEY==nomEnq),
+                  file = paste0(cheminOut, "/layers/metalrings.geojson"),
+                  layer_options = "ENCODING=UTF-8")
+    mun <- st_read(paste0(cheminIn, "/BD_geo/bdgeo_v4-3.gpkg"), "comunas")
+    geojson_write(mun %>% filter(CITYKEY==nomEnq),
+                  file = paste0(cheminOut, "/layers/comunasAL.geojson"),
+                  layer_options = "ENCODING=UTF-8")
+  }
+  
+  ## transMilenio
+  if(nomEnq=="bogota"){
+    tm <- st_read(paste0(cheminIn, "/BD_geo/bdgeo_v4-3.gpkg"), "transmilenio")
+    geojson_write(tm,
+                  file = paste0(cheminOut, "/layers/transmilenio.geojson"),
+                  layer_options = "ENCODING=UTF-8")
+  }
 }
 
 # 1. Indicateur POPULATION GLOBALE ----
@@ -287,7 +369,7 @@ createPopFiles <- function(nomEnq, prez_long, sfSec, seuil, cheminOut, coupleSH)
   options(scipen = 999)
   pvs2 <- pvs %>% 
     left_join(., select(sfSec, CODE_SEC = Secteur_EM, AREA), by = "CODE_SEC") %>% 
-    select(-geometry) %>% 
+    st_drop_geometry() %>% 
     mutate(AREA_KM = AREA/1e6,
            dens = round(popSec/AREA_KM,2))
   
@@ -476,7 +558,7 @@ prepPVS <- function(nomEnq, prez_long, nomIndic, nomVar, seuil, coupleSH){
     pvs <- coupleSH %>% 
       left_join(., pvs, by = c("HOUR", "CODE_SEC")) %>% 
       mutate_if(is.numeric, ~replace(., is.na(.), 0))
-      
+    
     
     # Application du filtre
     pvs <- pvs %>% 
@@ -517,9 +599,9 @@ prepPVS <- function(nomEnq, prez_long, nomIndic, nomVar, seuil, coupleSH){
     
     # Stockage des cases na
     casesna <- c('{', 
-              '"casesNA":', sum(pvs$caseNA), ',',
-              '"casesTot":', dim(pvs)[1]*(dim(pvs)[2]-4), 
-              '}')
+                 '"casesNA":', sum(pvs$caseNA), ',',
+                 '"casesTot":', dim(pvs)[1]*(dim(pvs)[2]-4), 
+                 '}')
     
     # Indentation pour des yeux humains et sauvegarde
     casesna <- as.character(prettify(casesna, indent = 4))
@@ -540,8 +622,8 @@ prepPVS <- function(nomEnq, prez_long, nomIndic, nomVar, seuil, coupleSH){
   # si popSec = 0, modalités = 0
   pvs2 <- pvs2 %>% 
     mutate(across(all_of(starts_with(nomIndic)),
-            ~ case_when(popSec==0 ~ 0,
-                        TRUE ~ .)))
+                  ~ case_when(popSec==0 ~ 0,
+                              TRUE ~ .)))
   
   ## Construction de la table de présence par secteur et par heure : 
   ## POPULATION NON RESIDENTE (STOCKS)
@@ -637,9 +719,9 @@ prepPVS <- function(nomEnq, prez_long, nomIndic, nomVar, seuil, coupleSH){
     
     # Stockage des cases na
     casesna3 <- c('{', 
-                 '"casesNA":', sum(pvs3$caseNA), ',',
-                 '"casesTot":', dim(pvs3)[1]*(dim(pvs3)[2]-4), 
-                 '}')
+                  '"casesNA":', sum(pvs3$caseNA), ',',
+                  '"casesTot":', dim(pvs3)[1]*(dim(pvs3)[2]-4), 
+                  '}')
     
     # Indentation pour des yeux humains et sauvegarde
     casesna3 <- as.character(prettify(casesna3, indent = 4))
@@ -773,8 +855,8 @@ createFiles <- function(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, seuil,
         # si NA, abs. de pop non-résidente ; si NaN, info masquée
         dataShpChoroNR <- dataShpChoroNR %>% 
           mutate_if(is.numeric, ~replace(., is.na(.) & !is.nan(.), 0))
-         
-  
+        
+        
         ### Jointure des données au fond de carte
         shpChoroNR <- left_join(sfSec, dataShpChoroNR, by = "Secteur_EM")
         
@@ -868,8 +950,8 @@ createFiles <- function(nomIndic, nomVar, nomEnq, data, prez_long, sfSec, seuil,
       
       # si NA, abs. de pop non-résidente ; si NaN, info masquée
       df <- df %>% 
-          mutate_if(is.numeric, ~replace(., is.na(.) & !is.nan(.), 0))
-
+        mutate_if(is.numeric, ~replace(., is.na(.) & !is.nan(.), 0))
+      
       
       ## Export
       write.csv(df, 
@@ -1064,9 +1146,9 @@ createISeg <- function(nomIndic, nomVar, nomEnq, ctry, data, sfSec, seuil, chemi
                                            "moran" = NaN))
         }
       }
-
+      
     } 
-
+    
   }
   
   
@@ -1115,13 +1197,12 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
   dir.create(paste0(cheminOut, "/flowData"))
   dir.create(paste0(cheminOut, "/stacked"))
   dir.create(paste0(cheminOut, "/segreg"))
+  dir.create(paste0(cheminOut, "/layers"))
   
-
   #~ 1. LOAD DATA et FILTRAGES ----
   
   # couche secteur
-  sfSec <- st_read(paste0(cheminIn, "/BDgeo/SEC_59ED_W84.shp"))
-  sfSec <- sfSec %>% 
+  sfSec <- st_read(paste0(cheminIn, "/BD_geo/bdgeo_v4-3.gpkg"), "secteur_60ed_w84") %>% 
     filter(CITYKEY == nomEnq) %>%
     transmute(CITYKEY,
               ENQUETE, ANNEE,
@@ -1129,14 +1210,13 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
               AREA,
               CENTROID_X = X_W84, 
               CENTROID_Y = Y_W84,
-              PERIM = ZONAGE_SEC,
+              PERIM = word(ZONAGE_SEC, 1, 1, "-"),
               LIB) 
   
   nSec0 <- nrow(sfSec)
   
   ## filtre périmètre
   if(length(perim)!=0){
-    # perim <- unlist(perim)
     sfSec <- sfSec %>%
       filter(PERIM %in% unlist(perim))
   }
@@ -1156,12 +1236,6 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
     distinct() %>% 
     arrange(CODE_SEC, HOUR)
   
-  ### code pays de l'enquête
-  prez_long <- prez_long %>% 
-    mutate(PAYS = case_when(nomEnq=="bogota" ~ "CO",
-                            nomEnq=="sao-paulo" ~ "BR",
-                            nomEnq=="santiago" ~ "CL",
-                            TRUE ~ PAYS))
   ctry <- unique(prez_long$PAYS)
   
   ## filtre périmètre
@@ -1205,39 +1279,8 @@ p2m <- function(nomEnq, perim, subpop, cheminIn, cheminOut){
     cat(mess)
   } else {
     
-    # geojson vierge pour le téléchargement
-    geojson_write(sfSec %>% select(ENQUETE, ANNEE, CODE_SEC = Secteur_EM, LIB),
-                  file = paste0(cheminOut, "/geo/secteurs.geojson"))
-    
-    # les couches d'habillage
-    ## qpv
-    if(ctry=="FR" & nomEnq != "annecy"){
-      qp <- st_read(paste0(cheminIn, "/BDgeo/layers/qpv.geojson"))
-      geojson_write(qp %>% filter(CITYKEY==nomEnq),
-                    file = paste0(cheminOut, "/geo/qpv.geojson"),
-                    layer_options = "ENCODING=UTF-8")
-    }
-
-    ## metalrings & municipes
-    if(ctry %in% c("CO", "BR", "CL")){
-      mr <- st_read(paste0(cheminIn, "/BDgeo/layers/metalrings.geojson"))
-      geojson_write(mr %>% filter(CITYKEY==nomEnq),
-                    file = paste0(cheminOut, "/geo/metalrings.geojson"),
-                    layer_options = "ENCODING=UTF-8")
-      mun <- st_read(paste0(cheminIn, "/BDgeo/layers/comunasAL.geojson"))
-      geojson_write(mun %>% filter(CITYKEY==nomEnq),
-                    file = paste0(cheminOut, "/geo/comunasAL.geojson"),
-                    layer_options = "ENCODING=UTF-8")
-    }
-
-    ## transMilenio
-    if(nomEnq=="bogota"){
-      tm <- st_read(paste0(cheminIn, "/BDgeo/layers/transmilenio.geojson"))
-      geojson_write(tm,
-                    file = paste0(cheminOut, "/geo/transmilenio.geojson"),
-                    layer_options = "ENCODING=UTF-8")
-    }
-    
+    # création des couches d'habillage et de la couche des secteurs vierge
+    otherLayers(cheminIn, nomEnq, ctry, cheminOut)
     
     # création du json pour le menu accordéon + appel dico des variables
     dico <- menuJson(cheminIn, nomEnq, ctry, subpop, cheminOut)
